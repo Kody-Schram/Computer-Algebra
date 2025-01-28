@@ -1,12 +1,8 @@
 from enum import Enum
 
-class Token:
-    def __init__(self, type, value):
-        self.type = type
-        self.value = value
-
-    def __repr__(self):
-        return f'({self.type}, \'{self.value}\')'
+SUPPORTED_FUNCTIONS = [
+    'sin', 'cos', 'log', 'ln', 'sqrt'
+]
 
 class Type(Enum):
     Operator = 1
@@ -16,6 +12,18 @@ class Type(Enum):
     Right_Parenthesis = 5
     Function = 6
 
-SUPPORTED_FUNCTIONS = [
-    'sin', 'cos', 'log', 'ln', 'sqrt'
-]
+class Token:
+    def __init__(self, type: Type, value):
+        self.type: Type = type
+        self.value = value
+
+    def __repr__(self):
+        return f'({self.type}, \'{self.value}\')'
+
+
+class Node:
+    def __init__(self, type: Type, value, left, right):
+        self.type = type
+        self.value = value
+        self.left = left
+        self.right = right

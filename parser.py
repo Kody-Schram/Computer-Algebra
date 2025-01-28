@@ -1,8 +1,11 @@
 from api import Token, Type, SUPPORTED_FUNCTIONS
+from parserErrors import MismatchedParenetheses
 
 class Parser:
     @staticmethod
     def tokenize(expression: str) -> [Token]:
+        Parser.checkParentheses(expression)
+
         tokens: [Token] = []
 
         numBuffer = ''
@@ -40,7 +43,7 @@ class Parser:
             elif char.isalpha():
                 varBuffer += char
 
-                if Parser().isFunction(varBuffer):
+                if Parser.isFunction(varBuffer):
                     tokens.append(Token(Type.Function, varBuffer))
                     varBuffer = ''
 
@@ -63,6 +66,49 @@ class Parser:
                     )
 
         return tokens
+
+    @staticmethod
+    def generateAST(tokens: [Token]):
+        # Ensure equal parenthesis
+
+
+
+        precedence = {
+            '(': 4,
+            '^': 3,
+            '*': 2,
+            '/': 2,
+            '+': 1,
+            '-': 1
+        }
+
+        # Break into subexpressions within parenthesis
+        parens = True
+
+        while parens:
+            index = -1
+            for i, token in enumerate(tokens):
+                if token.type == Type.Left_Parenthesis:
+                    parenIndex = i
+
+            if index == -1:
+                parens = False
+
+            else:
+                foundRight = False
+
+                for i in range(index, len(tokens)):
+                    if tokens[i].type == Type.Right_Parenthesis:
+                        foundRight = True
+                        Parser.generateAST(tokens[index::i])
+
+    @staticmethod
+    def checkParentheses(expression: str) -> None:
+        leftCount = expression.count('(')
+        rightCount = expression.count(')')
+
+        if leftCount != rightCount:
+            raise MismatchedParenetheses()
 
     @staticmethod
     def isOperator(char):
