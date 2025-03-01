@@ -122,3 +122,13 @@ Token *tokenize(char *buffer) {
 
     return head;
 }
+
+void freeTokens(Token *head) {
+    Token* current = head;
+    while (currrent != NULL) {
+        Token *next = current->next;
+        free(current->value);
+        free(current);
+        current = next;
+    }
+}

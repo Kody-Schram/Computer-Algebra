@@ -15,5 +15,7 @@ int main() {
 
     free(expression);
 
+    freeTokens(head);
+
     return 0;
 }

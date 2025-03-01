@@ -21,4 +21,6 @@ int getOperatorLength(char *c);
 
 Token *tokenize(char *expression);
 
+void freeTokens(Token *head);
+
 #endif
