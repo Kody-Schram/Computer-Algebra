@@ -125,7 +125,7 @@ Token *tokenize(char *buffer) {
 
 void freeTokens(Token *head) {
     Token* current = head;
-    while (currrent != NULL) {
+    while (current != NULL) {
         Token *next = current->next;
         free(current->value);
         free(current);
