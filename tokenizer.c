@@ -48,11 +48,10 @@ int getBuiltinLength(char *c, char **builtins, int entries) {
             if (c[j] == builtins[i][j]) {
                 j ++;
             }
-            else if (j > 0) return j;
             else break;
         }
 
-        if (j>0) return j;
+        if (builtins[i][j] == '\0') return j;
 
     }
 
