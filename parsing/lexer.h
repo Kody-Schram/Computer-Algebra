@@ -1,7 +1,7 @@
 #ifndef LEXER_H
 #define LEXER_H
 
-#include "tokenizer.h"
+#include "parserTypes.h"
 
 Token *lex(Token *head);
 

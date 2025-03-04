@@ -2,12 +2,13 @@
 #include <stdlib.h>
 #include <ctype.h>
 
+#include "parserTypes.h"
 #include "tokenizer.h"
 
 int handleImplicitMul(Token *cur, Token *prev) {
     // Checks for implicit multiplcation before left bracket
-    if (cur->type == TOKEN_LEFT_BRACKET && prev != NULL) {
-        if (prev->type == TOKEN_IDENTIFIER || prev->type == TOKEN_NUMBER || prev->type == TOKEN_RIGHT_BRACKET) {
+    if (cur->type == TOKEN_LEFT_PAREN && prev != NULL) {
+        if (prev->type == TOKEN_IDENTIFIER || prev->type == TOKEN_NUMBER || prev->type == TOKEN_RIGHT_PAREN) {
             Token *impMult = createToken(TOKEN_OPERATOR, "*", 1);
             if (impMult == NULL) {
                 printf("Error allocating for implicit multiplcation token.\n");
@@ -23,9 +24,9 @@ int handleImplicitMul(Token *cur, Token *prev) {
     }
 
     // Checks for implicit multiplcation after right bracket
-    else if (cur->type == TOKEN_RIGHT_BRACKET && cur->next != NULL) {
+    else if (cur->type == TOKEN_RIGHT_PAREN && cur->next != NULL) {
         Token *nextToken = cur->next;
-        if (nextToken->type == TOKEN_IDENTIFIER || nextToken->type == TOKEN_NUMBER || nextToken->type == TOKEN_LEFT_BRACKET) {
+        if (nextToken->type == TOKEN_IDENTIFIER || nextToken->type == TOKEN_NUMBER || nextToken->type == TOKEN_LEFT_PAREN) {
             Token *impMult = createToken(TOKEN_OPERATOR, "*", 1);
             if (impMult == NULL) {
                 printf("Error allocating for implicit multiplcation token.\n");
@@ -37,6 +38,20 @@ int handleImplicitMul(Token *cur, Token *prev) {
 
             return 1;
 
+        }
+    }
+
+    // Checks number to variable implicit multiplication (eg. 2x)
+    else if (cur->type == TOKEN_NUMBER && cur->next != NULL) {
+        if (cur->next->type == TOKEN_IDENTIFIER) {
+            Token *impMult = createToken(TOKEN_OPERATOR, "*", 1);
+            if (impMult == NULL) {
+                printf("Error allocating for implicit multiplcation token.\n");
+                return 0;
+            }
+
+            impMult->next = cur->next;
+            cur->next = impMult;
         }
     }
 
