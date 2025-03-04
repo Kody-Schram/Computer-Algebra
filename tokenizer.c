@@ -20,6 +20,7 @@ Token *createToken(TokenType type, char *value, int l) {
         return NULL;
     }
     strncpy(token->value, value, l);
+    token->value[l] = '\0';
     token->next = NULL;
 
     return token;
@@ -37,7 +38,9 @@ void printTokens(Token *head) {
 // Returns:
 //  0: not an builtin
 // >0: length of builtin
-int getBuiltinLength(char *c, char *[] builtins) {
+int getBuiltinLength(char *c, char *builtins[]) {
+    if (c == NULL) return 0;
+
     for (int i = 0; i < (int) (sizeof(builtins)/sizeof(builtins[0])); i++) {
         int j = 0;
         
@@ -57,10 +60,16 @@ int getBuiltinLength(char *c, char *[] builtins) {
 }
 
 int getOperatorLength(char *c) {
-    if (c == NULL) return 0;
     char *operators[] = {"<=", ">=", "int", "drv", "+", "-", "*", "/", "^", "=", "<", ">"};
 
-    return getBuiltinLength(operators);
+    return getBuiltinLength(c, operators);
+
+}
+
+int getFunctionLength(char *c) {
+    char *functions[] = {"sin", "cos", "tan", "csc", "sec", "cot"};
+
+    return getBuiltinLength(c, functions);
 
 }
 
@@ -100,7 +109,17 @@ Token *tokenize(char *buffer) {
         }
 
         else {
-            printf("Unknown character: %c at index %d", buffer[i], i);
+            printf("Unknown character: %c\n", buffer[i]);
+            printf("%s\n", buffer);
+            char *pointer[] = malloc((i + 1) * sizeof(char));
+            if (pointer == NULL) {
+                return NULL;
+            }
+
+            memset(pointer, ' ', i);
+            pointer[i] = '^';
+
+            printf("%s", pointer);
             return NULL;
         }
 
@@ -124,7 +143,7 @@ Token *tokenize(char *buffer) {
 
 void freeTokens(Token *head) {
     Token* current = head;
-    while (currrent != NULL) {
+    while (current != NULL) {
         Token *next = current->next;
         free(current->value);
         free(current);
