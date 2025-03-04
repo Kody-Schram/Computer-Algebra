@@ -18,6 +18,8 @@ typedef struct Token {
     struct Token* next;
 } Token;
 
+Token *createToken(TokenType type, char *value, int l);
+
 void printTokens(Token *head);
 
 Token *tokenize(char *expression);

@@ -141,8 +141,6 @@ Token *tokenize(char *buffer) {
         int end = i;
         TokenType type = -1;
 
-        printf("%c\n", buffer[i]);
-
         // Skip spaces
         if (isspace(buffer[i])) {
             i++;
