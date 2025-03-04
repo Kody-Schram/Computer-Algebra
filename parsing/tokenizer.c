@@ -94,6 +94,9 @@ Token *tokenize(char *buffer) {
 
     int builtinln;
 
+    int spaceI = -1;
+    TokenType prevT = -1;
+
     int i = 0;
     while(buffer[i] != '\0') {
         int end = i;
@@ -101,6 +104,7 @@ Token *tokenize(char *buffer) {
 
         // Skip spaces
         if (isspace(buffer[i])) {
+            spaceI = i;
             i++;
             continue;
         }
@@ -123,7 +127,7 @@ Token *tokenize(char *buffer) {
         // Reads identifiers/variables
         else if (isalpha(buffer[i])) {
             type = TOKEN_IDENTIFIER;
-            while (isalpha(buffer[end])) end ++;
+            while (buffer[end] == '_' || (isalnum(buffer[end]) && !getFunctionLength(buffer+end))) end ++;
         }
 
         else {
@@ -146,6 +150,28 @@ Token *tokenize(char *buffer) {
                 return NULL;
             }
         }
+
+        // Prevents ambiguous syntax due to spaces
+        if (spaceI != -1) {
+            if ((prevT == TOKEN_NUMBER || prevT == TOKEN_IDENTIFIER) && (type == TOKEN_IDENTIFIER || type == TOKEN_NUMBER || type == TOKEN_FUNCTION)) {
+                printf("Spacing lead to ambiguous intent.\n");
+                printf("%s\n", buffer);
+
+                char *pointer = malloc((i) * sizeof(char));
+                if (pointer == NULL) {
+                    return NULL;
+                }
+
+                memset(pointer, ' ', i-1);
+                pointer[i-1] = '^';
+                printf("%s\n", pointer);
+
+                return NULL;
+            }
+        }
+
+        spaceI = -1;
+        prevT = type;
 
         Token *newToken = createToken(type, buffer + i, end - i);
 
