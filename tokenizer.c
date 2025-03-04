@@ -38,10 +38,10 @@ void printTokens(Token *head) {
 // Returns:
 //  0: not an builtin
 // >0: length of builtin
-int getBuiltinLength(char *c, char *builtins[]) {
+int getBuiltinLength(char *c, char **builtins, int entries) {
     if (c == NULL) return 0;
 
-    for (int i = 0; i < (int) (sizeof(builtins)/sizeof(builtins[0])); i++) {
+    for (int i = 0; i < entries; i++) {
         int j = 0;
         
         while (c[j] != '\0' && builtins[i][j] != '\0') {
@@ -60,24 +60,53 @@ int getBuiltinLength(char *c, char *builtins[]) {
 }
 
 int getOperatorLength(char *c) {
-    char *operators[] = {"<=", ">=", "int", "drv", "+", "-", "*", "/", "^", "=", "<", ">"};
+    char *operators[] = {"<=", ">=", "int", "drv","**", "+", "-", "*", "/", "^", "=", "<", ">"};
 
-    return getBuiltinLength(c, operators);
+    return getBuiltinLength(c, operators, sizeof(operators)/sizeof(operators[0]));
 
 }
 
 int getFunctionLength(char *c) {
     char *functions[] = {"sin", "cos", "tan", "csc", "sec", "cot"};
 
-    return getBuiltinLength(c, functions);
+    return getBuiltinLength(c, functions, sizeof(functions)/sizeof(functions[0]));
 
+}
+
+// Returns:
+// 0: unknown character
+// 1: valid symbol
+int getSimpleSymbols(char c, TokenType *type) {
+    switch(c) {
+        case '(':
+        case '{':
+        case '[':
+            *type = TOKEN_LEFT_BRACKET;
+            break;
+ 
+        case ')':
+        case '}':
+        case ']':
+            *type = TOKEN_RIGHT_BRACKET;
+            break;
+        case ':':
+            *type = TOKEN_FUNC_DEF;
+            break;
+        case ',':
+            *type = TOKEN_SEPERATOR;
+            break;
+        default:
+            return 0;
+    }
+
+    return 1;
 }
 
 Token *tokenize(char *buffer) {
     Token *head = NULL;
     Token *prev = NULL;
 
-    int opl;
+    int builtinln;
 
     int i = 0;
     while(buffer[i] != '\0') {
@@ -98,32 +127,49 @@ Token *tokenize(char *buffer) {
             while (isdigit(buffer[end])) end ++;
         }
         // Checks if operator and returns the length if it is
-        else if ((opl = getOperatorLength(buffer + i))) {
-            end += opl;
+        else if ((builtinln = getOperatorLength(buffer + i))) {
+            // Switches ** into ^ for exponents
+            if (builtinln == 2) {
+                if (buffer[i] == '*' && buffer[i+1] == '*') {
+                    i ++;
+                    buffer[i] = '^';
+                }
+            }
+
+            end += builtinln;
             type = TOKEN_OPERATOR;
         }
-
+        // Checks if builtin function and return the length if it is
+        else if ((builtinln = getFunctionLength(buffer + i))) {
+            end += builtinln;
+            type = TOKEN_FUNCTION;
+        }
+        // Reads identifiers/variables
         else if (isalpha(buffer[i])) {
             type = TOKEN_IDENTIFIER;
             while (isalpha(buffer[end])) end ++;
         }
 
         else {
-            printf("Unknown character: %c\n", buffer[i]);
-            printf("%s\n", buffer);
-            char *pointer[] = malloc((i + 1) * sizeof(char));
-            if (pointer == NULL) {
+            int l = getSimpleSymbols(buffer[i], &type);
+            if (l > 0) {
+                end ++;
+            } else {
+                printf("Unknown character: %c\n", buffer[i]);
+                printf("%s\n", buffer);
+
+                char *pointer = malloc((i + 1) * sizeof(char));
+                if (pointer == NULL) {
+                    return NULL;
+                }
+
+                memset(pointer, ' ', i);
+                pointer[i] = '^';
+                printf("%s\n", pointer);
+
                 return NULL;
             }
-
-            memset(pointer, ' ', i);
-            pointer[i] = '^';
-
-            printf("%s", pointer);
-            return NULL;
         }
-
-        printf("creating token\n");
 
         Token *newToken = createToken(type, buffer + i, end - i);
 
