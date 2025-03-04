@@ -156,14 +156,6 @@ Token *tokenize(char *buffer) {
         }
         // Checks if operator and returns the length if it is
         else if ((builtinln = getOperatorLength(buffer + i))) {
-            // Switches ** into ^ for exponents
-            if (builtinln == 2) {
-                if (buffer[i] == '*' && buffer[i+1] == '*') {
-                    i ++;
-                    buffer[i] = '^';
-                }
-            }
-
             end += builtinln;
             type = TOKEN_OPERATOR;
         }
