@@ -13,11 +13,7 @@ typedef struct Token {
     struct Token* next;
 } Token;
 
-Token *createToken(TokenType type, char *value, int l);
-
 void printTokens(Token *head);
-
-int getOperatorLength(char *c);
 
 Token *tokenize(char *expression);
 
