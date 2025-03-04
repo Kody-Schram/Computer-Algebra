@@ -19,7 +19,7 @@ Token *createToken(TokenType type, char *value, int l) {
         printf("Error allocating space for token value.");
         return NULL;
     }
-    strncpy(token->value, value, l);
+    memcpy(token->value, value, l);
     token->value[l] = '\0';
     token->next = NULL;
 
@@ -30,7 +30,36 @@ void printTokens(Token *head) {
     Token *cur = head;
 
     while (cur != NULL) {
-        printf("<type: %d, value: %s>\n", cur->type, cur->value);
+        const char *type = NULL;
+
+        switch(cur->type) {
+            case 0:
+                type = "NUMBER";
+                break;
+            case 1:
+                type = "OPERATOR";
+                break;
+            case 2:
+                type = "IDENTIFIER";
+                break;
+            case 3:
+                type = "FUNCTION";
+                break;
+            case 4:
+                type = "LEFT_BRACKET";
+                break;
+            case 5:
+                type = "RIGHT_BRACKET";
+                break;
+            case 6:
+                type = "SEPERATOR";
+                break;
+            case 7:
+                type = "FUNC_DEF";
+                break;
+        }
+
+        printf("<type: %s, value: %s>\n", type, cur->value);
         cur = cur->next;
     }
 }
