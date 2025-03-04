@@ -53,5 +53,4 @@ dkms.conf
 
 .DS_Store
 .vscode
-Makefile
 main
