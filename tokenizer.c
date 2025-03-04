@@ -66,7 +66,7 @@ int getOperatorLength(char *c) {
 }
 
 int getFunctionLength(char *c) {
-    char *functions[] = {"sin", "cos", "tan", "csc", "sec", "cot"};
+    char *functions[] = {"sin", "cos", "tan", "csc", "sec", "cot", "log", "ln"};
 
     return getBuiltinLength(c, functions, sizeof(functions)/sizeof(functions[0]));
 
