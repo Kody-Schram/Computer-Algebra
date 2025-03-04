@@ -1,57 +1,67 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include <string.h>
 
 #include "parserTypes.h"
 #include "tokenizer.h"
 
 int handleImplicitMul(Token *cur, Token *prev) {
-    // Checks for implicit multiplcation before left bracket
-    if (cur->type == TOKEN_LEFT_PAREN && prev != NULL) {
-        if (prev->type == TOKEN_IDENTIFIER || prev->type == TOKEN_NUMBER || prev->type == TOKEN_RIGHT_PAREN) {
-            Token *impMult = createToken(TOKEN_OPERATOR, "*", 1);
-            if (impMult == NULL) {
-                printf("Error allocating for implicit multiplcation token.\n");
-                return 0;
+    printf("checking for implicit\n");
+    // x() or 2()
+    // 2x
+    // xsinx
+
+    // Handle implicit multiplcation with left bracket or function
+    // x(x-1) => x*(x-1)
+    if ((cur->type == TOKEN_LEFT_PAREN || cur->type == TOKEN_FUNCTION) && prev != NULL) {
+        printf("checking for left paren and function\n");
+        if (prev->type == TOKEN_NUMBER || prev->type == TOKEN_IDENTIFIER) {
+            Token *mult = createToken(TOKEN_OPERATOR, "*", 1);
+            if (mult == NULL) {
+                printf("Error allocating for implicit multiplcation token.");
+                return -1;
             }
 
-            prev->next = impMult;
-            impMult->next = cur;
+            prev->next = mult;
+            mult->next = cur;
 
             return 1;
-
         }
     }
-
-    // Checks for implicit multiplcation after right bracket
+    // Handle implicit multiplcation with right bracket
+    // (x-1)x => (x-1)*x
     else if (cur->type == TOKEN_RIGHT_PAREN && cur->next != NULL) {
+        printf("checking for right paren\n");
         Token *nextToken = cur->next;
-        if (nextToken->type == TOKEN_IDENTIFIER || nextToken->type == TOKEN_NUMBER || nextToken->type == TOKEN_LEFT_PAREN) {
-            Token *impMult = createToken(TOKEN_OPERATOR, "*", 1);
-            if (impMult == NULL) {
-                printf("Error allocating for implicit multiplcation token.\n");
-                return 0;
+        if (nextToken->type == TOKEN_NUMBER || nextToken->type == TOKEN_IDENTIFIER || nextToken->type == TOKEN_LEFT_PAREN || nextToken->type == TOKEN_FUNCTION) {
+            Token *mult = createToken(TOKEN_OPERATOR, "*", 1);
+            if (mult == NULL) {
+                printf("Error allocating for implicit multiplcation token.");
+                return -1;
             }
 
-            cur->next = impMult;
-            impMult->next = nextToken;
+            mult->next = nextToken;
+            cur->next = mult;
 
             return 1;
-
         }
     }
+    // Handle constant and identifier multiplication
+    // 2x => 2*x
+    else if (cur->type == TOKEN_NUMBER && prev != NULL) {
+        if (prev->type == TOKEN_NUMBER) {
 
-    // Checks number to variable implicit multiplication (eg. 2x)
-    else if (cur->type == TOKEN_NUMBER && cur->next != NULL) {
-        if (cur->next->type == TOKEN_IDENTIFIER) {
-            Token *impMult = createToken(TOKEN_OPERATOR, "*", 1);
-            if (impMult == NULL) {
-                printf("Error allocating for implicit multiplcation token.\n");
-                return 0;
+            Token *mult = createToken(TOKEN_OPERATOR, "*", 1);
+            if (mult == NULL) {
+                printf("Error allocating for implicit multiplcation token.");
+                return -1;
             }
 
-            impMult->next = cur->next;
-            cur->next = impMult;
+            prev->next = mult;
+            mult->next = cur;
+
+            return 1;
         }
     }
 
@@ -64,7 +74,7 @@ int handleExponentRewrite(Token **cur, Token *prev) {
             Token *exponent = createToken(TOKEN_OPERATOR, "^", 1);
             if (exponent == NULL) {
                 printf("Error allocating for ** to ^ conversion token.");
-                return 0;
+                return -1;
             }
 
             prev->next = exponent;
@@ -82,14 +92,14 @@ int handleExponentRewrite(Token **cur, Token *prev) {
     return 0;
 }
 
-// Cleans the token list
 Token *lex(Token* head) {
     Token *cur = head;
     Token *prev = NULL;
 
     while (cur != NULL) {
-        if (handleImplicitMul(cur, prev)) continue;
-        else if (handleExponentRewrite(&cur, prev)) continue;
+        if (handleImplicitMul(cur, prev) == -1) return NULL;
+        if (handleExponentRewrite(&cur, prev) == -1) return NULL;
+
 
         prev = cur;
         cur = cur->next;
