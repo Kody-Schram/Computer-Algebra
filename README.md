@@ -24,12 +24,17 @@ Takes in a string and parses it into a list of tokens. Some expressions will be 
 
 
 ##### Built in Functions
-- sin
-- cos
-- tan
-- csc
-- sec
-- cot
+*Parameter brackets will be implied for functions until next operator*
+(eg. sinx+1 => sin(x) + 1)
+
+- sin()
+- cos()
+- tan()
+- csc()
+- sec()
+- cot()
+- log()
+- ln()
 
 ##### Defining New Functions
 Function declaration is indicated by : operator. ":" allows the parser to differentiate an identifier and a function declaration. After declaring a function, subsequent uses of the function identifier will automatically be recognized as that function.
