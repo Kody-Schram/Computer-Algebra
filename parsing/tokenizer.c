@@ -26,44 +26,6 @@ Token *createToken(TokenType type, char *value, int l) {
     return token;
 }
 
-void printTokens(Token *head) {
-    Token *cur = head;
-
-    while (cur != NULL) {
-        const char *type = NULL;
-
-        switch(cur->type) {
-            case 0:
-                type = "NUMBER";
-                break;
-            case 1:
-                type = "OPERATOR";
-                break;
-            case 2:
-                type = "IDENTIFIER";
-                break;
-            case 3:
-                type = "FUNCTION";
-                break;
-            case 4:
-                type = "LEFT_BRACKET";
-                break;
-            case 5:
-                type = "RIGHT_BRACKET";
-                break;
-            case 6:
-                type = "SEPERATOR";
-                break;
-            case 7:
-                type = "FUNC_DEF";
-                break;
-        }
-
-        printf("<type: %s, value: %s>\n", type, cur->value);
-        cur = cur->next;
-    }
-}
-
 // Returns:
 //  0: not an builtin
 // >0: length of builtin
@@ -203,14 +165,4 @@ Token *tokenize(char *buffer) {
     }
 
     return head;
-}
-
-void freeTokens(Token *head) {
-    Token* current = head;
-    while (current != NULL) {
-        Token *next = current->next;
-        free(current->value);
-        free(current);
-        current = next;
-    }
 }

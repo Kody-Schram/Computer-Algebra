@@ -3,21 +3,17 @@
 #include <ctype.h>
 
 #include "input.h"
-#include "tokenizer.h"
-#include "lexer.h"
+#include "parsing/parser.h"
+#include "parsing/parserTypes.h"
 
 int main() {
 
     char *expression = terminalEntry();
     printf("you entered %s\n", expression);
 
-    Token *raw = tokenize(expression);
-    free(expression);
-
-    Token *head = lex(raw);
+    Token *head = parse(expression);
     printTokens(head);
-
-    freeTokens(head);
+    // freeTokens(head);
 
     return 0;
 }
