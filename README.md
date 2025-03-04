@@ -14,13 +14,13 @@ Takes in a string and parses it into a list of tokens. Some expressions will be 
 
 #### Syntax
 ##### Operators
-- + (addition)
-- - (subtraction)
-- * (multiplication)
-- / (division)
-- ^ or ** (exponentiation)
-- drv or derivative
-- int or integral
+- "+" (addition)
+- "-" (subtraction)
+- "*" (multiplication)
+- "/" (division)
+- "^" or "**" (exponentiation)
+- "drv" (derivative)
+- "int" (integral)
 
 
 ##### Built in Functions
