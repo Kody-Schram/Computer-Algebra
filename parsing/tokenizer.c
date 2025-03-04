@@ -69,14 +69,10 @@ int getFunctionLength(char *c) {
 int getSimpleSymbols(char c, TokenType *type) {
     switch(c) {
         case '(':
-        case '{':
-        case '[':
             *type = TOKEN_LEFT_BRACKET;
             break;
  
         case ')':
-        case '}':
-        case ']':
             *type = TOKEN_RIGHT_BRACKET;
             break;
         case ':':
