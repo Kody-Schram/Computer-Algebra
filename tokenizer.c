@@ -35,22 +35,14 @@ void printTokens(Token *head) {
 }
 
 // Returns:
-//  0: not an operator
-// >0: length of operator
-int getOperatorLength(char *c) {
-    printf("checking operators\n");
-
-    char *operators[] = {"<=", ">=", "int", "drv", "+", "-", "*", "/", "^", "=", "<", ">"};
-
-    if (c == NULL) {
-        return 0;
-    }
-
-    for (int i = 0; i < (int) (sizeof(operators)/sizeof(operators[0])); i++) {
+//  0: not an builtin
+// >0: length of builtin
+int getBuiltinLength(char *c, char *[] builtins) {
+    for (int i = 0; i < (int) (sizeof(builtins)/sizeof(builtins[0])); i++) {
         int j = 0;
         
-        while (c[j] != '\0' && operators[i][j] != '\0') {
-            if (c[j] == operators[i][j]) {
+        while (c[j] != '\0' && builtins[i][j] != '\0') {
+            if (c[j] == builtins[i][j]) {
                 j ++;
             }
             else if (j > 0) return j;
@@ -62,6 +54,13 @@ int getOperatorLength(char *c) {
     }
 
     return 0;
+}
+
+int getOperatorLength(char *c) {
+    if (c == NULL) return 0;
+    char *operators[] = {"<=", ">=", "int", "drv", "+", "-", "*", "/", "^", "=", "<", ">"};
+
+    return getBuiltinLength(operators);
 
 }
 
