@@ -50,7 +50,7 @@ int getBuiltinLength(char *c, char **builtins, int entries) {
 }
 
 int getOperatorLength(char *c) {
-    char *operators[] = {"<=", ">=", "int", "drv","**", "+", "-", "*", "/", "^", "=", "<", ">"};
+    char *operators[] = {"<=", ">=", "int", "drv", "+", "-", "*", "/", "^", "=", "<", ">"};
 
     return getBuiltinLength(c, operators, sizeof(operators)/sizeof(operators[0]));
 

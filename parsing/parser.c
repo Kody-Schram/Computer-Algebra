@@ -5,13 +5,6 @@
 #include "tokenizer.h"
 #include "lexer.h"
 
-Token *parse(char *buffer) {
-    Token *raw = tokenize(buffer);
-    Token *head = lex(raw);
-
-    return head;
-}
-
 void freeTokens(Token *head) {
     Token* current = head;
     while (current != NULL) {
@@ -55,7 +48,14 @@ void printTokens(Token *head) {
                 break;
         }
 
-        printf("<type: %s, value: %s>\n", type, cur->value);
+        printf("<type: %s, value: '%s'>\n", type, cur->value);
         cur = cur->next;
     }
+}
+
+Token *parse(char *buffer) {
+    Token *raw = tokenize(buffer);
+    Token *head = lex(raw);
+
+    return head;
 }

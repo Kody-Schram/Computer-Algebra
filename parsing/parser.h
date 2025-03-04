@@ -3,10 +3,10 @@
 
 #include "parserTypes.h"
 
-Token *parse(char *buffer);
-
 void freeTokens(Token *head);
 
 void printTokens(Token *head);
+
+Token *parse(char *buffer);
 
 #endif
