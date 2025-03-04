@@ -12,8 +12,10 @@ int main() {
     printf("you entered %s\n", expression);
 
     Token *head = parse(expression);
+    printf("\nFinal Token List\n");
     printTokens(head);
-    // freeTokens(head);
+    
+    freeTokens(head);
 
     return 0;
 }

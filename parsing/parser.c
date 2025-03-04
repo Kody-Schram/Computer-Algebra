@@ -18,6 +18,7 @@ void freeTokens(Token *head) {
 void printTokens(Token *head) {
     Token *cur = head;
 
+    printf("[\n");
     while (cur != NULL) {
         const char *type = NULL;
 
@@ -48,13 +49,19 @@ void printTokens(Token *head) {
                 break;
         }
 
-        printf("<type: %s, value: '%s'>\n", type, cur->value);
+        printf("    <type: %s, value: '%s'>\n", type, cur->value);
         cur = cur->next;
     }
+
+    printf("]\n");
 }
 
 Token *parse(char *buffer) {
     Token *raw = tokenize(buffer);
+
+    printf("\nRaw Tokens\n");
+    printTokens(raw);
+
     Token *head = lex(raw);
 
     return head;
