@@ -12,8 +12,8 @@
 ### Tokenization
 Takes in a string and parses it into a list of tokens. Some expressions will be rewritten into a stardardized way to represent expressions (ex. ** -> ^ for exponents).
 
-#### Syntax
-##### Operators
+### Syntax
+#### Operators
 - "+" (addition)
 - "-" (subtraction)
 - "*" (multiplication)
@@ -23,7 +23,7 @@ Takes in a string and parses it into a list of tokens. Some expressions will be 
 - "int" (integral)
 
 
-##### Built in Functions
+#### Built in Functions
 *Parameter brackets will be implied for functions until next operator*
 (eg. sinx+1 => sin(x) + 1)
 
