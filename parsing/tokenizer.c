@@ -26,9 +26,17 @@ Token *createToken(TokenType type, char *value, int l) {
     return token;
 }
 
-// Returns:
-//  0: not an builtin
-// >0: length of builtin
+/**
+ * @brief Get the Builtin Length object
+ * 
+ * @retval 0: No match found
+ * @retval >0: Length of match found
+ * 
+ * @param c Start of string to check against
+ * @param builtins List of strings
+ * @param entries Number of entries in the list
+ * @return int 
+ */
 int getBuiltinLength(char *c, char **builtins, int entries) {
     if (c == NULL) return 0;
 
@@ -49,6 +57,15 @@ int getBuiltinLength(char *c, char **builtins, int entries) {
     return 0;
 }
 
+/**
+ * @brief Gets the length of any operators found
+ * 
+ * @retval 0: No operator found
+ * @retval >0: Length of operator found
+ * 
+ * @param c Start of string to check against
+ * @return int 
+ */
 int getOperatorLength(char *c) {
     char *operators[] = {"<=", ">=", "int", "drv", "+", "-", "*", "/", "^", "=", "<", ">"};
 
@@ -56,6 +73,15 @@ int getOperatorLength(char *c) {
 
 }
 
+/**
+ * @brief Gets the length any builtin function found
+ * 
+ * @retval 0: No builtin function found
+ * @retval >0: Length of builtin function found
+ * 
+ * @param c Start of string to check against
+ * @return int 
+ */
 int getFunctionLength(char *c) {
     char *functions[] = {"sin", "cos", "tan", "csc", "sec", "cot", "log", "ln"};
 
@@ -63,9 +89,16 @@ int getFunctionLength(char *c) {
 
 }
 
-// Returns:
-// 0: unknown character
-// 1: valid symbol
+/**
+ * @brief Check a few single character symbols
+ * 
+ * @retval 0: No symbol recognized
+ * @retval 1: Properly found symbol
+ * 
+ * @param c Character being checked
+ * @param type Pointer to type variable in tokenizer
+ * @return int 
+ */
 int getSimpleSymbols(char c, TokenType *type) {
     switch(c) {
         case '(':
@@ -174,6 +207,7 @@ Token *tokenize(char *buffer) {
         prevT = type;
 
         Token *newToken = createToken(type, buffer + i, end - i);
+        if (newToken == NULL) return NULL;
 
         if (prev != NULL) {
             prev-> next = newToken;

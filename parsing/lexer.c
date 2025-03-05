@@ -6,6 +6,17 @@
 #include "parserTypes.h"
 #include "tokenizer.h"
 
+/**
+ * @brief Adds * where it is implied through standard math notation
+ * 
+ * @retval -1: Error, could not complete the function
+ * @retval 0: No implicit multiplcation found, no action taken
+ * @retval 1: Properly identified and corrected implied multiplcation
+ * 
+ * @param cur Current token in list
+ * @param prev Previous token in list
+ * @return int 
+ */
 int handleImplicitMul(Token *cur, Token *prev) {
     printf("checking for implicit\n");
     // x() or 2()
@@ -68,6 +79,17 @@ int handleImplicitMul(Token *cur, Token *prev) {
     return 0;
 }
 
+/**
+ * @brief Replaces ** tokens with a ^ token
+ * 
+ * @retval -1: Error, could not properly create the new token
+ * @retval 0: "**" tokens not found, no replacement made
+ * @retval 1: Properly replaced with "^"
+ * 
+ * @param cur Current node in the list
+ * @param prev Previous node
+ * @return int 
+ */
 int handleExponentRewrite(Token **cur, Token *prev) {
     if ((*cur)->value[0] == '*' && (*cur)->next != NULL) {
         if ((*cur)->next->value[0] == '*') {
@@ -99,7 +121,6 @@ Token *lex(Token* head) {
     while (cur != NULL) {
         if (handleImplicitMul(cur, prev) == -1) return NULL;
         if (handleExponentRewrite(&cur, prev) == -1) return NULL;
-
 
         prev = cur;
         cur = cur->next;

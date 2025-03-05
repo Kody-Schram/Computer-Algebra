@@ -58,6 +58,7 @@ void printTokens(Token *head) {
 
 Token *parse(char *buffer) {
     Token *raw = tokenize(buffer);
+    if (raw == NULL) return NULL;
 
     printf("\nRaw Tokens\n");
     printTokens(raw);
