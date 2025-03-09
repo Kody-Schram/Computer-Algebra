@@ -5,27 +5,6 @@
 
 #include "tokenizer.h"
 
-Token *createToken(TokenType type, char *value, int l) {
-    Token *token = (Token*) malloc(sizeof(Token));
-    if (token == NULL) {
-        printf("Error allocating space for token.");
-        return NULL;
-    }
-
-    // Populates newToken attributes
-    token->type = type;
-    token->value = (char*) malloc(l+1);
-    if (token->value == NULL) {
-        printf("Error allocating space for token value.");
-        return NULL;
-    }
-    memcpy(token->value, value, l);
-    token->value[l] = '\0';
-    token->next = NULL;
-
-    return token;
-}
-
 /**
  * @brief Get the Builtin Length object
  * 
@@ -90,6 +69,41 @@ int getFunctionLength(char *c) {
 }
 
 /**
+ * @brief Gets length of number found
+ * 
+ * @retval 0: No number found
+ * @retval >0: Length of number found
+ * 
+ * @param c Start of string to check against
+ * @return int Length of found number
+ */
+int getNumber(char *c) {
+    int i = 0;
+    if (isdigit(c[0]) || c[0] == '.') {
+        while (isdigit(c[i]) || c[i] == '.') i ++;
+    }
+
+    return i;
+}
+
+/**
+ * @brief Gets length of identifier found
+ * 
+ * @retval 0: No identifier found
+ * @retval >0: Length of identifier found
+ * 
+ * @param c Start of  string to check against
+ * @return int Length of found identifier
+ */
+int getIdentifier(char *c) {
+    int i = 0;
+    if (isalpha(c[0])) {
+        while (c[i] == '_' || (isalnum(c[i]) && !getFunctionLength(c+i))) i ++;
+    }
+    return i;
+}
+
+/**
  * @brief Check a few single character symbols
  * 
  * @retval 0: No symbol recognized
@@ -121,16 +135,39 @@ int getSimpleSymbols(char c, TokenType *type) {
     return 1;
 }
 
+Token *createToken(TokenType type, char *value, int l) {
+    // Allocates new token
+    Token *token = (Token*) malloc(sizeof(Token));
+    if (token == NULL) {
+        printf("Error allocating space for token.");
+        return NULL;
+    }
+
+    // Populates newToken attributes
+    token->type = type;
+    token->value = (char*) malloc(l+1);
+    if (token->value == NULL) {
+        printf("Error allocating space for token value.");
+        return NULL;
+    }
+    memcpy(token->value, value, l);
+    token->value[l] = '\0';
+    token->next = NULL;
+
+    return token;
+}
+
 Token *tokenize(char *buffer) {
     Token *head = NULL;
     Token *prev = NULL;
 
-    int builtinln;
+    int matchLen;
 
     int spaceI = -1;
     TokenType prevT = -1;
 
     int i = 0;
+    // Loops through till end of string
     while(buffer[i] != '\0') {
         int end = i;
         TokenType type = -1;
@@ -143,34 +180,38 @@ Token *tokenize(char *buffer) {
         }
         
         // Number can start with a - for a negative number
-        else if (isdigit(buffer[i])) {
+        else if ((matchLen = getNumber(buffer + i))) {
+            end += matchLen;
             type = TOKEN_NUMBER;
-            while (isdigit(buffer[end])) end ++;
         }
         // Checks if operator and returns the length if it is
-        else if ((builtinln = getOperatorLength(buffer + i))) {
-            end += builtinln;
+        else if ((matchLen = getOperatorLength(buffer + i))) {
+            end += matchLen;
             type = TOKEN_OPERATOR;
         }
         // Checks if builtin function and return the length if it is
-        else if ((builtinln = getFunctionLength(buffer + i))) {
-            end += builtinln;
+        else if ((matchLen = getFunctionLength(buffer + i))) {
+            end += matchLen;
             type = TOKEN_FUNCTION;
         }
         // Reads identifiers/variables
-        else if (isalpha(buffer[i])) {
+        else if ((matchLen = getIdentifier(buffer + i))) {
+            end += matchLen;
             type = TOKEN_IDENTIFIER;
-            while (buffer[end] == '_' || (isalnum(buffer[end]) && !getFunctionLength(buffer+end))) end ++;
         }
 
         else {
+            // Checks remaining symbols
             int l = getSimpleSymbols(buffer[i], &type);
             if (l > 0) {
                 end ++;
-            } else {
+            }
+            // Unknown character found, returns error
+            else {
                 printf("Unknown character: %c\n", buffer[i]);
-                printf("%s\n", buffer);
 
+                // Prints input with pointer to unknown character
+                printf("%s\n", buffer);
                 char *pointer = malloc((i + 1) * sizeof(char));
                 if (pointer == NULL) {
                     return NULL;
@@ -188,8 +229,9 @@ Token *tokenize(char *buffer) {
         if (spaceI != -1) {
             if ((prevT == TOKEN_NUMBER || prevT == TOKEN_IDENTIFIER) && (type == TOKEN_IDENTIFIER || type == TOKEN_NUMBER || type == TOKEN_FUNCTION)) {
                 printf("Spacing lead to ambiguous intent.\n");
-                printf("%s\n", buffer);
 
+                // Pritns input and pointer to problematic char
+                printf("%s\n", buffer);
                 char *pointer = malloc((i) * sizeof(char));
                 if (pointer == NULL) {
                     return NULL;
@@ -205,10 +247,11 @@ Token *tokenize(char *buffer) {
 
         spaceI = -1;
         prevT = type;
-
+        
         Token *newToken = createToken(type, buffer + i, end - i);
         if (newToken == NULL) return NULL;
 
+        // Updates linked list
         if (prev != NULL) {
             prev-> next = newToken;
         } else {
