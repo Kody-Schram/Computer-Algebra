@@ -1,10 +1,11 @@
 #ifndef PARSERTYPES_H
 #define PARSERTYPES_H
 
-typedef enum {
+typedef enum TokenType {
     TOKEN_NUMBER,
     TOKEN_OPERATOR,
     TOKEN_IDENTIFIER,
+    TOKEN_ASSIGNMENT,
     TOKEN_LEFT_PAREN,
     TOKEN_RIGHT_PAREN,
     TOKEN_FUNC_CALL,
@@ -15,7 +16,7 @@ typedef enum {
 typedef struct Token {
     TokenType type;
     char* value;
-    
+
     struct Token* next;
 } Token;
 

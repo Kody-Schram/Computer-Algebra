@@ -32,8 +32,8 @@ void printTokens(Token *head) {
             case TOKEN_IDENTIFIER:
                 type = "IDENTIFIER";
                 break;
-            case TOKEN_FUNCTION:
-                type = "FUNCTION";
+            case TOKEN_ASSIGNMENT:
+                type = "ASSIGNMENT";
                 break;
             case TOKEN_LEFT_PAREN:
                 type = "LEFT_PAREN";
@@ -41,11 +41,14 @@ void printTokens(Token *head) {
             case TOKEN_RIGHT_PAREN:
                 type = "RIGHT_PAREN";
                 break;
-            case TOKEN_SEPERATOR:
-                type = "SEPERATOR";
+            case TOKEN_FUNC_CALL:
+                type = "FUNC_CALL";
                 break;
             case TOKEN_FUNC_DEF:
                 type = "FUNC_DEF";
+                break;
+            case TOKEN_SEPERATOR:
+                type = "SEPERATOR";
                 break;
         }
 
