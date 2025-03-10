@@ -1,10 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-char* terminalEntry() {
-    int DEFAULT_SIZE = 50;
+#define DEFAULT_INPUT_SIZE 50
 
-    char* expression = (char *) malloc(DEFAULT_SIZE * sizeof(char));
+char* terminalEntry() {
+
+    char* expression = (char *) malloc(DEFAULT_INPUT_SIZE * sizeof(char));
     if (expression == NULL) {
         printf("Cannot allocate space for expression.");
         free(expression);
@@ -14,7 +15,7 @@ char* terminalEntry() {
     printf("Enter an expression: ");
     fflush(stdout);
 
-    int size = DEFAULT_SIZE;
+    int size = DEFAULT_INPUT_SIZE;
     int length = 0;
 
     char c;

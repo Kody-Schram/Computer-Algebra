@@ -24,7 +24,7 @@ Takes in a string and parses it into a list of tokens. Some expressions will be 
 
 
 #### Built in Functions
-*Parameter brackets will be implied for functions until next operator*
+*Parameter brackets will be implied for functions for first term after function*
 (eg. sinx+1 => sin(x) + 1)
 
 - sin()

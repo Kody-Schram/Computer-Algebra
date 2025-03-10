@@ -5,16 +5,17 @@ typedef enum {
     TOKEN_NUMBER,
     TOKEN_OPERATOR,
     TOKEN_IDENTIFIER,
-    TOKEN_FUNCTION,
     TOKEN_LEFT_PAREN,
     TOKEN_RIGHT_PAREN,
-    TOKEN_SEPERATOR,
-    TOKEN_FUNC_DEF
+    TOKEN_FUNC_CALL,
+    TOKEN_FUNC_DEF,
+    TOKEN_SEPERATOR
 } TokenType;
 
 typedef struct Token {
     TokenType type;
     char* value;
+    
     struct Token* next;
 } Token;
 
@@ -31,8 +32,8 @@ typedef struct ASTNode {
     NodeType type;
     char *value;
 
-    ASTNode *left;
-    ASTNode *right;
+    struct ASTNode *left;
+    struct ASTNode *right;
 } ASTNode;
 
 #endif

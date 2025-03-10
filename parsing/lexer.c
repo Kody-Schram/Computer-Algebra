@@ -6,6 +6,8 @@
 #include "parserTypes.h"
 #include "tokenizer.h"
 
+#define DEFAULT_STACK_SIZE 25
+
 /**
  * @brief Adds * where it is implied through standard math notation
  * 
@@ -25,7 +27,7 @@ int handleImplicitMul(Token *cur, Token *prev) {
 
     // Handle implicit multiplcation with left bracket or function
     // x(x-1) => x*(x-1)
-    if ((cur->type == TOKEN_LEFT_PAREN || cur->type == TOKEN_FUNCTION) && prev != NULL) {
+    if ((cur->type == TOKEN_LEFT_PAREN || cur->type == TOKEN_FUNC_CALL) && prev != NULL) {
         printf("checking for left paren and function\n");
         if (prev->type == TOKEN_NUMBER || prev->type == TOKEN_IDENTIFIER) {
             Token *mult = createToken(TOKEN_OPERATOR, "*", 1);
@@ -45,7 +47,7 @@ int handleImplicitMul(Token *cur, Token *prev) {
     else if (cur->type == TOKEN_RIGHT_PAREN && cur->next != NULL) {
         printf("checking for right paren\n");
         Token *nextToken = cur->next;
-        if (nextToken->type == TOKEN_NUMBER || nextToken->type == TOKEN_IDENTIFIER || nextToken->type == TOKEN_LEFT_PAREN || nextToken->type == TOKEN_FUNCTION) {
+        if (nextToken->type == TOKEN_NUMBER || nextToken->type == TOKEN_IDENTIFIER || nextToken->type == TOKEN_LEFT_PAREN || nextToken->type == TOKEN_FUNC_CALL) {
             Token *mult = createToken(TOKEN_OPERATOR, "*", 1);
             if (mult == NULL) {
                 printf("Error allocating for implicit multiplcation token.");
@@ -95,7 +97,7 @@ int handleExponentRewrite(Token **cur, Token *prev) {
         if ((*cur)->next->value[0] == '*') {
             Token *exponent = createToken(TOKEN_OPERATOR, "^", 1);
             if (exponent == NULL) {
-                printf("Error allocating for ** to ^ conversion token.");
+                printf("Error allocating for '**' to '^' conversion token.");
                 return -1;
             }
 
@@ -114,13 +116,49 @@ int handleExponentRewrite(Token **cur, Token *prev) {
     return 0;
 }
 
+int handleFunctionParenthesis() {
+    
+}
+
+void resizeStack(int *size, Token ***stack) {
+    *size *= 2;
+    Token **temp = realloc(*stack, *size * sizeof(Token*));
+
+    if (temp == NULL) {
+        printf("Error reallocating parenthesis stack.");
+        free(*stack);
+        *stack = NULL;
+    } else {
+        *stack = temp;
+    }
+}
+
 Token *lex(Token* head) {
     Token *cur = head;
     Token *prev = NULL;
 
+    int openParenthesis = 0;
+    int size = DEFAULT_STACK_SIZE;
+    Token **stack = malloc(size * sizeof(Token*));
+    if (stack == NULL) {
+        printf("Error allocating for parenthesis stack.");
+        return NULL;
+    }
+
     while (cur != NULL) {
         if (handleImplicitMul(cur, prev) == -1) return NULL;
         if (handleExponentRewrite(&cur, prev) == -1) return NULL;
+
+        if (cur->type == TOKEN_LEFT_PAREN) {
+            openParenthesis ++;
+
+            if (openParenthesis > size) {
+                resizeStack(&size, &stack);
+                if (stack == NULL) return NULL;
+            }
+
+            stack[openParenthesis] = cur;
+        }
 
         prev = cur;
         cur = cur->next;

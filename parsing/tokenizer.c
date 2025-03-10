@@ -192,7 +192,7 @@ Token *tokenize(char *buffer) {
         // Checks if builtin function and return the length if it is
         else if ((matchLen = getFunctionLength(buffer + i))) {
             end += matchLen;
-            type = TOKEN_FUNCTION;
+            type = TOKEN_FUNC_CALL;
         }
         // Reads identifiers/variables
         else if ((matchLen = getIdentifier(buffer + i))) {
@@ -227,7 +227,7 @@ Token *tokenize(char *buffer) {
 
         // Prevents ambiguous syntax due to spaces
         if (spaceI != -1) {
-            if ((prevT == TOKEN_NUMBER || prevT == TOKEN_IDENTIFIER) && (type == TOKEN_IDENTIFIER || type == TOKEN_NUMBER || type == TOKEN_FUNCTION)) {
+            if ((prevT == TOKEN_NUMBER || prevT == TOKEN_IDENTIFIER) && (type == TOKEN_IDENTIFIER || type == TOKEN_NUMBER || type == TOKEN_FUNC_CALL)) {
                 printf("Spacing lead to ambiguous intent.\n");
 
                 // Pritns input and pointer to problematic char
@@ -247,7 +247,7 @@ Token *tokenize(char *buffer) {
 
         spaceI = -1;
         prevT = type;
-        
+
         Token *newToken = createToken(type, buffer + i, end - i);
         if (newToken == NULL) return NULL;
 
