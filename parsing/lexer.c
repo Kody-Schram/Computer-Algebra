@@ -6,7 +6,7 @@
 #include "parserTypes.h"
 #include "tokenizer.h"
 
-#define DEFAULT_STACK_SIZE 25
+const int DEFAULT_STACK_SIZE = 25;
 
 /**
  * @brief Adds * where it is implied through standard math notation

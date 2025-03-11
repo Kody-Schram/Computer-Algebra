@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include "tokenizer.h"
+#include "builtins.h"
 
 /**
  * @brief Get the Builtin Length object
@@ -16,7 +17,7 @@
  * @param entries Number of entries in the list
  * @return int 
  */
-int getBuiltinLength(char *c, char **builtins, int entries) {
+int getBuiltinLength(char *c, const char **builtins, int entries) {
     if (c == NULL) return 0;
 
     for (int i = 0; i < entries; i++) {
@@ -46,7 +47,7 @@ int getBuiltinLength(char *c, char **builtins, int entries) {
  * @return int 
  */
 int getOperatorLength(char *c) {
-    char *operators[] = {"<=", ">=", "int", "drv", "+", "-", "*", "/", "^", "<", ">"};
+    const char *operators[] = {"<=", ">=", "int", "drv", "+", "-", "*", "/", "^", "<", ">"};
 
     return getBuiltinLength(c, operators, sizeof(operators)/sizeof(operators[0]));
 
@@ -62,10 +63,7 @@ int getOperatorLength(char *c) {
  * @return int 
  */
 int getFunctionLength(char *c) {
-    char *functions[] = {"sin", "cos", "tan", "csc", "sec", "cot", "log", "ln"};
-
-    return getBuiltinLength(c, functions, sizeof(functions)/sizeof(functions[0]));
-
+    return getBuiltinLength(c, builtin_identifiers, nBuiltins);
 }
 
 /**

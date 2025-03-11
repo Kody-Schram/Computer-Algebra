@@ -1,6 +1,7 @@
 #include <stdlib.h>
 
 #include "functions.h"
+#include "builtins.h"
 
 FunctionTable functionTable;
 
@@ -8,8 +9,10 @@ void addFunction(Function* function) {
 
 }
 
-void builtins() {
-    //Function sin = {"sin", "x"};
+void addBuiltins() {
+    for (int i = 0; i < nBuiltins; i ++) {
+        addFunction((Function*) &builtins[i]);
+    }
 }
 
 void initFunctionTable() {

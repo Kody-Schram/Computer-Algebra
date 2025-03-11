@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define DEFAULT_INPUT_SIZE 50
+const int DEFAULT_INPUT_SIZE = 50;
 
 char* terminalEntry() {
 
