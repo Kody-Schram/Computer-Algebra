@@ -53,5 +53,10 @@ dkms.conf
 
 .DS_Store
 .vscode
+
+# Builds
 main
-pseudo
+test
+
+# pseudo code
+pseudo*
