@@ -2,8 +2,8 @@
 #include <stdio.h>
 
 #include "parserTypes.h"
-#include "tokenizer.h"
-#include "lexer.h"
+#include "codegen/tokenizer.h"
+#include "codegen/lexer.h"
 
 void freeTokens(Token *head) {
     Token* current = head;

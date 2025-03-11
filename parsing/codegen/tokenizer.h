@@ -1,7 +1,7 @@
 #ifndef TOKENIZER_H
 #define TOKENIZER_H
 
-#include "parserTypes.h"
+#include "../parserTypes.h"
 
 /**
  * @brief Creates a Token object

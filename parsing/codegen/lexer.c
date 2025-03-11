@@ -3,7 +3,6 @@
 #include <ctype.h>
 #include <string.h>
 
-#include "parserTypes.h"
 #include "tokenizer.h"
 
 const int DEFAULT_STACK_SIZE = 25;

@@ -1,7 +1,7 @@
 #ifndef LEXER_H
 #define LEXER_H
 
-#include "parserTypes.h"
+#include "../parserTypes.h"
 
 /**
  * @brief Refines tokens list for AST generation
