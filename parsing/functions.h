@@ -9,7 +9,7 @@ typedef enum FunctionType {
 } FunctionType;
 
 typedef struct Function {
-    char *identifer;
+    char *identifier;
     char **parameters;
     int nParameters;
 
