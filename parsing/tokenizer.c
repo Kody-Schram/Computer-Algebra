@@ -46,7 +46,7 @@ int getBuiltinLength(char *c, char **builtins, int entries) {
  * @return int 
  */
 int getOperatorLength(char *c) {
-    char *operators[] = {"<=", ">=", "int", "drv", "+", "-", "*", "/", "^", "=", "<", ">"};
+    char *operators[] = {"<=", ">=", "int", "drv", "+", "-", "*", "/", "^", "<", ">"};
 
     return getBuiltinLength(c, operators, sizeof(operators)/sizeof(operators[0]));
 
@@ -118,7 +118,6 @@ int getSimpleSymbols(char c, TokenType *type) {
         case '(':
             *type = TOKEN_LEFT_PAREN;
             break;
- 
         case ')':
             *type = TOKEN_RIGHT_PAREN;
             break;
@@ -127,6 +126,9 @@ int getSimpleSymbols(char c, TokenType *type) {
             break;
         case ',':
             *type = TOKEN_SEPERATOR;
+            break;
+        case '=':
+            *type = TOKEN_ASSIGNMENT;
             break;
         default:
             return 0;

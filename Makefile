@@ -4,18 +4,21 @@
 CC = gcc
 CFLAGS = -Wall -Wextra
 
-# Automatically find all .c files in the current directory
+# Builds for normal execution
 SRC = $(wildcard *.c) $(wildcard parsing/*.c)
-
-# Define the object files (generated from source files)
 OBJ = $(SRC:.c=.o)
-
-# Define the final output executable
 EXEC = main
 
-# Default rule to compile the executable
 $(EXEC): $(OBJ)
 	$(CC) $(OBJ) -o $(EXEC)
+
+# Builds for testing
+TEST_SRC = $(wildcard testing/*.c) $(wildcard parsing/*.c)
+TEST_OBJ = $(TEST_SRC:.c=.o)
+TEST_EXEC = test
+
+$(TEST_EXEC): $(TEST_OBJ)
+	$(CC) $(TEST_OBJ) -o $(TEST_EXEC)
 
 # Rule to compile .c files into .o object files
 %.o: %.c
@@ -23,6 +26,6 @@ $(EXEC): $(OBJ)
 
 # Clean up the generated files
 clean:
-	rm -f $(OBJ) $(EXEC)
+	rm -f $(OBJ) $(EXEC) $(TEST_OBJ) $(TEST_EXEC)
 
 .PHONY: clean

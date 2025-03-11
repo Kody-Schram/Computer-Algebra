@@ -1,7 +1,17 @@
- #include "functions.h"
+#include <stdlib.h>
 
- FunctionTable functionTable;
+#include "functions.h"
 
- void initFunctionTable() {
-    
- }
+FunctionTable functionTable;
+
+void addFunction(Function* function) {
+
+}
+
+void builtins() {
+    //Function sin = {"sin", "x"};
+}
+
+void initFunctionTable() {
+    functionTable = *(FunctionTable*) malloc(sizeof(int) + 8 * sizeof(Function*));
+}

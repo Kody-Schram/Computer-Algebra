@@ -3,15 +3,27 @@
 
 #include "parserTypes.h"
 
+typedef enum FunctionType {
+    BUILTIN,
+    DEFINED
+} FunctionType;
+
 typedef struct Function {
     char *identifer;
     char **parameters;
     int nParameters;
 
-    ASTNode *definition;
+    FunctionType type;
+
+    union 
+    {
+        ASTNode *definition;
+        double (*builtin) (double);
+    };
 } Function;
 
 typedef struct FunctionTable {
+    int size;
     Function *table[];
 } FunctionTable;
 

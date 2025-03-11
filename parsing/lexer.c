@@ -20,7 +20,7 @@
  * @return int 
  */
 int handleImplicitMul(Token *cur, Token *prev) {
-    printf("checking for implicit\n");
+    //printf("checking for implicit\n");
     // x() or 2()
     // 2x
     // xsinx
@@ -28,7 +28,7 @@ int handleImplicitMul(Token *cur, Token *prev) {
     // Handle implicit multiplcation with left bracket or function
     // x(x-1) => x*(x-1)
     if ((cur->type == TOKEN_LEFT_PAREN || cur->type == TOKEN_FUNC_CALL) && prev != NULL) {
-        printf("checking for left paren and function\n");
+        //printf("checking for left paren and function\n");
         if (prev->type == TOKEN_NUMBER || prev->type == TOKEN_IDENTIFIER) {
             Token *mult = createToken(TOKEN_OPERATOR, "*", 1);
             if (mult == NULL) {
@@ -45,7 +45,7 @@ int handleImplicitMul(Token *cur, Token *prev) {
     // Handle implicit multiplcation with right bracket
     // (x-1)x => (x-1)*x
     else if (cur->type == TOKEN_RIGHT_PAREN && cur->next != NULL) {
-        printf("checking for right paren\n");
+        //printf("checking for right paren\n");
         Token *nextToken = cur->next;
         if (nextToken->type == TOKEN_NUMBER || nextToken->type == TOKEN_IDENTIFIER || nextToken->type == TOKEN_LEFT_PAREN || nextToken->type == TOKEN_FUNC_CALL) {
             Token *mult = createToken(TOKEN_OPERATOR, "*", 1);
