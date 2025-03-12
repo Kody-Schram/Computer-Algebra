@@ -24,7 +24,14 @@ typedef struct Function {
 
 typedef struct FunctionTable {
     int size;
-    Function *table[];
+    int n;
+    Function **table;
 } FunctionTable;
+
+int addFunction(Function *function);
+
+int searchTable(Function *function);
+
+int initFunctionTable();
 
 #endif
