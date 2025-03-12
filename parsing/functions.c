@@ -10,9 +10,17 @@ const int DEFAULT_INCREASE_SIZE = 5;
 
 FunctionTable functionTable;
 
-int addFunction(Function* function) {
-    functionTable.n ++;
+void printTable() {
+    printf("<\n");
+    for (int i = 0; i < functionTable.n; i ++) {
+        if (functionTable.table[i] != NULL) {
+        printf("identifier: %s,\n", functionTable.table[i]->identifier);
+        }
+    }
+    printf(">\n");
+}
 
+int addFunction(Function* function) {
     // Increases table size if needed
     if (functionTable.n == functionTable.size) {
         functionTable.size += DEFAULT_INCREASE_SIZE;
@@ -24,6 +32,7 @@ int addFunction(Function* function) {
     }
 
     functionTable.table[functionTable.n] = function;
+    functionTable.n ++;
 
     return 1;
 }
@@ -59,6 +68,6 @@ int initFunctionTable() {
     functionTable.n = 0;
 
     if (!addBuiltins()) return 0;
-
+    
     return 1;
 }
