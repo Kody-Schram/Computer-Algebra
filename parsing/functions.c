@@ -39,7 +39,7 @@ int addFunction(Function* function) {
 
 int addBuiltins() {
     for (int i = 0; i < nBuiltins; i ++) {
-        if (!addFunction((Function*) &builtins[i])) {
+        if (addFunction((Function*) &builtins[i]) != NULL) {
             return 0; // Error handling
         }
     }
@@ -47,14 +47,14 @@ int addBuiltins() {
     return 1;
 }
 
-int searchTable(Function* function) {
+Function *searchTable(char *identifier) {
     for (int i = 0; i < functionTable.n; i ++) {
-        if (functionTable.table[i]->identifier == function->identifier) {
-            return 1;
+        if (functionTable.table[i]->identifier == identifier) {
+            return functionTable.table[i];
         }
     }
 
-    return 0;
+    return NULL;
 }
 
 int initFunctionTable() {
