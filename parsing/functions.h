@@ -30,7 +30,7 @@ typedef struct FunctionTable {
 
 int addFunction(Function *function);
 
-int searchTable(Function *function);
+Function *searchTable(char *identifer);
 
 int initFunctionTable();
 
