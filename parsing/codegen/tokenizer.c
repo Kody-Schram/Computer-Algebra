@@ -5,7 +5,7 @@
 
 #include "tokenizer.h"
 #include "../builtins.h"
-#include "../functions.h"
+#include "../tables/functions.c"
 
 /**
  * @brief Get the Builtin Length object
@@ -64,7 +64,12 @@ int getOperatorLength(char *c) {
  * @return int 
  */
 int getFunctionLength(char *c) {
-    return getBuiltinLength(c, builtin_identifiers, nBuiltins);
+    Function *func = searchTable(c);
+    if (func != NULL) {
+        return strlen(searchTable(c)->identifier);
+    }
+
+    return 0;
 }
 
 /**

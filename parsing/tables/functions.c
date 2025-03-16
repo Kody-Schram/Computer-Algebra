@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 
 #include "functions.h"
@@ -41,7 +42,7 @@ int addBuiltins() {
     for (int i = 0; i < nBuiltins; i ++) {
         if (addFunction((Function*) &builtins[i]) == 0) {
             printf("Error adding function to table.\n");
-            return 0; // Error handling
+            return 0;
         }
     }
 
@@ -49,8 +50,10 @@ int addBuiltins() {
 }
 
 Function *searchTable(char *identifier) {
-    for (int i = 0; i < functionTable.n; i ++) {
-        if (functionTable.table[i]->identifier == identifier) {
+    for (int i = 0; i < functionTable.n ; i ++) {
+        Function *func = functionTable.table[i];
+        
+        if (strncmp(func->identifier, identifier, strlen(func->identifier)) == 0) {
             return functionTable.table[i];
         }
     }
