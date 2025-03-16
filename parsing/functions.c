@@ -39,7 +39,8 @@ int addFunction(Function* function) {
 
 int addBuiltins() {
     for (int i = 0; i < nBuiltins; i ++) {
-        if (addFunction((Function*) &builtins[i]) != NULL) {
+        if (addFunction((Function*) &builtins[i]) == 0) {
+            printf("Error adding function to table.\n");
             return 0; // Error handling
         }
     }
@@ -64,7 +65,7 @@ int initFunctionTable() {
         return 0;
     }
 
-    functionTable.size = 0;
+    functionTable.size = DEFAULT_TABLE_SIZE;
     functionTable.n = 0;
 
     if (!addBuiltins()) return 0;
