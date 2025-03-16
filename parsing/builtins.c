@@ -67,3 +67,12 @@ const Function builtins[] = {
         .builtin = log
     }
 };
+
+const Constant constants[] = {
+    {
+        .identifier = "pi",
+        .value = M_PI
+    }
+};
+
+const int nConstants = 1;
