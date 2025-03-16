@@ -3,7 +3,7 @@
 
 
 #include "functions.h"
-#include "builtins.h"
+#include "../builtins.h"
 
 const int DEFAULT_TABLE_SIZE = 10;
 const int DEFAULT_INCREASE_SIZE = 5;

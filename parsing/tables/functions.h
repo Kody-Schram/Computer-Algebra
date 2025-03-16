@@ -1,7 +1,7 @@
 #ifndef FUNCTIONS_H
 #define FUNCTIONS_H
 
-#include "parserTypes.h"
+#include "../parserTypes.h"
 
 typedef enum FunctionType {
     BUILTIN,

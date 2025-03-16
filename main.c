@@ -3,7 +3,7 @@
 #include <ctype.h>
 
 #include "input.h"
-#include "parsing/functions.h"
+#include "parsing/tables/functions.h"
 
 #include "parsing/parser.h"
 #include "parsing/parserTypes.h"
