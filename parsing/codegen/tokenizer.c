@@ -185,50 +185,51 @@ Token *tokenize(char *buffer) {
             continue;
         }
         
-        // Number can start with a - for a negative number
-        else if ((matchLen = getNumber(buffer + i))) {
+        // Checks remaining symbols
+        else if ((matchLen = getSimpleSymbols(buffer[i], &type))) {
             end += matchLen;
-            type = TOKEN_NUMBER;
         }
+
         // Checks if operator and returns the length if it is
         else if ((matchLen = getOperatorLength(buffer + i))) {
             end += matchLen;
             type = TOKEN_OPERATOR;
         }
+
+        // Number can start with a - for a negative number
+        else if ((matchLen = getNumber(buffer + i))) {
+            end += matchLen;
+            type = TOKEN_NUMBER;
+        }
+        
         // Checks if builtin function and return the length if it is
         else if ((matchLen = getFunctionLength(buffer + i))) {
             end += matchLen;
             type = TOKEN_FUNC_CALL;
         }
+        
         // Reads identifiers/variables
         else if ((matchLen = getIdentifier(buffer + i))) {
             end += matchLen;
             type = TOKEN_IDENTIFIER;
         }
-
+        
         else {
-            // Checks remaining symbols
-            int l = getSimpleSymbols(buffer[i], &type);
-            if (l > 0) {
-                end ++;
-            }
             // Unknown character found, returns error
-            else {
-                printf("Unknown character: %c\n", buffer[i]);
+            printf("Unknown character: %c\n", buffer[i]);
 
-                // Prints input with pointer to unknown character
-                printf("%s\n", buffer);
-                char *pointer = malloc((i + 1) * sizeof(char));
-                if (pointer == NULL) {
-                    return NULL;
-                }
-
-                memset(pointer, ' ', i);
-                pointer[i] = '^';
-                printf("%s\n", pointer);
-
+            // Prints input with pointer to unknown character
+            printf("%s\n", buffer);
+            char *pointer = malloc((i + 1) * sizeof(char));
+            if (pointer == NULL) {
                 return NULL;
             }
+
+            memset(pointer, ' ', i);
+            pointer[i] = '^';
+            printf("%s\n", pointer);
+
+            return NULL;
         }
 
         // Prevents ambiguous syntax due to spaces
