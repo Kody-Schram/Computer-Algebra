@@ -115,8 +115,26 @@ int handleExponentRewrite(Token **cur, Token *prev) {
     return 0;
 }
 
-int handleFunctionParenthesis() {
-    
+int checkInvalidBinop(Token *cur, Token *prev) {
+    if (prev != NULL && cur->next != NULL) {
+        if (cur->type == TOKEN_OPERATOR && (prev->type == TOKEN_OPERATOR || cur->next->type == TOKEN_OPERATOR)) {
+            printf("Two operators are not allowed next to each other.\n");
+            return 1;
+        }
+    }
+    else if (cur->type == TOKEN_OPERATOR) {
+        printf("Invalid binary operator.\n");
+        if (prev == NULL) {
+            printf("Operator must be preceeded by a variable, number, or function.\n");
+        } 
+        if (cur->next == NULL) {
+            printf("Operator must be followed by a variable, number, or function.\n");
+        }
+
+        return 1;
+    }
+
+    return 0;
 }
 
 void resizeStack(int *size, Token ***stack) {
@@ -140,13 +158,15 @@ Token *lex(Token* head) {
     int size = DEFAULT_STACK_SIZE;
     Token **stack = malloc(size * sizeof(Token*));
     if (stack == NULL) {
-        printf("Error allocating for parenthesis stack.");
+        printf("Error allocating for parenthesis stack.\n");
         return NULL;
     }
 
     while (cur != NULL) {
+        printf("Current Token: <%u, %s>\n", cur->type, cur->value);
         if (handleImplicitMul(cur, prev) == -1) return NULL;
         if (handleExponentRewrite(&cur, prev) == -1) return NULL;
+        if (checkInvalidBinop(cur, prev)) return NULL;
 
         if (cur->type == TOKEN_LEFT_PAREN) {
             openParenthesis ++;
