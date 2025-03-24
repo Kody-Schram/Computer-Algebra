@@ -68,5 +68,7 @@ Token *parse(char *buffer) {
 
     Token *head = lex(raw);
 
+    if (head == NULL) return NULL;
+
     return head;
 }
