@@ -65,6 +65,20 @@ const Function builtins[] = {
         .nParameters = 1,
         .type = BUILTIN,
         .builtin = log
+    },
+    {
+        .identifier = "int",
+        .parameters = (char *[]) {},
+        .nParameters = 1,
+        .type = BUILTIN,
+        .builtin = 0
+    },
+    {
+        .identifier = "der",
+        .parameters = (char *[]) {},
+        .nParameters = 1,
+        .type = BUILTIN,
+        .builtin = 0
     }
 };
 
