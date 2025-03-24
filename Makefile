@@ -7,7 +7,9 @@ CFLAGS = -Wall -Wextra
 # Builds for normal execution
 SRC = $(wildcard *.c) \
 	  $(wildcard parsing/*.c) \
-	  $(wildcard parsing/codegen/*.c)
+	  $(wildcard parsing/codegen/*.c) \
+	  $(wildcard parsing/tables/*.c)
+
 OBJ = $(SRC:.c=.o)
 EXEC = main
 
@@ -15,9 +17,11 @@ $(EXEC): $(OBJ)
 	$(CC) $(OBJ) -o $(EXEC)
 
 # Builds for testing
-TEST_SRC = $(wildcard *.c) \
-	  	   $(wildcard parsing/*.c) \
-	       $(wildcard parsing/codegen/*.c)
+TEST_SRC = $(wildcard testing/*.c) \
+		   $(wildcard parsing/*.c) \
+	       $(wildcard parsing/codegen/*.c) \
+		   $(wildcard parsing/tables/*.c)
+
 TEST_OBJ = $(TEST_SRC:.c=.o)
 TEST_EXEC = test
 
