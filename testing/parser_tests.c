@@ -34,10 +34,25 @@ void test_syntax_errors() {
     assert(parse("f:x y = x+1") == NULL); // No space allowed between params
 }
 
+void test_invalid_operators() {
+    // Test cases for invalid binary operators
+    assert(parse("sin+") == NULL);  // Should return an error (invalid use of '+')
+    assert(parse("sin+)") == NULL); // Should return an error (invalid placement of '+')
+    assert(parse("2**") == NULL);   // Should return an error (operator without second operand)
+    assert(parse("*3") == NULL);    // Should return an error (operator without first operand)
+    assert(parse("^") == NULL);     // Should return an error (standalone operator)
+    assert(parse("(2+)3") == NULL); // Should return an error (invalid use of '+')
+    assert(parse("sin()*") == NULL);// Should return an error (operator following function call)
+    assert(parse("log(2)^") == NULL);// Should return an error (operator at end of expression)
+}
+
+
 void run_parser_tests() {
     test_basic_operations();
-    //test_functions();
+    test_functions();
     test_function_definition();
     test_syntax_errors();
+    test_invalid_operators();
+
     printf("All tests passed!\n");
 }
