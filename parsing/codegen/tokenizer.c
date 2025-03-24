@@ -5,7 +5,7 @@
 
 #include "tokenizer.h"
 #include "../builtins.h"
-#include "../tables/functions.c"
+#include "../tables/functions.h"
 
 /**
  * @brief Get the Builtin Length object
