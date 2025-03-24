@@ -37,4 +37,20 @@ typedef struct ASTNode {
     struct ASTNode *right;
 } ASTNode;
 
+/**
+ * @brief Creates a Token object
+ * 
+ * @retval NULL: Error creating the new token
+ * @retval Token*: Properly created the new token
+ * 
+ * @param type The type of the Token
+ * @param value String value of the Token
+ * @param l Length of the string value
+ * @return Token* 
+ */
+Token *createToken(TokenType type, char *value, int l);
+
+
+void printTokens(Token *head);
+
 #endif

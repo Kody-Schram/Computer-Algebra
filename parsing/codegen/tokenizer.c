@@ -141,28 +141,6 @@ int getSimpleSymbols(char c, TokenType *type) {
     return 1;
 }
 
-Token *createToken(TokenType type, char *value, int l) {
-    // Allocates new token
-    Token *token = (Token*) malloc(sizeof(Token));
-    if (token == NULL) {
-        printf("Error allocating space for token.");
-        return NULL;
-    }
-
-    // Populates newToken attributes
-    token->type = type;
-    token->value = (char*) malloc(l+1);
-    if (token->value == NULL) {
-        printf("Error allocating space for token value.");
-        return NULL;
-    }
-    memcpy(token->value, value, l);
-    token->value[l] = '\0';
-    token->next = NULL;
-
-    return token;
-}
-
 Token *tokenize(char *buffer) {
     Token *head = NULL;
     Token *prev = NULL;
