@@ -88,7 +88,7 @@ int handleImplicitMul(Token *cur, Token *prev) {
  * @retval 1: Properly replaced with "^"
  * 
  * @param cur Current node in the list
- * @param prev Previous node
+ * @param prev Previous node in the list
  * @return int 
  */
 int handleExponentRewrite(Token **cur, Token *prev) {
@@ -115,6 +115,16 @@ int handleExponentRewrite(Token **cur, Token *prev) {
     return 0;
 }
 
+/**
+ * @brief Checks to ensure binary operators valid
+ * 
+ * @retval -1: Error, binary operator is invalid
+ * @retval 0: All binary operators are valid
+ * 
+ * @param cur Current node in the list
+ * @param prev Previous node in the list
+ * @return int 
+ */
 int checkInvalidBinop(Token *cur, Token *prev) {
     Token *next = cur->next;
     if (prev != NULL && next != NULL) {
@@ -122,18 +132,18 @@ int checkInvalidBinop(Token *cur, Token *prev) {
             if (prev->type == TOKEN_OPERATOR || next->type == TOKEN_OPERATOR) {
                 printf("Invalid operation \"%s%s%s\".\n", prev->value, cur->value, next->value);
                 //printf("Two operators, \"%s%s\" are not allowed next to each other.\n", cur->value, next->value);
-                return 1;
+                return -1;
 
             } 
             else if (prev->type != TOKEN_NUMBER && prev->type != TOKEN_IDENTIFIER && prev->type != TOKEN_RIGHT_PAREN) {
                 printf("Invalid operation \"%s%s%s\".\n", prev->value, cur->value, next->value);
                 //printf("Operator must be preceeded by a number, an identifer, or a right parenthesis.\n");
-                return 1;
+                return -1;
             }
             else if (next->type != TOKEN_NUMBER && next->type != TOKEN_IDENTIFIER && next->type != TOKEN_LEFT_PAREN && next->type != TOKEN_FUNC_CALL) {
                 printf("Invalid operation \"%s%s%s\".\n", prev->value, cur->value, next->value);
                 //printf("Operator must be followed by a number, an identifier, a left parenthesis, or a function call.\n");
-                return 1;
+                return -1;
             }
         }
     }
@@ -148,7 +158,7 @@ int checkInvalidBinop(Token *cur, Token *prev) {
             printf("Invalid operation \"%s\"\n", cur->value);
         }
 
-        return 1;
+        return -1;
     }
 
     return 0;
@@ -202,7 +212,7 @@ Token *lex(Token* head) {
         // printf("Current Token: <%u, %s>\n", cur->type, cur->value);
         if (handleImplicitMul(cur, prev) == -1) return NULL;
         if (handleExponentRewrite(&cur, prev) == -1) return NULL;
-        if (checkInvalidBinop(cur, prev)) return NULL;
+        if (checkInvalidBinop(cur, prev) == -1) return NULL;
         if (handleFunctionParens(cur)) return NULL;
 
         if (cur->type == TOKEN_LEFT_PAREN) {
