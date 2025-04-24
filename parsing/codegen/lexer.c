@@ -3,7 +3,7 @@
 #include <ctype.h>
 #include <string.h>
 
-#include "tokenizer.h"
+#include "lexer.h"
 
 const int DEFAULT_STACK_SIZE = 25;
 
