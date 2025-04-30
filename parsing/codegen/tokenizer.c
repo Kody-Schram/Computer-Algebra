@@ -238,7 +238,7 @@ Token *tokenize(char *buffer) {
 
         // Updates linked list
         if (prev != NULL) {
-            prev-> next = newToken;
+            prev->next = newToken;
         } else {
             head = newToken;
         }

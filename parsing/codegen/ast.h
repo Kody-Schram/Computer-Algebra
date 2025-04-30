@@ -3,6 +3,11 @@
 
 #include "../parserTypes.h"
 
-Token* shuntingYard(Token *head);
+typedef struct RPNList {
+    int length;
+    Token **rpn;
+} RPNList;
+
+RPNList shuntingYard(Token *head);
 
 #endif
