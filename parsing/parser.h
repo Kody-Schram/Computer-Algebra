@@ -17,6 +17,8 @@ void freeTokens(Token *head);
  */
 void printTokens(Token *head);
 
+int parseFunction(Token *head);
+
 /**
  * @brief Handles entire parsing process from string to AST
  * 
