@@ -27,11 +27,12 @@ void freeTokens(Token *head) {
 
 void printRPN(RPNList list) {
     for (int i = 0; i < list.length; i ++) {
-        printf("%s\n", list.rpn[i]->value);
+        printf("%s", list.rpn[i]->value);
     }
+    printf("\n");
 }
 
-int containsFunction(Token* head) {
+int containsFunction(Token *head) {
     Token *cur = head;
     while (cur != NULL) {
         if (cur->type == TOKEN_FUNC_DEF) return 1;
@@ -128,8 +129,8 @@ Token *parse(char *buffer) {
         parseFunction(head);
     }
 
-    // RPNList RPN = shuntingYard(head);
-    // printRPN(RPN);
+    RPNList RPN = shuntingYard(head);
+    printRPN(RPN);
 
     return head;
 }
