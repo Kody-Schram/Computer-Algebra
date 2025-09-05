@@ -20,11 +20,6 @@ const int DEFAULT_PARAM_SIZE = 3;
  * @return int 
  */
 int handleImplicitMul(Token *cur, Token *prev) {
-    //printf("checking for implicit\n");
-    // x() or 2()
-    // 2x
-    // xsinx
-
     // Handle implicit multiplcation with left bracket or function
     // x(x-1) => x*(x-1)
     if ((cur->type == TOKEN_LEFT_PAREN || cur->type == TOKEN_FUNC_CALL) && prev != NULL) {
@@ -165,6 +160,7 @@ int checkInvalidBinop(Token *cur, Token *prev) {
     return 0;
 }
 
+
 int handleFunctionParens(Token **cur) {
     if ((*cur)->type == TOKEN_FUNC_CALL) {
         Token *func = *cur;
@@ -207,6 +203,7 @@ int handleFunctionParens(Token **cur) {
     return 0;
 }
 
+
 int parseFunctionParameters(Token *start) {
     if (start->type == TOKEN_FUNC_CALL) {
         // Create list of header tokens for parameters
@@ -224,18 +221,6 @@ int parseFunctionParameters(Token *start) {
     return 0;
 }
 
-void resizeStack(int *size, Token ***stack) {
-    *size *= 2;
-    Token **temp = realloc(*stack, *size * sizeof(Token*));
-
-    if (temp == NULL) {
-        printf("Error reallocating parenthesis stack.\n");
-        free(*stack);
-        *stack = NULL;
-    } else {
-        *stack = temp;
-    }
-}
 
 Token *lex(Token* head) {
     Token *cur = head;
@@ -278,5 +263,3 @@ Token *lex(Token* head) {
     return head;
 
 }
-
-// 2(x+1
