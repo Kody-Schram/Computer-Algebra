@@ -223,6 +223,7 @@ int handleFunctionParens(Token **cur) {
     return 0;
 }
 
+
 Token *lex(Token* head) {
     Token *cur = head;
     Token *prev = NULL;
@@ -241,7 +242,6 @@ Token *lex(Token* head) {
         if (handleExponentRewrite(&cur, prev) == -1) return NULL;
         if (checkInvalidBinop(cur, prev) == -1) return NULL;
         if (handleFunctionParens(&cur)) return NULL;
-        if (parseFunctionParameters(cur)) return NULL;
 
         // Counts open parenthesis
         if (cur->type == TOKEN_LEFT_PAREN) {
@@ -250,7 +250,7 @@ Token *lex(Token* head) {
 
         if (cur->type == TOKEN_RIGHT_PAREN) {
             if (openParenthesis <= 0) {
-                printf("Mismatched parenthesis.");
+                printf("Mismatched parenthesis.\n");
                 return NULL;
             }
 
@@ -260,6 +260,11 @@ Token *lex(Token* head) {
         prev = cur;
         cur = cur->next;
     }
+
+    if (openParenthesis > 0) {
+        printf("Mismatched parenthesis.\n");
+        return NULL;
+    } 
 
     return head;
 

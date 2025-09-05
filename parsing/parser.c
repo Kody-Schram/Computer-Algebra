@@ -6,6 +6,7 @@
 #include "codegen/tokenizer.h"
 #include "codegen/lexer.h"
 #include "codegen/ast.h"
+#include "tables/functions.h"
 
 const int DEFAULT_PARAMETERS_SIZE = 5;
 
@@ -59,7 +60,7 @@ int parseFunctionDefinition(Token *head) {
     while (cur != NULL) {
         if ((cur->type != TOKEN_IDENTIFIER && component == IDENTIFIER)
             || (cur->type != TOKEN_SEPERATOR && component != PARAMETERS)) {
-                printf("Invalid token within function declaration.");
+                printf("Invalid token within function declaration. %s %d\n", cur->value, component);
                 return 0;
         }
         if (cur->type == TOKEN_SEPERATOR) {
@@ -80,7 +81,7 @@ int parseFunctionDefinition(Token *head) {
                 paramSize *= 2;
                 char **temp = realloc(parameters, paramSize);
                 if (temp == NULL) {
-                    printf("Error reallocating more space for function parameters.");
+                    printf("Error reallocating more space for function parameters.\n");
                     return 0;
                 }
 
@@ -112,13 +113,28 @@ int parseFunctionDefinition(Token *head) {
     return 1;
 }
 
+void parseFunctionCall(Token *head) {
+    Token **parameters = NULL;
+    int nParameters = 0;
 
-Token *parse(char *buffer) {
+    Token *cur = head;
+    Token *prev = NULL;
+
+    while (cur != NULL) {
+        if (cur->type == TOKEN_FUNC_CALL) {
+
+        }
+
+
+        prev = cur;
+        cur = cur->next;
+    }
+
+}
+
+Token *parse(char *buffer, int withinFunction) {
     Token *raw = tokenize(buffer);
     if (raw == NULL) return NULL;
-
-    // printf("\nRaw Tokens\n");
-    // printTokens(raw);
 
     Token *head = lex(raw);
 
@@ -126,11 +142,15 @@ Token *parse(char *buffer) {
 
     // Parses function definitions differently than regular expressions
     if (containsFunctionDefinition(head)) {
+        if (withinFunction) {
+            printf("Cannot have nested functions definitions.\n");
+            return NULL;
+        }
         parseFunctionDefinition(head);
+    } else {
+        RPNList RPN = shuntingYard(head);
+        printRPN(RPN);
     }
-
-    RPNList RPN = shuntingYard(head);
-    printRPN(RPN);
 
     return head;
 }

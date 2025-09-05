@@ -17,7 +17,7 @@ int main() {
     char *expression = terminalEntry();
     printf("you entered %s\n", expression);
 
-    Token *head = parse(expression);
+    Token *head = parse(expression, 0);
     printf("\nFinal Token List\n");
     printTokens(head);
     
