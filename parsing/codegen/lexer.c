@@ -6,6 +6,7 @@
 #include "lexer.h"
 
 const int DEFAULT_STACK_SIZE = 25;
+const int DEFAULT_PARAM_SIZE = 3;
 
 /**
  * @brief Adds * where it is implied through standard math notation
@@ -61,7 +62,7 @@ int handleImplicitMul(Token *cur, Token *prev) {
     }
     // Handle constant and identifier multiplication
     // 2x => 2*x
-    else if (cur->type == TOKEN_NUMBER && prev != NULL) {
+    else if (cur->type == TOKEN_IDENTIFIER && prev != NULL) {
         if (prev->type == TOKEN_NUMBER) {
 
             Token *mult = createToken(TOKEN_OPERATOR, "*", 1);
@@ -164,22 +165,62 @@ int checkInvalidBinop(Token *cur, Token *prev) {
     return 0;
 }
 
-int handleFunctionParens(Token *cur) {
-    if (cur->type == TOKEN_FUNC_CALL) {
-        if (cur->next != NULL) {
-            // Try to implicitly add parenthesis
-            if (cur->next->type != TOKEN_LEFT_PAREN) {
+int handleFunctionParens(Token **cur) {
+    if ((*cur)->type == TOKEN_FUNC_CALL) {
+        Token *func = *cur;
+        if (func->next != NULL) {
+            // Try to implicitly add opening parenthesis
+            if (func->next->type != TOKEN_LEFT_PAREN) {
                 Token *parenthesis = createToken(TOKEN_LEFT_PAREN, "(", 1);
-                parenthesis->next = cur->next;
-                cur->next = parenthesis;
+                parenthesis->next = func->next;
+                func->next = parenthesis;
+
+                // Loops till end of term and adds closing parenthesis
+                while (func->type != TOKEN_OPERATOR || func->value[0] == '*' || func->value[0] == '^')
+                {
+                    if (func->next == NULL) {
+                        Token *closing = createToken(TOKEN_RIGHT_PAREN, ")", 1);
+                        closing->next = NULL;
+                        func->next = closing;
+
+                        printf("closing parameter created \n");
+
+                        return 0;
+                    }
+
+                    func = func->next;
+                }
+
+                Token *closing = createToken(TOKEN_RIGHT_PAREN, ")", 1);
+                closing->next = func->next->next;
+                func->next = closing;
+
+                printf("closing parameter created \n");
             }
         }
         else {
-            printf("Function call \"%s\" must be followed by required parameters.\n", cur->value);
+            printf("Function call \"%s\" must be followed by required parameters.\n", (*cur)->value);
             return 1;
         }
     }
 
+    return 0;
+}
+
+int parseFunctionParameters(Token *start) {
+    if (start->type == TOKEN_FUNC_CALL) {
+        // Create list of header tokens for parameters
+        Token **parameters = malloc(DEFAULT_PARAM_SIZE * sizeof(Token*));
+        int nParams = 0;
+
+        Token *end = start->next->next;
+
+        Token *cur = start->next->next;
+        parameters[nParams] = cur;
+        while (cur->next->type != TOKEN_SEPERATOR && cur->next->type != TOKEN_RIGHT_PAREN) {
+            cur = cur->next;
+        }
+    }
     return 0;
 }
 
@@ -188,7 +229,7 @@ void resizeStack(int *size, Token ***stack) {
     Token **temp = realloc(*stack, *size * sizeof(Token*));
 
     if (temp == NULL) {
-        printf("Error reallocating parenthesis stack.");
+        printf("Error reallocating parenthesis stack.\n");
         free(*stack);
         *stack = NULL;
     } else {
@@ -213,17 +254,21 @@ Token *lex(Token* head) {
         if (handleImplicitMul(cur, prev) == -1) return NULL;
         if (handleExponentRewrite(&cur, prev) == -1) return NULL;
         if (checkInvalidBinop(cur, prev) == -1) return NULL;
-        if (handleFunctionParens(cur)) return NULL;
+        if (handleFunctionParens(&cur)) return NULL;
+        if (parseFunctionParameters(cur)) return NULL;
 
+        // Counts open parenthesis
         if (cur->type == TOKEN_LEFT_PAREN) {
             openParenthesis ++;
+        }
 
-            if (openParenthesis > size) {
-                resizeStack(&size, &stack);
-                if (stack == NULL) return NULL;
+        if (cur->type == TOKEN_RIGHT_PAREN) {
+            if (openParenthesis <= 0) {
+                printf("Mismatched parenthesis.");
+                return NULL;
             }
 
-            stack[openParenthesis] = cur;
+            openParenthesis --;
         }
 
         prev = cur;
@@ -233,3 +278,5 @@ Token *lex(Token* head) {
     return head;
 
 }
+
+// 2(x+1

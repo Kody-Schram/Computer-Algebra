@@ -5,12 +5,10 @@
 ## Compiler
 ---
 *Steps*
-1. Tokenization and Lexing
-2. Building AST
-3. Executing
-
-### Tokenization
-Takes in a string and parses it into a list of tokens. Some expressions will be rewritten into a stardardized way to represent expressions (ex. ** -> ^ for exponents).
+1. Tokenization (Splits Input into Parts)
+2. Lexing (Corrects Input Errors or Ambiguity)
+3. Generates AST (Executable Form)
+4. Executing
 
 ### Syntax
 #### Operators
@@ -37,6 +35,8 @@ Takes in a string and parses it into a list of tokens. Some expressions will be 
 - ln()
 
 ##### Defining New Functions
-Function declaration is indicated by : operator. ":" allows the parser to differentiate an identifier and a function declaration. After declaring a function, subsequent uses of the function identifier will automatically be recognized as that function.
+Function declaration is indicated by the definition operator (":") followed by the required parameters and the function body. 
+_ex. f:x = x+1_ 
+_f_ represents the identifier/name, _x_ is the required parameter, and _x+1_ is the function body
 
-*eg. f:x = x+1*
+This allows the parser to differentiate an identifier and a function declaration. After declaring a function, subsequent uses of the function identifier will automatically be recognized as that function.
