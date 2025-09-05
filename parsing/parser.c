@@ -32,7 +32,7 @@ void printRPN(RPNList list) {
     printf("\n");
 }
 
-int containsFunction(Token *head) {
+int containsFunctionDefinition(Token *head) {
     Token *cur = head;
     while (cur != NULL) {
         if (cur->type == TOKEN_FUNC_DEF) return 1;
@@ -42,7 +42,7 @@ int containsFunction(Token *head) {
     return 0;
 }
 
-int parseFunction(Token *head) {
+int parseFunctionDefinition(Token *head) {
     printf("parsing function :)\n");
     FunctionComponent component = IDENTIFIER;
 
@@ -124,9 +124,9 @@ Token *parse(char *buffer) {
 
     if (head == NULL) return NULL;
 
-    // Parses functions differently than regular expressions
-    if (containsFunction(head)) {
-        parseFunction(head);
+    // Parses function definitions differently than regular expressions
+    if (containsFunctionDefinition(head)) {
+        parseFunctionDefinition(head);
     }
 
     RPNList RPN = shuntingYard(head);

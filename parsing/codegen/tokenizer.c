@@ -141,6 +141,7 @@ int getSimpleSymbols(char c, TokenType *type) {
     return 1;
 }
 
+
 Token *tokenize(char *buffer) {
     Token *head = NULL;
     Token *prev = NULL;

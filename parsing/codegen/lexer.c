@@ -160,7 +160,16 @@ int checkInvalidBinop(Token *cur, Token *prev) {
     return 0;
 }
 
-
+/**
+ * @brief Adds parenthesis around first term after function call if none are found
+ * 
+ * @retval -1: Error
+ * @retval 0: No parenthesis added
+ * @retval 1: Parenthesis added
+ * 
+ * @param cur Current node in the list
+ * @return int 
+ */
 int handleFunctionParens(Token **cur) {
     if ((*cur)->type == TOKEN_FUNC_CALL) {
         Token *func = *cur;
@@ -168,6 +177,10 @@ int handleFunctionParens(Token **cur) {
             // Try to implicitly add opening parenthesis
             if (func->next->type != TOKEN_LEFT_PAREN) {
                 Token *parenthesis = createToken(TOKEN_LEFT_PAREN, "(", 1);
+                if (parenthesis == NULL) {
+                    printf("Error creating the opening parenthesis token.\n");
+                    return -1;
+                }
                 parenthesis->next = func->next;
                 func->next = parenthesis;
 
@@ -176,51 +189,39 @@ int handleFunctionParens(Token **cur) {
                 {
                     if (func->next == NULL) {
                         Token *closing = createToken(TOKEN_RIGHT_PAREN, ")", 1);
+                        if (closing == NULL) {
+                            printf("Error creating the closing parenthesis token.\n");
+                            return -1;
+                        }
                         closing->next = NULL;
                         func->next = closing;
 
-                        printf("closing parameter created \n");
-
-                        return 0;
+                        return 1;
                     }
 
                     func = func->next;
                 }
 
                 Token *closing = createToken(TOKEN_RIGHT_PAREN, ")", 1);
+                if (closing == NULL) {
+                    printf("Error creating the closing parenthesis token.\n");
+                    return -1;
+                }
                 closing->next = func->next->next;
                 func->next = closing;
 
-                printf("closing parameter created \n");
+                return 1;
+
             }
         }
         else {
             printf("Function call \"%s\" must be followed by required parameters.\n", (*cur)->value);
-            return 1;
+            return -1;
         }
     }
 
     return 0;
 }
-
-
-int parseFunctionParameters(Token *start) {
-    if (start->type == TOKEN_FUNC_CALL) {
-        // Create list of header tokens for parameters
-        Token **parameters = malloc(DEFAULT_PARAM_SIZE * sizeof(Token*));
-        int nParams = 0;
-
-        Token *end = start->next->next;
-
-        Token *cur = start->next->next;
-        parameters[nParams] = cur;
-        while (cur->next->type != TOKEN_SEPERATOR && cur->next->type != TOKEN_RIGHT_PAREN) {
-            cur = cur->next;
-        }
-    }
-    return 0;
-}
-
 
 Token *lex(Token* head) {
     Token *cur = head;
