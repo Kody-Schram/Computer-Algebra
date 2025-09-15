@@ -51,13 +51,12 @@ int addBuiltins() {
 
 Function *searchTable(char *identifier) {
     for (int i = 0; i < functionTable.n ; i ++) {
-        Function *func = functionTable.table[i];
-        
-        if (strncmp(func->identifier, identifier, strlen(func->identifier)) == 0) {
+        if (strncmp(functionTable.table[i]->identifier, identifier, strlen(functionTable.table[i]->identifier)) == 0) {
             return functionTable.table[i];
         }
     }
 
+    // printf("No function with identifier %s was found.\n", identifier);
     return NULL;
 }
 
