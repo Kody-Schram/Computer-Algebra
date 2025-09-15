@@ -28,6 +28,6 @@ int parseFunction(Token *head);
  * @param buffer Mathematical string
  * @return Token* 
  */
-Token *parse(char *buffer);
+ASTNode *parse(char *buffer, int withinFunction);
 
 #endif

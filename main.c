@@ -17,11 +17,10 @@ int main() {
     char *expression = terminalEntry();
     printf("you entered %s\n", expression);
 
-    Token *head = parse(expression);
-    printf("\nFinal Token List\n");
-    printTokens(head);
-    
-    freeTokens(head);
+    ASTNode *head = parse(expression, 0);
+    if (head == NULL) {
+        printf("Error parsing input.\n");
+    }
 
     return 0;
 }
