@@ -3,6 +3,8 @@
 
 #include "ast.h"
 
+int DEFAULT_NODE_STACK_SIZE = 10;
+
 int getPrecedent(char *operator) {
     int precedent;
     switch(operator[0]) {
@@ -75,7 +77,7 @@ RPNList *shuntingYard(Token *head) {
             operators.entries ++;
 
             if (operators.entries == operators.size) {
-                reallocStack(&operators);
+                if (reallocStack(&operators)) return NULL;
             }
 
         } else if (cur->type == TOKEN_OPERATOR) {
@@ -95,7 +97,7 @@ RPNList *shuntingYard(Token *head) {
             operators.entries ++;
 
             if (operators.entries == operators.size) {
-                reallocStack(&operators);
+                if (reallocStack(&operators)) return NULL;
             }
 
         } else if (cur->type == TOKEN_RIGHT_PAREN) {
@@ -126,19 +128,38 @@ RPNList *shuntingYard(Token *head) {
     }
 
     list->length = output.entries;
-    list->rpn = (Token**) output.items;
+    list->items = (Token**) output.items;
 
     return list;
 }
 
-// ASTNode *astFromRPN(RPNList rpn) {
-//     return NULL;
-// }
+ASTNode *astFromRPN(RPNList *rpn) {
+    Stack nodes = {
+        DEFAULT_NODE_STACK_SIZE,
+        0,
+        malloc(DEFAULT_NODE_STACK_SIZE * sizeof(ASTNode))
+    };
 
-// ASTNode *generateAST(Token *head) {
-//     RPNList *rpn = shuntingYard(head);
-//     if (rpn->length == 0) return NULL;
+    for (int i = 0; i < rpn->length; i ++) {
+        printf("creating new node. %s\n", rpn->items[i]->value);
+        ASTNode *node = createASTNode(rpn->items[i]);
+        if (node == NULL) return NULL;
+        printf("success.\n");
 
-//     ASTNode *ast = astFromRPN(*rpn);
-//     return ast;
-// }
+        if (node->type == TOKEN_OPERATOR) {
+            node->right = nodes.items[nodes.entries - 1];
+            nodes.entries -- ;
+
+            node->left = nodes.items[nodes.entries - 1];
+            nodes.entries -- ;
+        }
+
+        nodes.items[nodes.entries] = node;
+        nodes.entries ++;
+        if (nodes.entries >= nodes.size) {
+            if (reallocStack(&nodes)) return NULL;
+        }
+    }
+
+    return nodes.items[0];
+}

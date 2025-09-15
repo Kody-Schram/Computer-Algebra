@@ -5,7 +5,7 @@
 
 typedef struct RPNList {
     int length;
-    Token **rpn;
+    Token **items;
 } RPNList;
 
 typedef struct Stack {
@@ -15,5 +15,8 @@ typedef struct Stack {
 } Stack;
 
 RPNList *shuntingYard(Token *head);
+
+
+ASTNode *astFromRPN(RPNList *rpn);
 
 #endif

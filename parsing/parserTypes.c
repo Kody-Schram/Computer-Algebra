@@ -69,3 +69,42 @@ void printTokens(Token *head) {
 
     printf("]\n");
 }
+
+ASTNode *createASTNode(Token *token) {
+    ASTNode *node = malloc(sizeof(ASTNode));
+    if (node == NULL) {
+        printf("Error allocating for new node.\n");
+        return NULL;
+    }
+
+    switch (token->type)
+    {
+    case TOKEN_IDENTIFIER:
+        node->type = NODE_VARIABLE;
+        node->identifier = token->value;
+        return node;
+
+    case TOKEN_NUMBER:
+        node->type = NODE_NUMBER;
+        char *end;
+        node->value = strtod(token->value, &end);
+        return node;
+
+    case TOKEN_OPERATOR:
+        node->type = NODE_OPERATOR;
+        node->identifier = token->value;
+        return node;
+
+    case TOKEN_FUNC_CALL:
+        node->type = NODE_FUNC_CALL;
+
+        // Maps identifier to function definition
+        Function *func = searchTable(token->value);
+        if (func == NULL) return NULL;
+
+        node->function = func;
+        return node;
+    default:
+        return NULL;
+    }
+}

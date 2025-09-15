@@ -28,7 +28,7 @@ void freeTokens(Token *head) {
 
 void printRPN(RPNList list) {
     for (int i = 0; i < list.length; i ++) {
-        printf("%s", list.rpn[i]->value);
+        printf("%s", list.items[i]->value);
     }
     printf("\n");
 }
@@ -125,14 +125,13 @@ void parseFunctionCall(Token *head) {
 
         }
 
-
         prev = cur;
         cur = cur->next;
     }
 
 }
 
-Token *parse(char *buffer, int withinFunction) {
+ASTNode *parse(char *buffer, int withinFunction) {
     printf("\nTokenizing Input\n");
     Token *raw = tokenize(buffer);
     if (raw == NULL) return NULL;
@@ -153,8 +152,13 @@ Token *parse(char *buffer, int withinFunction) {
     } else {
         printf("creating rpn\n");
         RPNList *RPN = shuntingYard(head);
+        if (RPN == NULL) return NULL;
         printRPN(*RPN);
-    }
 
-    return head;
+        printf("Generating AST.\n");
+        ASTNode *ast = astFromRPN(RPN);
+
+        freeTokens(head);
+        return ast;
+    }
 }

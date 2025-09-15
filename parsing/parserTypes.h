@@ -1,6 +1,8 @@
 #ifndef PARSERTYPES_H
 #define PARSERTYPES_H
 
+#include "tables/functions.h"
+
 typedef enum TokenType {
     TOKEN_NUMBER,
     TOKEN_OPERATOR,
@@ -31,7 +33,11 @@ typedef enum NodeType {
 
 typedef struct ASTNode {
     NodeType type;
-    char *value;
+    union {
+        char *identifier;
+        double value;
+        Function *function;
+    };
 
     struct ASTNode *left;
     struct ASTNode *right;
@@ -52,5 +58,8 @@ Token *createToken(TokenType type, char *value, int l);
 
 
 void printTokens(Token *head);
+
+
+ASTNode *createASTNode(Token *token);
 
 #endif
