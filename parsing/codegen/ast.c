@@ -14,6 +14,9 @@ int getPrecedent(char *operator) {
         case '/':
             precedent = 2;
             break;
+        case '^':
+            precedent = 3;
+            break;
     }
 
     return precedent;
@@ -32,62 +35,75 @@ int getLinkedListLength(Token *head) {
 }
 
 
-RPNList shuntingYard(Token *head) {
+int reallocStack(Stack *stack) {
+    stack->size *= 2;
+    void **temp = realloc(stack->items, stack->size * sizeof(void*));
+    if (temp == NULL) {
+        printf("Error reallocating space for stack.\n");
+        return 1;
+    }
+
+    stack->items = temp;
+    return 0;
+}
+
+RPNList *shuntingYard(Token *head) {
     Token *cur = head;
 
-    int length = getLinkedListLength(head);
+    int size = getLinkedListLength(head);
     Stack output = {
-        length,
+        size,
         0,
-        {malloc(length * sizeof(Token *))}
+        malloc(size * sizeof(Token *))
     };
-    // Token **output = malloc(length * sizeof(Token *));
-    // int outputEnd = 0;
 
     Stack operators = {
-        length / 2,
+        size / 2,
         0,
-        {malloc(length /2 * sizeof(Token *))}
+        malloc(size /2 * sizeof(Token *))
     };
-    // Token **operators = malloc(size * sizeof(Token *));
-    // int operators.entries = 0;
 
     while (cur != NULL) {
-        // Adds numbers, variables, functions to output stack
-        if (cur->type != TOKEN_LEFT_PAREN && cur->type != TOKEN_RIGHT_PAREN) {
-            if (cur->type == TOKEN_NUMBER || cur->type == TOKEN_IDENTIFIER || cur->type == TOKEN_FUNC_CALL) {
-                output.tokens[output.entries] = cur;
-                output.entries ++;
-            } else {
-                // At least one operator in, check precedence
-                if (operators.entries > 0) {
-                    if (getPrecedent(operators.tokens[operators.entries-1]->value) >= getPrecedent(cur->value)) {
-                        // Flush operators to output stack
-                        while (operators.entries > 0) {
-                            output.tokens[output.entries] = operators.tokens[operators.entries-1];
-                            output.entries ++;
-                            operators.entries --;
-                        }
-                    } else {
-                        if (operators.entries >= operators.length) {
-                            operators.length *= 2;
-                            Token **temp = realloc(operators.tokens, operators.length * sizeof(Token *));
-                            if (temp == NULL) {
-                                printf("Cannot allocate more space for operator stack.");
-                                free(operators.tokens);
-                                free(output.tokens);
+        // Add numbers, identifiers, and function calls to output stack
+        if (cur->type == TOKEN_NUMBER || cur->type == TOKEN_IDENTIFIER || cur->type == TOKEN_FUNC_CALL) {
+            output.items[output.entries] = cur;
+            output.entries ++;
 
-                                return (RPNList) {0, NULL};
-                            }
-                        }
+        // Adds opening parenthesis to operators
+        } else if (cur->type == TOKEN_LEFT_PAREN) {
+            operators.items[operators.entries] = cur;
+            operators.entries ++;
 
-                        operators.tokens[operators.entries] = cur;
-                        operators.entries ++;
-                    }
-                } else {
-                    operators.tokens[operators.entries] = cur;
-                    operators.entries ++;
+            if (operators.entries == operators.size) {
+                reallocStack(&operators);
+            }
+
+        } else if (cur->type == TOKEN_OPERATOR) {
+            if (operators.entries > 0) {
+                // Pops all operators on stack with greater or equal precedent
+                while ((operators.entries > 0) 
+                        && (((Token *) operators.items[operators.entries - 1])->value[0] != '(') 
+                        && (getPrecedent(((Token *) operators.items[operators.entries - 1])->value) >= getPrecedent(cur->value))) {
+
+                    operators.entries --;
+                    output.items[output.entries] = operators.items[operators.entries];
+                    output.entries ++;
                 }
+            }
+
+            operators.items[operators.entries] = cur;
+            operators.entries ++;
+
+            if (operators.entries == operators.size) {
+                reallocStack(&operators);
+            }
+
+        } else if (cur->type == TOKEN_RIGHT_PAREN) {
+            // Pops all operators within parenthesis when closing is reached
+            while (operators.entries > 0 && ((Token *) operators.items[operators.entries - 1])->value[0] != '(') {
+                operators.entries --;
+                output.items[output.entries] = operators.items[operators.entries];
+                output.entries ++;
             }
         }
 
@@ -96,24 +112,33 @@ RPNList shuntingYard(Token *head) {
 
     // Flush remaining operators to output stack
     while (operators.entries > 0) {
-        output.tokens[output.entries] = operators.tokens[operators.entries-1];
+        printf("flushing operators\n");
+        output.items[output.entries] = operators.items[operators.entries-1];
         output.entries++;
         operators.entries --;
     }
     
-    free(operators.tokens);
+    free(operators.items);
 
-    return (RPNList) {output.entries, output.tokens};
+    RPNList *list = malloc(sizeof(RPNList));
+    if (list == NULL) {
+        printf("Error allocating for RPN List.\n");
+    }
+
+    list->length = output.entries;
+    list->rpn = (Token**) output.items;
+
+    return list;
 }
 
-ASTNode *astFromRPN(RPNList rpn) {
-    
-}
+// ASTNode *astFromRPN(RPNList rpn) {
+//     return NULL;
+// }
 
-ASTNode *generateAST(Token *head) {
-    RPNList rpn = shuntingYard(head);
-    if (rpn.length == 0) return NULL;
+// ASTNode *generateAST(Token *head) {
+//     RPNList *rpn = shuntingYard(head);
+//     if (rpn->length == 0) return NULL;
 
-    ASTNode *ast = astFromRPN(rpn);
-    return ast;
-}
+//     ASTNode *ast = astFromRPN(*rpn);
+//     return ast;
+// }

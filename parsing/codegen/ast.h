@@ -9,14 +9,11 @@ typedef struct RPNList {
 } RPNList;
 
 typedef struct Stack {
-    int length;
+    int size;
     int entries;
-    union {
-        Token **tokens;
-        ASTNode **nodes;
-    };
+    void **items;
 } Stack;
 
-RPNList shuntingYard(Token *head);
+RPNList *shuntingYard(Token *head);
 
 #endif

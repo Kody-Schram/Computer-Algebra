@@ -5,7 +5,6 @@
 
 #include "lexer.h"
 
-const int DEFAULT_STACK_SIZE = 25;
 const int DEFAULT_PARAM_SIZE = 3;
 
 /**
@@ -229,12 +228,6 @@ Token *lex(Token* head) {
     Token *prev = NULL;
 
     int openParenthesis = 0;
-    int size = DEFAULT_STACK_SIZE;
-    Token **stack = malloc(size * sizeof(Token*));
-    if (stack == NULL) {
-        printf("Error allocating for parenthesis stack.\n");
-        return NULL;
-    }
 
     while (cur != NULL) {
         // printf("Current Token: <%u, %s>\n", cur->type, cur->value);

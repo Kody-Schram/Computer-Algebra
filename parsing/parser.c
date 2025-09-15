@@ -104,7 +104,7 @@ int parseFunctionDefinition(Token *head) {
         cur = cur->next;
     }
 
-    RPNList rpn = shuntingYard(bodyHead);
+    //RPNList rpn = shuntingYard(bodyHead);
     // Generate ast for body
 
     // Add to function table
@@ -133,12 +133,15 @@ void parseFunctionCall(Token *head) {
 }
 
 Token *parse(char *buffer, int withinFunction) {
+    printf("\nTokenizing Input\n");
     Token *raw = tokenize(buffer);
     if (raw == NULL) return NULL;
 
+    printf("\nLexing Tokens\n");
     Token *head = lex(raw);
-
+    
     if (head == NULL) return NULL;
+    printf("continuing to final step\n");
 
     // Parses function definitions differently than regular expressions
     if (containsFunctionDefinition(head)) {
@@ -148,8 +151,9 @@ Token *parse(char *buffer, int withinFunction) {
         }
         parseFunctionDefinition(head);
     } else {
-        RPNList RPN = shuntingYard(head);
-        printRPN(RPN);
+        printf("creating rpn\n");
+        RPNList *RPN = shuntingYard(head);
+        printRPN(*RPN);
     }
 
     return head;
