@@ -17,9 +17,13 @@ typedef enum TokenType {
 
 typedef struct Token {
     TokenType type;
-    char* value;
 
-    struct Token* next;
+    union {
+        char *value;
+        Function *function;
+    };
+
+    struct Token *next;
 } Token;
 
 
@@ -61,5 +65,8 @@ void printTokens(Token *head);
 
 
 ASTNode *createASTNode(Token *token);
+
+
+void printAST(ASTNode *head);
 
 #endif

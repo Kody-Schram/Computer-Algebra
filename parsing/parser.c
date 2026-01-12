@@ -27,9 +27,12 @@ void freeTokens(Token *head) {
 }
 
 void printRPN(RPNList list) {
+    printf("RPN: ");
+
     for (int i = 0; i < list.length; i ++) {
-        printf("%s", list.items[i]->value);
+        printf("%s ", list.items[i]->value);
     }
+
     printf("\n");
 }
 
@@ -53,11 +56,9 @@ int parseFunctionDefinition(Token *head) {
     char **parameters = malloc(paramSize * sizeof(char*));
     int nParams = 0;
 
-    Token *bodyHead;
-    Token *bodyCur;
-
     Token *cur = head;
     while (cur != NULL) {
+        printf("%s, type %d, comp %d,  == %d\n", cur->value, cur->type, component, (cur->type != TOKEN_IDENTIFIER && component == IDENTIFIER));
         if ((cur->type != TOKEN_IDENTIFIER && component == IDENTIFIER)
             || (cur->type != TOKEN_SEPERATOR && component != PARAMETERS)) {
                 printf("Invalid token within function declaration. %s %d\n", cur->value, component);
@@ -65,10 +66,12 @@ int parseFunctionDefinition(Token *head) {
         }
         if (cur->type == TOKEN_SEPERATOR) {
             component = PARAMETERS;
+            cur = cur->next;
             continue;
         }
         if (cur->type == TOKEN_ASSIGNMENT) {
             component = BODY;
+            cur = cur->next;
             continue;
         }
         if (component == IDENTIFIER) {
@@ -90,30 +93,35 @@ int parseFunctionDefinition(Token *head) {
             }
             parameters[nParams] = strdup(cur->value);
             nParams ++;
+
         // Adds remaining tokens to new body linked list
         } else if (component == BODY) {
-            if (bodyHead == NULL) {
-                bodyHead = cur;
-                bodyCur = bodyHead;
-            } else {
-                bodyCur->next = cur;
-                bodyCur = bodyCur->next;
-            }
+            RPNList *rpn = shuntingYard(cur);
+            if (rpn == NULL) return 0;
+
+            // Generate ast for body
+            ASTNode *head = astFromRPN(rpn);
+            if (head == NULL) return 0;
+
+            // Add to function table
+            Function *function = malloc(sizeof(function));
+            if (function == NULL) return 0;
+
+            function->identifier = identifier;
+            function->nParameters = nParams;
+            function->parameters = parameters;
+            function->type = DEFINED;
+            function->definition = head;
+
+            return addFunction(function);
+
         }
 
         cur = cur->next;
     }
-
-    //RPNList rpn = shuntingYard(bodyHead);
-    // Generate ast for body
-
-    // Add to function table
-
-    printf("identifier: %s", identifier);
-    return 1;
 }
 
-void parseFunctionCall(Token *head) {
+void parseFunctionCalls(Token *head) {
     Token **parameters = NULL;
     int nParameters = 0;
 
@@ -121,7 +129,21 @@ void parseFunctionCall(Token *head) {
     Token *prev = NULL;
 
     while (cur != NULL) {
+
+        // Recursively parses nested function calls
         if (cur->type == TOKEN_FUNC_CALL) {
+            // Skips opening parens, has been handled by the lexer already
+            prev = cur->next;
+            cur = cur->next->next;
+
+            Token *newFunc = malloc(sizeof(Token));
+
+            Token *end = NULL;
+            int parens = 1;
+            while (parens > 0) {
+
+            }
+            end = cur;
 
         }
 
@@ -135,12 +157,12 @@ ASTNode *parse(char *buffer, int withinFunction) {
     printf("\nTokenizing Input\n");
     Token *raw = tokenize(buffer);
     if (raw == NULL) return NULL;
+    printf("Success\n");
 
     printf("\nLexing Tokens\n");
     Token *head = lex(raw);
-    
     if (head == NULL) return NULL;
-    printf("continuing to final step\n");
+    printf("Success\n");
 
     // Parses function definitions differently than regular expressions
     if (containsFunctionDefinition(head)) {
@@ -150,15 +172,20 @@ ASTNode *parse(char *buffer, int withinFunction) {
         }
         parseFunctionDefinition(head);
     } else {
-        printf("creating rpn\n");
+        printf("\nCreating RPN\n");
         RPNList *RPN = shuntingYard(head);
         if (RPN == NULL) return NULL;
         printRPN(*RPN);
 
-        printf("Generating AST.\n");
+        printf("\nGenerating AST.\n");
         ASTNode *ast = astFromRPN(RPN);
+
+        printf("\nPrinting AST\n");
+        printAST(ast);
 
         freeTokens(head);
         return ast;
     }
+
+    return NULL;
 }

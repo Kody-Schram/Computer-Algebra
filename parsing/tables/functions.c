@@ -74,3 +74,12 @@ int initFunctionTable() {
     
     return 1;
 }
+
+void printFunction(Function *function) {
+    printf("%s(", function->identifier);
+
+    for (int i = 0; i < function->nParameters-1; i ++) {
+        printf("%s,", function->parameters[i]);
+    }
+    printf("%s)", function->parameters[function->nParameters-1]);
+}

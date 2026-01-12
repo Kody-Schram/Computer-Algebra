@@ -107,6 +107,9 @@ RPNList *shuntingYard(Token *head) {
                 output.items[output.entries] = operators.items[operators.entries];
                 output.entries ++;
             }
+
+            // Removes '(' from list
+            operators.entries --;
         }
 
         cur = cur->next;
@@ -137,21 +140,24 @@ ASTNode *astFromRPN(RPNList *rpn) {
     Stack nodes = {
         DEFAULT_NODE_STACK_SIZE,
         0,
-        malloc(DEFAULT_NODE_STACK_SIZE * sizeof(ASTNode))
+        malloc(DEFAULT_NODE_STACK_SIZE * sizeof(ASTNode *))
     };
 
     for (int i = 0; i < rpn->length; i ++) {
         printf("creating new node. %s\n", rpn->items[i]->value);
         ASTNode *node = createASTNode(rpn->items[i]);
         if (node == NULL) return NULL;
-        printf("success.\n");
 
-        if (node->type == TOKEN_OPERATOR) {
+        if (node->type == NODE_OPERATOR) {
+            printf("adding children\n");
+
             node->right = nodes.items[nodes.entries - 1];
-            nodes.entries -- ;
+            node->left = nodes.items[nodes.entries - 2];
 
-            node->left = nodes.items[nodes.entries - 1];
-            nodes.entries -- ;
+            // printf("left %s", node->left->identifier);
+            // printf("right %s", node->right->value);
+
+            nodes.entries -= 2;
         }
 
         nodes.items[nodes.entries] = node;
@@ -161,5 +167,6 @@ ASTNode *astFromRPN(RPNList *rpn) {
         }
     }
 
+    printf("length %d", nodes.entries);
     return nodes.items[0];
 }

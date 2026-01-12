@@ -234,7 +234,7 @@ Token *lex(Token* head) {
         if (handleImplicitMul(cur, prev) == -1) return NULL;
         if (handleExponentRewrite(&cur, prev) == -1) return NULL;
         if (checkInvalidBinop(cur, prev) == -1) return NULL;
-        if (handleFunctionParens(&cur)) return NULL;
+        if (handleFunctionParens(&cur) == -1) return NULL;
 
         // Counts open parenthesis
         if (cur->type == TOKEN_LEFT_PAREN) {

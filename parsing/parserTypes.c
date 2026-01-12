@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <math.h>
 
 #include "parserTypes.h"
 
@@ -82,19 +83,16 @@ ASTNode *createASTNode(Token *token) {
     case TOKEN_IDENTIFIER:
         node->type = NODE_VARIABLE;
         node->identifier = token->value;
-        return node;
-
+        break;
     case TOKEN_NUMBER:
         node->type = NODE_NUMBER;
         char *end;
         node->value = strtod(token->value, &end);
-        return node;
-
+        break;
     case TOKEN_OPERATOR:
         node->type = NODE_OPERATOR;
         node->identifier = token->value;
-        return node;
-
+        break;
     case TOKEN_FUNC_CALL:
         node->type = NODE_FUNC_CALL;
 
@@ -103,8 +101,48 @@ ASTNode *createASTNode(Token *token) {
         if (func == NULL) return NULL;
 
         node->function = func;
-        return node;
+        break;
     default:
         return NULL;
     }
+
+    node->left = NULL;
+    node->right = NULL;
+    return node;
+}
+
+void printASTRec(ASTNode *node) {
+    if (node == NULL) return;
+
+    // print current node
+    switch (node->type) {
+        case NODE_NUMBER:
+            printf("Num: %f", node->value);
+            break;
+        case NODE_OPERATOR:
+            printf("OP: %s", node->identifier);
+            break;
+        case NODE_VARIABLE:
+            printf("VAR: %s", node->identifier);
+            break;
+        case NODE_FUNC_CALL:
+            printf("FNC: %s", node->function->identifier);
+            break;
+        case NODE_FUNC_DEF:
+            printf("FND: %s", node->function->identifier);
+            break;
+        default:
+            printf("?");
+            break;
+    }
+
+    printf(", ");
+
+    printASTRec(node->left);
+    printASTRec(node->right);
+}
+
+
+void printAST(ASTNode *root) {
+    printASTRec(root);
 }
