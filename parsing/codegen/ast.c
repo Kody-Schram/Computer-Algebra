@@ -136,6 +136,16 @@ RPNList *shuntingYard(Token *head) {
     return list;
 }
 
+void printRPN(RPNList list) {
+    printf("RPN: ");
+
+    for (int i = 0; i < list.length; i ++) {
+        printf("%s ", list.items[i]->value);
+    }
+
+    printf("\n");
+}
+
 ASTNode *astFromRPN(RPNList *rpn) {
     Stack nodes = {
         DEFAULT_NODE_STACK_SIZE,

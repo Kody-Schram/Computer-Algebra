@@ -17,7 +17,7 @@ int main() {
     char *expression = terminalEntry();
     printf("you entered %s\n", expression);
 
-    ASTNode *head = parse(expression, 0);
+    ASTNode *head = parse(expression, 0, 1);
     if (head == NULL) {
         printf("Error parsing input.\n");
     }

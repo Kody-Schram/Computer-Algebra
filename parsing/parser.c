@@ -26,16 +26,6 @@ void freeTokens(Token *head) {
     }
 }
 
-void printRPN(RPNList list) {
-    printf("RPN: ");
-
-    for (int i = 0; i < list.length; i ++) {
-        printf("%s ", list.items[i]->value);
-    }
-
-    printf("\n");
-}
-
 int containsFunctionDefinition(Token *head) {
     Token *cur = head;
     while (cur != NULL) {
@@ -153,16 +143,14 @@ void parseFunctionCalls(Token *head) {
 
 }
 
-ASTNode *parse(char *buffer, int withinFunction) {
-    printf("\nTokenizing Input\n");
+ASTNode *parse(char *buffer, int withinFunction, int debugging) {
+    if (debugging) printf("\nTokenizing Input\n");
     Token *raw = tokenize(buffer);
     if (raw == NULL) return NULL;
-    printf("Success\n");
 
-    printf("\nLexing Tokens\n");
+    if (debugging) printf("\nLexing Tokens\n");
     Token *head = lex(raw);
     if (head == NULL) return NULL;
-    printf("Success\n");
 
     // Parses function definitions differently than regular expressions
     if (containsFunctionDefinition(head)) {
@@ -172,16 +160,18 @@ ASTNode *parse(char *buffer, int withinFunction) {
         }
         parseFunctionDefinition(head);
     } else {
-        printf("\nCreating RPN\n");
+        if (debugging) printf("\nCreating RPN\n");
         RPNList *RPN = shuntingYard(head);
         if (RPN == NULL) return NULL;
-        printRPN(*RPN);
+        if (debugging) printRPN(*RPN);
 
-        printf("\nGenerating AST.\n");
+        if (debugging) printf("\nGenerating AST.\n");
         ASTNode *ast = astFromRPN(RPN);
 
-        printf("\nPrinting AST\n");
-        printAST(ast);
+        if (debugging) {
+            printf("\nPrinting AST\n");
+            printAST(ast);
+        }
 
         freeTokens(head);
         return ast;
