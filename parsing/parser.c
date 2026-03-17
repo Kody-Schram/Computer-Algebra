@@ -36,7 +36,7 @@ int containsFunctionDefinition(Token *head) {
     return 0;
 }
 
-int parseFunctionDefinition(Token *head) {
+int parseFunctionDefinition(Token *head, Environment *env) {
     printf("parsing function :)\n");
     FunctionComponent component = IDENTIFIER;
 
@@ -90,11 +90,11 @@ int parseFunctionDefinition(Token *head) {
             if (rpn == NULL) return 0;
 
             // Generate ast for body
-            ASTNode *head = astFromRPN(rpn);
+            ASTNode *head = astFromRPN(rpn, env);
             if (head == NULL) return 0;
 
             // Add to function table
-            Function *function = malloc(sizeof(function));
+            Function *function = malloc(sizeof(Function));
             if (function == NULL) return 0;
 
             function->nParameters = nParams;
@@ -102,12 +102,16 @@ int parseFunctionDefinition(Token *head) {
             function->type = DEFINED;
             function->definition = head;
 
-            return addFunction(function);
+            // Adds function to the environment
+            bindSymbol(env, FUNCTION, identifier, function);
+            return 1;
 
         }
 
         cur = cur->next;
     }
+
+    return 0;
 }
 
 void parseFunctionCalls(Token *head) {
@@ -142,9 +146,9 @@ void parseFunctionCalls(Token *head) {
 
 }
 
-ASTNode *parse(char *buffer, int withinFunction, int debugging) {
+ASTNode *parse(char *buffer, Environment *env, int withinFunction, int debugging) {
     if (debugging) printf("\nTokenizing Input\n");
-    Token *raw = tokenize(buffer);
+    Token *raw = tokenize(buffer, env);
     if (raw == NULL) return NULL;
 
     if (debugging) printf("\nLexing Tokens\n");
@@ -157,7 +161,7 @@ ASTNode *parse(char *buffer, int withinFunction, int debugging) {
             printf("Cannot have nested functions definitions.\n");
             return NULL;
         }
-        parseFunctionDefinition(head);
+        parseFunctionDefinition(head, env);
     } else {
         if (debugging) printf("\nCreating RPN\n");
         RPNList *RPN = shuntingYard(head);
@@ -165,7 +169,7 @@ ASTNode *parse(char *buffer, int withinFunction, int debugging) {
         if (debugging) printRPN(*RPN);
 
         if (debugging) printf("\nGenerating AST.\n");
-        ASTNode *ast = astFromRPN(RPN);
+        ASTNode *ast = astFromRPN(RPN, env);
 
         if (debugging) {
             printf("\nPrinting AST\n");

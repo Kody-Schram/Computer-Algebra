@@ -1,4 +1,6 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include "environment.h"
 
 const int DEFAULT_TABLE_SIZE = 10;
@@ -40,7 +42,7 @@ int bindSymbol(Environment *env, SymbolType type, char *identifier, void *symbol
 
 Symbol* searchEnvironment(Environment *env, char *identifier) {
     for (int i = 0; i < env->entries; i ++) {
-        if (strcmp(env->symbols[i], identifier) == 0) {
+        if (strcmp(env->symbols[i].identifier, identifier) == 0) {
             return &env->symbols[i];
         }
     }

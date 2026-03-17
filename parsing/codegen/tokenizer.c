@@ -5,7 +5,6 @@
 
 #include "tokenizer.h"
 #include "../builtins.h"
-#include "../env/environment.h"
 
 /**
  * @brief Get the Builtin Length object
@@ -48,7 +47,7 @@ int getBuiltinLength(char *c, const char **builtins, int entries) {
  * @return int 
  */
 int getOperatorLength(char *c) {
-    const char *operators[] = {"<=", ">=", "int", "drv", "+", "-", "*", "/", "^", "<", ">"};
+    const char *operators[] = {"->", "+", "-", "*", "/", "^"};
 
     return getBuiltinLength(c, operators, sizeof(operators)/sizeof(operators[0]));
 
@@ -63,13 +62,11 @@ int getOperatorLength(char *c) {
  * @param c Start of string to check against
  * @return int 
  */
-int getFunctionLength(char *c) {
-    Function *func = searchTable(c);
-    if (func != NULL) {
-        return strlen(searchTable(c)->identifier);
-    }
+int getFunctionLength(char *c, Environment *env) {
+    Symbol *symbol = searchEnvironment(env, c);
+    if (symbol->type != FUNCTION) return 0;
 
-    return 0;
+    return strlen(symbol->identifier);
 }
 
 /**
@@ -99,10 +96,10 @@ int getNumber(char *c) {
  * @param c Start of  string to check against
  * @return int Length of found identifier
  */
-int getIdentifier(char *c) {
+int getIdentifier(char *c, Environment *env) {
     int i = 0;
     if (isalpha(c[0])) {
-        while (c[i] == '_' || (isalnum(c[i]) && !getFunctionLength(c+i))) i ++;
+        while (c[i] == '_' || (isalnum(c[i]) && !getFunctionLength(c+i, env))) i ++;
     }
     return i;
 }
@@ -142,7 +139,7 @@ int getSimpleSymbols(char c, TokenType *type) {
 }
 
 
-Token *tokenize(char *buffer) {
+Token *tokenize(char *buffer, Environment *env) {
     Token *head = NULL;
     Token *prev = NULL;
 
@@ -182,13 +179,13 @@ Token *tokenize(char *buffer) {
         }
         
         // Checks if builtin function and return the length if it is
-        else if ((matchLen = getFunctionLength(buffer + i))) {
+        else if ((matchLen = getFunctionLength(buffer + i, env))) {
             end += matchLen;
             type = TOKEN_FUNC_CALL;
         }
         
         // Reads identifiers/variables
-        else if ((matchLen = getIdentifier(buffer + i))) {
+        else if ((matchLen = getIdentifier(buffer + i, env))) {
             end += matchLen;
             type = TOKEN_IDENTIFIER;
         }
@@ -216,13 +213,14 @@ Token *tokenize(char *buffer) {
             if ((prevT == TOKEN_NUMBER || prevT == TOKEN_IDENTIFIER) && (type == TOKEN_IDENTIFIER || type == TOKEN_NUMBER || type == TOKEN_FUNC_CALL)) {
                 printf("Spacing lead to ambiguous intent.\n");
 
-                // Pritns input and pointer to problematic char
+                // Prints input and pointer to problematic char
                 printf("%s\n", buffer);
                 char *pointer = malloc((i) * sizeof(char));
                 if (pointer == NULL) {
                     return NULL;
                 }
 
+                // Formatting error printout
                 memset(pointer, ' ', i-1);
                 pointer[i-1] = '^';
                 printf("%s\n", pointer);

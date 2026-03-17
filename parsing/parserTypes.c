@@ -71,7 +71,7 @@ void printTokens(Token *head) {
     printf("]\n");
 }
 
-ASTNode *createASTNode(Token *token) {
+ASTNode *createASTNode(Token *token, Environment *env) {
     ASTNode *node = malloc(sizeof(ASTNode));
     if (node == NULL) {
         printf("Error allocating for new node.\n");
@@ -97,7 +97,8 @@ ASTNode *createASTNode(Token *token) {
         node->type = NODE_FUNC_CALL;
 
         // Maps identifier to function definition
-        Function *func = searchTable(token->value);
+        Symbol *symbol = searchEnvironment(env, token->value);
+        Function *func = symbol->function;
         if (func == NULL) return NULL;
 
         node->function = func;
@@ -125,12 +126,12 @@ void printASTRec(ASTNode *node) {
         case NODE_VARIABLE:
             printf("VAR: %s", node->identifier);
             break;
-        case NODE_FUNC_CALL:
-            printf("FNC: %s", node->function->identifier);
-            break;
-        case NODE_FUNC_DEF:
-            printf("FND: %s", node->function->identifier);
-            break;
+        // case NODE_FUNC_CALL:
+        //     printf("FNC: %s", node->function->identifier);
+        //     break;
+        // case NODE_FUNC_DEF:
+        //     printf("FND: %s", node->function->identifier);
+        //     break;
         default:
             printf("?");
             break;

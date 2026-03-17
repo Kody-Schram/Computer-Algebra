@@ -146,7 +146,7 @@ void printRPN(RPNList list) {
     printf("\n");
 }
 
-ASTNode *astFromRPN(RPNList *rpn) {
+ASTNode *astFromRPN(RPNList *rpn, Environment *env) {
     Stack nodes = {
         DEFAULT_NODE_STACK_SIZE,
         0,
@@ -155,7 +155,7 @@ ASTNode *astFromRPN(RPNList *rpn) {
 
     for (int i = 0; i < rpn->length; i ++) {
         printf("creating new node. %s\n", rpn->items[i]->value);
-        ASTNode *node = createASTNode(rpn->items[i]);
+        ASTNode *node = createASTNode(rpn->items[i], env);
         if (node == NULL) return NULL;
 
         if (node->type == NODE_OPERATOR) {

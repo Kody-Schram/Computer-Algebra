@@ -64,7 +64,7 @@ Token *createToken(TokenType type, char *value, int l);
 void printTokens(Token *head);
 
 
-ASTNode *createASTNode(Token *token);
+ASTNode *createASTNode(Token *token, Environment *env);
 
 
 void printAST(ASTNode *head);

@@ -20,6 +20,6 @@ RPNList *shuntingYard(Token *head);
 void printRPN(RPNList list);
 
 
-ASTNode *astFromRPN(RPNList *rpn);
+ASTNode *astFromRPN(RPNList *rpn, Environment *env);
 
 #endif

@@ -1,7 +1,7 @@
 #ifndef ENVIRONMENT_H
 #define ENVIRONMENT_H
 
-#include "../parserTypes.h"
+typedef struct ASTNode ASTNode;
 
 typedef enum {
     BUILTIN,
@@ -13,8 +13,7 @@ typedef struct {
     int nParameters;
     FunctionType type;
 
-    union 
-    {
+    union {
         ASTNode *definition;
         double (*builtin) (double);
     };
@@ -47,6 +46,7 @@ typedef struct {
 
 
 Environment *createEnvironment();
-int bindSymbol(Environment env, Symbol *symbol);
+int bindSymbol(Environment *env, SymbolType type, char *identifier, void *symbol);
+Symbol* searchEnvironment(Environment *env, char *identifier);
 
 #endif
