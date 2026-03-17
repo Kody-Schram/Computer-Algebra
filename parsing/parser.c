@@ -72,7 +72,7 @@ int parseFunctionDefinition(Token *head, Environment *env) {
             // Reallocates parameter list if needed
             if (nParams >= paramSize) {
                 paramSize *= 2;
-                char **temp = realloc(parameters, paramSize);
+                char **temp = realloc(parameters, sizeof(char*) * paramSize);
                 if (temp == NULL) {
                     printf("Error reallocating more space for function parameters.\n");
                     return 0;

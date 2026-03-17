@@ -18,7 +18,7 @@ Environment *createEnvironment() {
 int bindComponent(Environment *env, ComponentType type, char *identifier, void *component) {
     if (env->entries >= env->size) {
         env->size += DEFAULT_INCREASE_SIZE;
-        Component* temp = realloc(env->components, env->size);
+        Component* temp = realloc(env->components, sizeof(Component) * env->size);
         if (temp == NULL) {
             printf("Error reallocating space for environment.\n");
             return 0;
