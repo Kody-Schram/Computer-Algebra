@@ -6,7 +6,7 @@
 #include "codegen/tokenizer.h"
 #include "codegen/lexer.h"
 #include "codegen/ast.h"
-#include "tables/functions.h"
+#include "env/environment.h"
 
 const int DEFAULT_PARAMETERS_SIZE = 5;
 
@@ -97,7 +97,6 @@ int parseFunctionDefinition(Token *head) {
             Function *function = malloc(sizeof(function));
             if (function == NULL) return 0;
 
-            function->identifier = identifier;
             function->nParameters = nParams;
             function->parameters = parameters;
             function->type = DEFINED;

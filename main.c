@@ -3,16 +3,15 @@
 #include <ctype.h>
 
 #include "input.h"
-#include "parsing/tables/functions.h"
+#include "parsing/env/environment.h"
 
 #include "parsing/parser.h"
 #include "parsing/parserTypes.h"
 
 int main() {
 
-    if (!initFunctionTable()) {
-        return 0;
-    }
+    Environment *global_env = createEnvironment();
+    if (global_env == NULL) return 0;
 
     char *expression = terminalEntry();
     printf("you entered %s\n", expression);

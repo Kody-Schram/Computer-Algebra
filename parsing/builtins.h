@@ -1,7 +1,7 @@
 #ifndef BUILTINS_H
 #define BUILTINS_H
 
-#include "tables/functions.h"
+#include "env/environment.h"
 
 // Function builtins
 extern const char *builtin_identifiers[];

@@ -29,7 +29,7 @@ This operator allows you to specify variable values and function definitions
 
 ##### Declaring Variables
 Variable declaration is structured as follows:
-* (value) -> (variable name)
+*(value) -> (variable name)*
 
 ##### Defining New Functions
 Function declaration is structured as follows:

@@ -25,7 +25,7 @@ char* terminalEntry() {
             char* temp = realloc(expression, size);
             if (temp == NULL) {
                 printf("Cannot allocate more space for expression.");
-                free(expression);
+                free(temp);
 
                 return NULL;
             }

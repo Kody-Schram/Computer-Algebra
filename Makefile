@@ -8,7 +8,7 @@ CFLAGS = -Wall -Wextra
 SRC = $(wildcard *.c) \
 	  $(wildcard parsing/*.c) \
 	  $(wildcard parsing/codegen/*.c) \
-	  $(wildcard parsing/tables/*.c)
+	  $(wildcard parsing/env/*.c)
 
 OBJ = $(SRC:.c=.o)
 EXEC = main
@@ -20,7 +20,7 @@ $(EXEC): $(OBJ)
 TEST_SRC = $(wildcard testing/*.c) \
 		   $(wildcard parsing/*.c) \
 	       $(wildcard parsing/codegen/*.c) \
-		   $(wildcard parsing/tables/*.c)
+		   $(wildcard parsing/env/*.c)
 
 TEST_OBJ = $(TEST_SRC:.c=.o)
 TEST_EXEC = test

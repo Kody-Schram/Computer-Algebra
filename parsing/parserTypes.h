@@ -1,7 +1,7 @@
 #ifndef PARSERTYPES_H
 #define PARSERTYPES_H
 
-#include "tables/functions.h"
+#include "env/environment.h"
 
 typedef enum TokenType {
     TOKEN_NUMBER,
