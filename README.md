@@ -12,9 +12,9 @@
 5. Executing
 
 
-### Syntax
+## Syntax
 ---
-#### Operators
+### Operators
 - "+" Addition
 - "-" Subtraction
 - "*" Multiplication
@@ -23,15 +23,13 @@
 - "->" Mapping
 
 
-#### Mapping Operator
-
 This operator allows you to specify variable values and function definitions
 
-##### Declaring Variables
+### Declaring Variables
 Variable declaration is structured as follows:
 *(value) -> (variable name)*
 
-##### Defining New Functions
+### Defining New Functions
 Function declaration is structured as follows:
 
 *(function name) : (list of parameters seperated with ","s) -> (function definition)*
@@ -44,13 +42,13 @@ This allows the parser to differentiate an identifier and a function declaration
 *All functions and variables declared by the user get added to the global environment of the system and can then be used again on subsequent lines*
 
 
-### Plugins
+## Plugins
 ---
-#### Core
+### Core
 - Algebra
 - Trigonometry
 
 These are fundamental parts of the system which is split into the plugins to seperate them from the parsing base of the system.
 
-#### Source
+### Source
 This includes the rest of the plugins. These plugins can be selected by altering the Makefile to specify what functionalities are required.

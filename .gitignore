@@ -58,5 +58,8 @@ dkms.conf
 main
 test
 
+*.ps1
+project_dump.txt
+
 # pseudo code
 pseudo*
