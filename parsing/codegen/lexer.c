@@ -223,6 +223,36 @@ int handleFunctionParens(Token **cur) {
 }
 
 
+int handleNegatives(Token **ptr, Token *prev) {
+    Token *cur = *ptr;
+
+    if (cur->type != TOKEN_OPERATOR) return 0;
+    if (strcmp(cur->value, "-") != 0) return 0;
+
+    if (prev != NULL && prev->type != TOKEN_OPERATOR && prev->type != TOKEN_LEFT_PAREN) return 0;
+    
+    printf("Creating -1 and multiplication tokens.\n");
+
+    Token *negative_one = createToken(TOKEN_NUMBER, "-1", 2);
+    Token *mult = createToken(TOKEN_OPERATOR, "*", 1);
+
+    if (negative_one == NULL || mult == NULL) {
+        printf("Error handling negatives.\n");
+        return -1;
+    }
+
+    negative_one->next = mult;
+    mult->next = cur->next;
+
+    if (prev != NULL) prev->next = negative_one;
+    free(cur->value);
+    free(cur);
+
+    **ptr = *negative_one;
+
+    return 1;
+}
+
 Token *lex(Token* head) {
     Token *cur = head;
     Token *prev = NULL;
@@ -231,6 +261,8 @@ Token *lex(Token* head) {
 
     while (cur != NULL) {
         // printf("Current Token: <%u, %s>\n", cur->type, cur->value);
+        if (handleNegatives(&cur, prev) == -1) return NULL;
+        printf("cur: %s\n", cur->value);
         if (handleImplicitMul(cur, prev) == -1) return NULL;
         if (handleExponentRewrite(&cur, prev) == -1) return NULL;
         if (checkInvalidBinop(cur, prev) == -1) return NULL;

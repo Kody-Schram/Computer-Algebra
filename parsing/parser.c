@@ -150,10 +150,12 @@ ASTNode *parse(char *buffer, Environment *env, int withinFunction, int debugging
     if (debugging) printf("\nTokenizing Input\n");
     Token *raw = tokenize(buffer, env);
     if (raw == NULL) return NULL;
+    printTokens(raw);
 
     if (debugging) printf("\nLexing Tokens\n");
     Token *head = lex(raw);
     if (head == NULL) return NULL;
+    printTokens(head);
 
     // Parses function definitions differently than regular expressions
     if (containsFunctionDefinition(head)) {

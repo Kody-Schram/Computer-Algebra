@@ -42,7 +42,7 @@ int getBuiltinLength(char *c, const char **builtins, int entries) {
  * @return int 
  */
 int getOperatorLength(char *c) {
-    const char *operators[] = {"->", "+", "-", "*", "/", "^"};
+    const char *operators[] = {"->"};
 
     return getBuiltinLength(c, operators, sizeof(operators)/sizeof(operators[0]));
 
@@ -126,6 +126,8 @@ int getComponentLength(char *c, Environment *env) {
  * @return int 
  */
 int getSimpleComponents(char c, TokenType *type) {
+
+    //"+", "-", "*", "/", "^"
     switch(c) {
         case '(':
             *type = TOKEN_LEFT_PAREN;
@@ -139,8 +141,12 @@ int getSimpleComponents(char c, TokenType *type) {
         case ',':
             *type = TOKEN_SEPERATOR;
             break;
-        case '=':
-            *type = TOKEN_ASSIGNMENT;
+        case '+':
+        case '-':
+        case '*':
+        case '/':
+        case '^':
+            *type = TOKEN_OPERATOR;
             break;
         default:
             return 0;
