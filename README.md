@@ -5,38 +5,52 @@
 ## Compiler
 ---
 *Steps*
-1. Tokenization (Splits Input into Parts)
-2. Lexing (Corrects Input Errors or Ambiguity)
-3. Generates AST (Executable Form)
-4. Executing
+1. Tokenization (Splits input into parts)
+2. Lexing (Attempts to correct input errors or ambiguities)
+3. Generates AST (Executable form)
+4. Simplifes Expression (Condenses constants, etc.)
+5. Executing
+
 
 ### Syntax
+---
 #### Operators
-- "+" (addition)
-- "-" (subtraction)
-- "*" (multiplication)
-- "/" (division)
-- "^" or "**" (exponentiation)
-- "drv" (derivative)
-- "int" (integral)
+- "+" Addition
+- "-" Subtraction
+- "*" Multiplication
+- "/" Division
+- "^" or "**" Exponentiation
+- "->" Mapping
 
 
-#### Built in Functions
-*Parameter brackets will be implied for functions for first term after function*
-(eg. sinx+1 => sin(x) + 1)
+#### Mapping Operator
 
-- sin()
-- cos()
-- tan()
-- csc()
-- sec()
-- cot()
-- log()
-- ln()
+This operator allows you to specify variable values and function definitions
+
+##### Declaring Variables
+Variable declaration is structured as follows:
+* (value) -> (variable name)
 
 ##### Defining New Functions
-Function declaration is indicated by the definition operator (":") followed by the required parameters and the function body. 
-_ex. f:x = x+1_ 
-_f_ represents the identifier/name, _x_ is the required parameter, and _x+1_ is the function body
+Function declaration is structured as follows:
+
+*(function name) : (list of parameters seperated with ","s) -> (function definition)*
+
+_ex. f:x -> x+1_ 
 
 This allows the parser to differentiate an identifier and a function declaration. After declaring a function, subsequent uses of the function identifier will automatically be recognized as that function.
+
+
+*All functions and variables declared by the user get added to the global environment of the system and can then be used again on subsequent lines*
+
+
+### Plugins
+---
+#### Core
+- Algebra
+- Trigonometry
+
+These are fundamental parts of the system which is split into the plugins to seperate them from the parsing base of the system.
+
+#### Source
+This includes the rest of the plugins. These plugins can be selected by altering the Makefile to specify what functionalities are required.
