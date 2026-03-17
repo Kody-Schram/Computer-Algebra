@@ -21,7 +21,7 @@ typedef struct {
 
 
 typedef enum {
-    VARAIBLE,
+    VARIABLE,
     FUNCTION
 } ComponentType;
 

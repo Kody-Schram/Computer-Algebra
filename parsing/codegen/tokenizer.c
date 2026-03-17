@@ -198,7 +198,7 @@ Token *tokenize(char *buffer, Environment *env) {
             Component *cmp = searchEnvironment(env, buffer + i);
             buffer[end] = temp;
 
-            if (cmp == NULL || cmp->type == VARAIBLE) type = TOKEN_IDENTIFIER;
+            if (cmp == NULL || cmp->type == VARIABLE) type = TOKEN_IDENTIFIER;
             else type = TOKEN_FUNC_CALL;
         }
         

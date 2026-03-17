@@ -31,7 +31,7 @@ int bindComponent(Environment *env, ComponentType type, char *identifier, void *
     Component *new = &env->components[env->entries];
     new->type = type;
     new->identifier = strdup(identifier);
-    if (type == VARAIBLE) new->value = *(double*) component;
+    if (type == VARIABLE) new->value = *(double*) component;
     else new->function = (Function*) component;
 
     env->entries ++;
