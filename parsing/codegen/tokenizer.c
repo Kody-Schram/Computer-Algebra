@@ -20,21 +20,16 @@
 int getBuiltinLength(char *c, const char **builtins, int entries) {
     if (c == NULL) return 0;
 
-    for (int i = 0; i < entries; i++) {
-        int j = 0;
-        
-        while (c[j] != '\0' && builtins[i][j] != '\0') {
-            if (c[j] == builtins[i][j]) {
-                j ++;
-            }
-            else break;
-        }
+    int max = 0;
 
-        if (builtins[i][j] == '\0') return j;
+    for (int i = 0; i < entries; i++) {
+        int length = strlen(builtins[i]);
+
+        if (strncmp(c, builtins[i], length) == 0 && length > max) max = length;
 
     }
 
-    return 0;
+    return max;
 }
 
 /**
@@ -88,19 +83,35 @@ int getNumber(char *c) {
 }
 
 /**
- * @brief Gets length of identifier found
+ * @brief Get the length of identifiers by checking against the environment registry
  * 
  * @retval 0: No identifier found
- * @retval >0: Length of identifier found
+ * @retval >0: Length of identifier or component found
  * 
- * @param c Start of  string to check against
- * @return int Length of found identifier
+ * @param c Start of buffer to check against
+ * @param env Environment
+ * @return int Length of largest component found or length of contiuguous valid identifier characters
  */
-int getIdentifier(char *c, Environment *env) {
+int getComponentLength(char *c, Environment *env) {
+    // If not valid character type for variable name, automatically skip check
+    if (!isalpha(c[0])) return 0;
+
     int i = 0;
-    if (isalpha(c[0])) {
-        while (c[i] == '_' || (isalnum(c[i]) && !getFunctionLength(c+i, env))) i ++;
+    int max = 0;
+    while (isalnum(c[i]) || c[i] == '_') {
+        char temp = c[i + 1];
+        
+        // Adds the end of string char to only select a part of the buffer
+        c[i + 1] = '\0';
+        Component *cmp = searchEnvironment(env, c);
+        c[i + 1] = temp;
+
+        if (cmp != NULL) max = i + 1;
+
+        i++;
     }
+
+    if (max > 0) return max;
     return i;
 }
 
@@ -172,22 +183,23 @@ Token *tokenize(char *buffer, Environment *env) {
             type = TOKEN_OPERATOR;
         }
 
-        // Number can start with a - for a negative number
+        // Number can start with a - for a negative number (not implemented yet)
         else if ((matchLen = getNumber(buffer + i))) {
             end += matchLen;
             type = TOKEN_NUMBER;
         }
         
         // Checks if builtin function and return the length if it is
-        else if ((matchLen = getFunctionLength(buffer + i, env))) {
+        else if ((matchLen = getComponentLength(buffer + i, env))) {
             end += matchLen;
-            type = TOKEN_FUNC_CALL;
-        }
-        
-        // Reads identifiers/variables
-        else if ((matchLen = getIdentifier(buffer + i, env))) {
-            end += matchLen;
-            type = TOKEN_IDENTIFIER;
+
+            char temp = buffer[end];
+            buffer[end] = '\0';
+            Component *cmp = searchEnvironment(env, buffer + i);
+            buffer[end] = temp;
+
+            if (cmp == NULL || cmp->type == VARAIBLE) type = TOKEN_IDENTIFIER;
+            else type = TOKEN_FUNC_CALL;
         }
         
         else {
