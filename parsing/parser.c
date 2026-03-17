@@ -90,7 +90,7 @@ int parseFunctionDefinition(Token *head, Environment *env) {
             if (rpn == NULL) return 0;
 
             // Generate ast for body
-            ASTNode *head = astFromRPN(rpn, env);
+            ASTNode *head = astFromRPN(rpn);
             if (head == NULL) return 0;
 
             // Add to function table
@@ -169,7 +169,7 @@ ASTNode *parse(char *buffer, Environment *env, int withinFunction, int debugging
         if (debugging) printRPN(*RPN);
 
         if (debugging) printf("\nGenerating AST.\n");
-        ASTNode *ast = astFromRPN(RPN, env);
+        ASTNode *ast = astFromRPN(RPN);
 
         if (debugging) {
             printf("\nPrinting AST\n");

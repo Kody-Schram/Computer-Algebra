@@ -20,7 +20,6 @@ typedef struct Token {
 
     union {
         char *value;
-        Function *function;
     };
 
     struct Token *next;
@@ -40,7 +39,6 @@ typedef struct ASTNode {
     union {
         char *identifier;
         double value;
-        Function *function;
     };
 
     struct ASTNode *left;
@@ -64,7 +62,7 @@ Token *createToken(TokenType type, char *value, int l);
 void printTokens(Token *head);
 
 
-ASTNode *createASTNode(Token *token, Environment *env);
+ASTNode *createASTNode(Token *token);
 
 
 void printAST(ASTNode *head);

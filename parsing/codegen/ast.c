@@ -7,6 +7,7 @@ int DEFAULT_NODE_STACK_SIZE = 10;
 
 int getPrecedent(char *operator) {
     int precedent;
+    // set precedent for '->'
     switch(operator[0]) {
         case '+':
         case '-':
@@ -146,7 +147,7 @@ void printRPN(RPNList list) {
     printf("\n");
 }
 
-ASTNode *astFromRPN(RPNList *rpn, Environment *env) {
+ASTNode *astFromRPN(RPNList *rpn) {
     Stack nodes = {
         DEFAULT_NODE_STACK_SIZE,
         0,
@@ -155,7 +156,7 @@ ASTNode *astFromRPN(RPNList *rpn, Environment *env) {
 
     for (int i = 0; i < rpn->length; i ++) {
         printf("creating new node. %s\n", rpn->items[i]->value);
-        ASTNode *node = createASTNode(rpn->items[i], env);
+        ASTNode *node = createASTNode(rpn->items[i]);
         if (node == NULL) return NULL;
 
         if (node->type == NODE_OPERATOR) {

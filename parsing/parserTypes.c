@@ -71,7 +71,7 @@ void printTokens(Token *head) {
     printf("]\n");
 }
 
-ASTNode *createASTNode(Token *token, Environment *env) {
+ASTNode *createASTNode(Token *token) {
     ASTNode *node = malloc(sizeof(ASTNode));
     if (node == NULL) {
         printf("Error allocating for new node.\n");
@@ -82,7 +82,7 @@ ASTNode *createASTNode(Token *token, Environment *env) {
     {
     case TOKEN_IDENTIFIER:
         node->type = NODE_VARIABLE;
-        node->identifier = token->value;
+        node->identifier = strdup(token->value);
         break;
     case TOKEN_NUMBER:
         node->type = NODE_NUMBER;
@@ -91,17 +91,11 @@ ASTNode *createASTNode(Token *token, Environment *env) {
         break;
     case TOKEN_OPERATOR:
         node->type = NODE_OPERATOR;
-        node->identifier = token->value;
+        node->identifier = strdup(token->value);
         break;
     case TOKEN_FUNC_CALL:
         node->type = NODE_FUNC_CALL;
-
-        // Maps identifier to function definition
-        Component *component = searchEnvironment(env, token->value);
-        Function *func = component->function;
-        if (func == NULL) return NULL;
-
-        node->function = func;
+        node->identifier = strdup(token->value);
         break;
     default:
         return NULL;
@@ -112,38 +106,68 @@ ASTNode *createASTNode(Token *token, Environment *env) {
     return node;
 }
 
-void printASTRec(ASTNode *node) {
+// void printASTRec(ASTNode *node) {
+//     if (node == NULL) return;
+
+//     // print current node
+//     switch (node->type) {
+//         case NODE_NUMBER:
+//             printf("Num: %f", node->value);
+//             break;
+//         case NODE_OPERATOR:
+//             printf("OP: %s", node->identifier);
+//             break;
+//         case NODE_VARIABLE:
+//             printf("VAR: %s", node->identifier);
+//             break;
+//         // case NODE_FUNC_CALL:
+//         //     printf("FNC: %s", node->function->identifier);
+//         //     break;
+//         // case NODE_FUNC_DEF:
+//         //     printf("FND: %s", node->function->identifier);
+//         //     break;
+//         default:
+//             printf("?");
+//             break;
+//     }
+
+//     printf(", ");
+
+//     printASTRec(node->left);
+//     printASTRec(node->right);
+// }
+
+void printASTRec(ASTNode *node, int level) {
     if (node == NULL) return;
 
-    // print current node
-    switch (node->type) {
+    // Print indentation based on depth
+    for (int i = 0; i < level; i++) printf("  ");
+
+    // Print node info
+    switch(node->type) {
         case NODE_NUMBER:
-            printf("Num: %f", node->value);
+            printf("[NUM: %f]\n", node->value);
             break;
         case NODE_OPERATOR:
-            printf("OP: %s", node->identifier);
+            printf("[OP: %s]\n", node->identifier);
             break;
         case NODE_VARIABLE:
-            printf("VAR: %s", node->identifier);
+            printf("[VAR: %s]\n", node->identifier);
             break;
-        // case NODE_FUNC_CALL:
-        //     printf("FNC: %s", node->function->identifier);
-        //     break;
-        // case NODE_FUNC_DEF:
-        //     printf("FND: %s", node->function->identifier);
-        //     break;
-        default:
-            printf("?");
+        case NODE_FUNC_CALL: 
+            printf("[FUNC: %s]\n", node->identifier);
+            break;
+        case NODE_FUNC_DEF:
+            printf("no");
             break;
     }
 
-    printf(", ");
-
-    printASTRec(node->left);
-    printASTRec(node->right);
+    // Recursively print children
+    printASTRec(node->left, level + 1);
+    printASTRec(node->right, level + 1);
 }
 
 
 void printAST(ASTNode *root) {
-    printASTRec(root);
+    printASTRec(root, 0);
 }
