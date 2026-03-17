@@ -5,6 +5,7 @@
 
 #include "parserTypes.h"
 
+
 Token *createToken(TokenType type, char *value, int l) {
     // Allocates new token
     Token *token = (Token*) malloc(sizeof(Token));
@@ -26,6 +27,7 @@ Token *createToken(TokenType type, char *value, int l) {
 
     return token;
 }
+
 
 void printTokens(Token *head) {
     Token *cur = head;
@@ -71,6 +73,7 @@ void printTokens(Token *head) {
     printf("]\n");
 }
 
+
 ASTNode *createASTNode(Token *token) {
     ASTNode *node = malloc(sizeof(ASTNode));
     if (node == NULL) {
@@ -106,36 +109,6 @@ ASTNode *createASTNode(Token *token) {
     return node;
 }
 
-// void printASTRec(ASTNode *node) {
-//     if (node == NULL) return;
-
-//     // print current node
-//     switch (node->type) {
-//         case NODE_NUMBER:
-//             printf("Num: %f", node->value);
-//             break;
-//         case NODE_OPERATOR:
-//             printf("OP: %s", node->identifier);
-//             break;
-//         case NODE_VARIABLE:
-//             printf("VAR: %s", node->identifier);
-//             break;
-//         // case NODE_FUNC_CALL:
-//         //     printf("FNC: %s", node->function->identifier);
-//         //     break;
-//         // case NODE_FUNC_DEF:
-//         //     printf("FND: %s", node->function->identifier);
-//         //     break;
-//         default:
-//             printf("?");
-//             break;
-//     }
-
-//     printf(", ");
-
-//     printASTRec(node->left);
-//     printASTRec(node->right);
-// }
 
 void printASTRec(ASTNode *node, int level) {
     if (node == NULL) return;

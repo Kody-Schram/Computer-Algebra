@@ -16,6 +16,7 @@ typedef enum FunctionComponent {
     BODY
 } FunctionComponent;
 
+
 void freeTokens(Token *head) {
     Token* current = head;
     while (current != NULL) {
@@ -26,6 +27,7 @@ void freeTokens(Token *head) {
     }
 }
 
+
 int containsFunctionDefinition(Token *head) {
     Token *cur = head;
     while (cur != NULL) {
@@ -35,6 +37,7 @@ int containsFunctionDefinition(Token *head) {
 
     return 0;
 }
+
 
 int parseFunctionDefinition(Token *head, Environment *env) {
     printf("parsing function :)\n");
@@ -114,6 +117,7 @@ int parseFunctionDefinition(Token *head, Environment *env) {
     return 0;
 }
 
+
 void parseFunctionCalls(Token *head) {
     Token **parameters = NULL;
     int nParameters = 0;
@@ -145,6 +149,7 @@ void parseFunctionCalls(Token *head) {
     }
 
 }
+
 
 ASTNode *parse(char *buffer, Environment *env, int withinFunction, int debugging) {
     if (debugging) printf("\nTokenizing Input\n");

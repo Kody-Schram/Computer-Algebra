@@ -5,8 +5,6 @@
 
 #include "lexer.h"
 
-const int DEFAULT_PARAM_SIZE = 3;
-
 /**
  * @brief Adds * where it is implied through standard math notation
  * 
@@ -118,7 +116,7 @@ int handleExponentRewrite(Token **cur, Token *prev) {
  * 
  * @param cur Current node in the list
  * @param prev Previous node in the list
- * @return int 
+ * @return int Error code
  */
 int checkInvalidBinop(Token *cur, Token *prev) {
     Token *next = cur->next;
@@ -167,7 +165,7 @@ int checkInvalidBinop(Token *cur, Token *prev) {
  * @retval 1: Parenthesis added
  * 
  * @param cur Current node in the list
- * @return int 
+ * @return int Error code
  */
 int handleFunctionParens(Token **cur) {
     if ((*cur)->type == TOKEN_FUNC_CALL) {
@@ -222,16 +220,29 @@ int handleFunctionParens(Token **cur) {
     return 0;
 }
 
-
+/**
+ * @brief Handles negatives
+ * 
+ * @retval -1: Error, new tokens couldn't be created
+ * @retval 0: No negative to handle
+ * @retval 1: Negative handled
+ * 
+ * @param ptr Pointer to the pointer to the current Token
+ * @param prev Pointer to the previous Token
+ * @return int Error code
+ */
 int handleNegatives(Token **ptr, Token *prev) {
     Token *cur = *ptr;
 
+    // Determines if a '-' is in place
     if (cur->type != TOKEN_OPERATOR) return 0;
     if (strcmp(cur->value, "-") != 0) return 0;
 
+    // Outlines cases for following negative handling
+    // (ie determines this is a negative and not a subtraction)
     if (prev != NULL && prev->type != TOKEN_OPERATOR && prev->type != TOKEN_LEFT_PAREN) return 0;
     
-    printf("Creating -1 and multiplication tokens.\n");
+    //printf("Creating -1 and multiplication tokens.\n");
 
     Token *negative_one = createToken(TOKEN_NUMBER, "-1", 2);
     Token *mult = createToken(TOKEN_OPERATOR, "*", 1);
@@ -241,6 +252,7 @@ int handleNegatives(Token **ptr, Token *prev) {
         return -1;
     }
 
+    // Modifies Token list to include new Tokens
     negative_one->next = mult;
     mult->next = cur->next;
 
@@ -253,6 +265,7 @@ int handleNegatives(Token **ptr, Token *prev) {
     return 1;
 }
 
+
 Token *lex(Token* head) {
     Token *cur = head;
     Token *prev = NULL;
@@ -262,7 +275,6 @@ Token *lex(Token* head) {
     while (cur != NULL) {
         // printf("Current Token: <%u, %s>\n", cur->type, cur->value);
         if (handleNegatives(&cur, prev) == -1) return NULL;
-        printf("cur: %s\n", cur->value);
         if (handleImplicitMul(cur, prev) == -1) return NULL;
         if (handleExponentRewrite(&cur, prev) == -1) return NULL;
         if (checkInvalidBinop(cur, prev) == -1) return NULL;
