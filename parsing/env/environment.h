@@ -23,11 +23,11 @@ typedef struct {
 typedef enum {
     VARAIBLE,
     FUNCTION
-} SymbolType;
+} ComponentType;
 
 
 typedef struct {
-    SymbolType type;
+    ComponentType type;
     char *identifier;
 
     union {
@@ -35,18 +35,18 @@ typedef struct {
         double value;
     };
 
-} Symbol;
+} Component;
 
 
 typedef struct {
     int entries;
     int size;
-    Symbol *symbols;
+    Component *components;
 } Environment;
 
 
 Environment *createEnvironment();
-int bindSymbol(Environment *env, SymbolType type, char *identifier, void *symbol);
-Symbol* searchEnvironment(Environment *env, char *identifier);
+int bindComponent(Environment *env, ComponentType type, char *identifier, void *component);
+Component* searchEnvironment(Environment *env, char *identifier);
 
 #endif

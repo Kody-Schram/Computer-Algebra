@@ -97,8 +97,8 @@ ASTNode *createASTNode(Token *token, Environment *env) {
         node->type = NODE_FUNC_CALL;
 
         // Maps identifier to function definition
-        Symbol *symbol = searchEnvironment(env, token->value);
-        Function *func = symbol->function;
+        Component *component = searchEnvironment(env, token->value);
+        Function *func = component->function;
         if (func == NULL) return NULL;
 
         node->function = func;

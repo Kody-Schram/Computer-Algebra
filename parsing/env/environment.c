@@ -10,29 +10,29 @@ Environment *createEnvironment() {
     Environment *env = malloc(sizeof(Environment));
     env->entries = 0;
     env->size = DEFAULT_TABLE_SIZE;
-    env->symbols = malloc(sizeof(Symbol) * DEFAULT_TABLE_SIZE);
+    env->components = malloc(sizeof(Component) * DEFAULT_TABLE_SIZE);
 
     return env;
 }
 
-int bindSymbol(Environment *env, SymbolType type, char *identifier, void *symbol) {
+int bindComponent(Environment *env, ComponentType type, char *identifier, void *component) {
     if (env->entries >= env->size) {
         env->size += DEFAULT_INCREASE_SIZE;
-        Symbol* temp = realloc(env->symbols, env->size);
+        Component* temp = realloc(env->components, env->size);
         if (temp == NULL) {
             printf("Error reallocating space for environment.\n");
             return 0;
         }
 
-        env->symbols = temp;
+        env->components = temp;
     }
 
-    // Creates new symbol
-    Symbol *new = &env->symbols[env->entries];
+    // Creates new component
+    Component *new = &env->components[env->entries];
     new->type = type;
     new->identifier = strdup(identifier);
-    if (type == VARAIBLE) new->value = *(double*) symbol;
-    else new->function = (Function*) symbol;
+    if (type == VARAIBLE) new->value = *(double*) component;
+    else new->function = (Function*) component;
 
     env->entries ++;
 
@@ -40,10 +40,10 @@ int bindSymbol(Environment *env, SymbolType type, char *identifier, void *symbol
 
 }
 
-Symbol* searchEnvironment(Environment *env, char *identifier) {
+Component* searchEnvironment(Environment *env, char *identifier) {
     for (int i = 0; i < env->entries; i ++) {
-        if (strcmp(env->symbols[i].identifier, identifier) == 0) {
-            return &env->symbols[i];
+        if (strcmp(env->components[i].identifier, identifier) == 0) {
+            return &env->components[i];
         }
     }
 

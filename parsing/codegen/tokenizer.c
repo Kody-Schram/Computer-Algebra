@@ -63,10 +63,10 @@ int getOperatorLength(char *c) {
  * @return int 
  */
 int getFunctionLength(char *c, Environment *env) {
-    Symbol *symbol = searchEnvironment(env, c);
-    if (symbol->type != FUNCTION) return 0;
+    Component *component = searchEnvironment(env, c);
+    if (component->type != FUNCTION) return 0;
 
-    return strlen(symbol->identifier);
+    return strlen(component->identifier);
 }
 
 /**
@@ -105,16 +105,16 @@ int getIdentifier(char *c, Environment *env) {
 }
 
 /**
- * @brief Check a few single character symbols
+ * @brief Check a few single character components
  * 
- * @retval 0: No symbol recognized
- * @retval 1: Properly found symbol
+ * @retval 0: No component recognized
+ * @retval 1: Properly found component
  * 
  * @param c Character being checked
  * @param type Pointer to type variable in tokenizer
  * @return int 
  */
-int getSimpleSymbols(char c, TokenType *type) {
+int getSimpleComponents(char c, TokenType *type) {
     switch(c) {
         case '(':
             *type = TOKEN_LEFT_PAREN;
@@ -161,8 +161,8 @@ Token *tokenize(char *buffer, Environment *env) {
             continue;
         }
         
-        // Checks remaining symbols
-        else if ((matchLen = getSimpleSymbols(buffer[i], &type))) {
+        // Checks remaining components
+        else if ((matchLen = getSimpleComponents(buffer[i], &type))) {
             end += matchLen;
         }
 

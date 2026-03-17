@@ -103,7 +103,7 @@ int parseFunctionDefinition(Token *head, Environment *env) {
             function->definition = head;
 
             // Adds function to the environment
-            bindSymbol(env, FUNCTION, identifier, function);
+            bindComponent(env, FUNCTION, identifier, function);
             return 1;
 
         }
