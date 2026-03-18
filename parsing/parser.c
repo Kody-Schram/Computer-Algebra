@@ -81,7 +81,7 @@ static void parseFunctionCalls(Token *head) {
 }
 
 static ASTNode *parseFunctionDefinition(Token *head) {
-    printf("parsing function :)\n");
+    printf("Parsing function definition.\n");
     FunctionComponent component = IDENTIFIER;
 
     char *id;
@@ -92,10 +92,11 @@ static ASTNode *parseFunctionDefinition(Token *head) {
 
     Token *cur = head;
     while (cur != NULL) {
-        //printf("%s, type %d, comp %d,  == %d\n", cur->value, cur->type, component, (cur->type != TOKEN_IDENTIFIER && component == IDENTIFIER));
+        printf("%s, type %d, comp %d,  == %d\n", cur->value, cur->type, component, (cur->type != TOKEN_IDENTIFIER && component == IDENTIFIER));
         
         // Checks for switching to body
         if (component == PARAMETERS && cur->type == TOKEN_ASSIGNMENT) {
+            printf("Moving to function body.\n");
             component = BODY;
             cur = cur->next;
             break;
@@ -107,6 +108,7 @@ static ASTNode *parseFunctionDefinition(Token *head) {
 
         // Checks for switching to parameters
         if (component == IDENTIFIER && cur->type == TOKEN_FUNC_DEF) {
+            printf("Moving to function parameters.\n");
             component = PARAMETERS;
             cur = cur->next;
             continue;
@@ -125,22 +127,28 @@ static ASTNode *parseFunctionDefinition(Token *head) {
         if (component == IDENTIFIER) {
             id = cur->value;
         } else {
-            if (cur->type == TOKEN_SEPERATOR) continue;
-            // Reallocates parameter list if needed
-            if (nParams >= paramSize) {
-                paramSize *= 2;
-                char **temp = realloc(parameters, sizeof(char*) * paramSize);
-                if (temp == NULL) {
-                    printf("Error reallocating more space for function parameters.\n");
-                    return 0;
+            if (cur->type != TOKEN_SEPERATOR) {
+            
+                // Reallocates parameter list if needed
+                if (nParams >= paramSize) {
+                    printf("Reallocating for parameter list\n");
+                    paramSize *= 2;
+                    char **temp = realloc(parameters, sizeof(char*) * paramSize);
+                    if (temp == NULL) {
+                        printf("Error reallocating more space for function parameters.\n");
+                        return 0;
+                    }
+
+                    parameters = temp;
+                    
                 }
 
-                parameters = temp;
-                
+                printf("Adding parameter: %s\n", cur->value);
+                parameters[nParams] = strdup(cur->value);
+                nParams ++;
             }
-            parameters[nParams] = strdup(cur->value);
-            nParams ++;
         }
+
         cur = cur->next;
     }
 

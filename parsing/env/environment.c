@@ -53,15 +53,18 @@ Component* searchEnvironment(Environment *env, char *identifier) {
 
 void printEnvironment(Environment *env) {
     for (int i = 0; i < env->entries; i ++) {
-        char *type;
         switch(env->components[i].type) {
             case FUNCTION:
-                type = "function";
+                Function *func = env->components[i].function;
+                printf("%s(", env->components[i].identifier);
+                for (int i = 0; i < func->nParameters - 1; i ++) {
+                    printf("%s,", func->parameters[i]);
+                }
+                printf("%s)\n", func->parameters[func->nParameters-1]);
                 break;
             default:
-                type = "variable";
+                printf("%s (variable)", env->components[i].identifier);
         }
         
-        printf("%s (%s)", env->components[i].identifier, type);
     }
 }

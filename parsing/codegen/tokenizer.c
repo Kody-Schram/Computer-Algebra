@@ -43,7 +43,6 @@ static SymbolReturn getSymbolLength(char *c) {
 
             result.len = len;
             result.type = DEFAULT_MAPPING[i].type;
-            printf("Match against #%d\n", i);
         }
     }
 
