@@ -3,7 +3,7 @@
 
 const int DEFAULT_INPUT_SIZE = 50;
 
-char* terminalEntry() {
+char* terminalEntry(int line) {
 
     char* expression = (char *) malloc(DEFAULT_INPUT_SIZE * sizeof(char));
     if (expression == NULL) {
@@ -12,7 +12,7 @@ char* terminalEntry() {
         return NULL;
     }
     
-    printf("Enter an expression: ");
+    printf("%d> ", line);
     fflush(stdout);
 
     int size = DEFAULT_INPUT_SIZE;

@@ -5,7 +5,8 @@ typedef struct ASTNode ASTNode;
 
 typedef enum {
     BUILTIN,
-    DEFINED
+    DEFINED,
+    TRANSFORM
 } FunctionType;
 
 typedef struct {
@@ -16,8 +17,16 @@ typedef struct {
     union {
         ASTNode *definition;
         double (*builtin) (double);
+        ASTNode* (*transform) (ASTNode **args, int nArgs);
     };
 } Function;
+
+
+typedef struct {
+    char *identifier;
+    ASTNode **parameters;
+    int nParams;
+} FunctionCall;
 
 
 typedef enum {

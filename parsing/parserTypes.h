@@ -19,7 +19,10 @@ typedef enum TokenType {
 typedef struct Token {
     TokenType type;
 
-    char *value;
+    union {
+        char *value;
+        FunctionCall *call;
+    };
 
     struct Token *next;
 } Token;
@@ -41,6 +44,7 @@ typedef struct ASTNode {
         char *identifier;
         double value;
         void *definition;
+        FunctionCall *call;
     };
 
     struct ASTNode *left;

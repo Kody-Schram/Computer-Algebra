@@ -8,7 +8,7 @@
 #include "codegen/ast.h"
 #include "env/environment.h"
 
-const int DEFAULT_PARAMETERS_SIZE = 5;
+static const int DEFAULT_PARAMETERS_SIZE = 3;
 
 typedef enum FunctionComponent {
     IDENTIFIER,
@@ -38,6 +38,7 @@ static int containsFunctionDefinition(Token *head) {
     return 0;
 }
 
+
 static int containsAssignment(Token *head) {
     Token *cur = head;
     while (cur != NULL) {
@@ -48,37 +49,102 @@ static int containsAssignment(Token *head) {
     return 0;
 }
 
-static void parseFunctionCalls(Token *head) {
-    Token **parameters = NULL;
-    int nParameters = 0;
 
-    Token *cur = head;
+static int parseFunctionCalls(Token **head) {
+    Token *cur = *head;
     Token *prev = NULL;
 
     while (cur != NULL) {
 
         // Recursively parses nested function calls
         if (cur->type == TOKEN_FUNC_CALL) {
-            // Skips opening parens, has been handled by the lexer already
-            prev = cur->next;
-            cur = cur->next->next;
+            Token *funcPrev = prev;
+            Token **funcCall = &cur;
 
-            Token *newFunc = malloc(sizeof(Token));
+            int size = DEFAULT_PARAMETERS_SIZE;
+            int nParameters = 0;
+            ASTNode **paramASTs = malloc(sizeof(ASTNode *) * size);
+            if (paramASTs == NULL) {
+                printf("Error allocating for parameter ASTs.\n");
+                return 1;
+            }
 
-            Token *end = NULL;
-            int parens = 1;
-            while (parens > 0) {
+            char *identifier = cur->value;
+
+            Token *toFree = cur->next;
+
+            while (cur->type != TOKEN_RIGHT_PAREN) {
+                 // Skips opening parens, has been handled by the lexer already, also skips seperators
+                prev = cur->next;
+                cur = cur->next->next;
+
+                Token *paramHead = cur;
+                do {
+                    prev = cur;
+                    cur = cur->next;
+                } while(cur->type != TOKEN_SEPERATOR && cur->type != TOKEN_RIGHT_PAREN);
+
+                // Frees parenthesis or seperator token
+                free(toFree->value);
+                free(toFree);
+
+                prev->next = NULL;
+                toFree = cur->next;
+
+                if (nParameters >= size - 1) {
+                    size += DEFAULT_PARAMETERS_SIZE; 
+                    ASTNode **temp = realloc(paramASTs, sizeof(ASTNode *) * size);
+
+                    if (temp == NULL) {
+                        printf("Error reallocating for more function call parameters.\n");
+                        return 1;
+                    }
+
+                    paramASTs = temp;
+
+                }
+
+                printf("\nParameter Tokens\n");
+                printTokens(paramHead);
+
+                RPNList *rpn = shuntingYard(paramHead);
+                if (rpn == NULL) return 1;
+
+                ASTNode *ast = astFromRPN(rpn);
+                if (ast == NULL) return 1;
+
+                printf("\nParameter AST\n");
+                printAST(ast);
+
+                paramASTs[nParameters] = ast;
+                nParameters ++;
 
             }
-            end = cur;
 
+            // Creates new function call token
+            Token *callToken = malloc(sizeof(Token));
+            callToken->type = TOKEN_FUNC_CALL;
+            callToken->call = malloc(sizeof(FunctionCall));
+
+            callToken->call->identifier = strdup(identifier);
+            callToken->call->nParams = nParameters;
+            callToken->call->parameters = paramASTs;
+
+            // Replaces original funciton call token
+            callToken->next = (*funcCall)->next;
+            funcPrev->next = callToken;
+
+            free((*funcCall)->value);
+            free((*funcCall));
         }
 
         prev = cur;
         cur = cur->next;
     }
 
+    return 0;
 }
+
 
 static ASTNode *parseFunctionDefinition(Token *head, Environment *env) {
     printf("Parsing function definition.\n");
@@ -196,10 +262,12 @@ static ASTNode *parseFunctionDefinition(Token *head, Environment *env) {
     return assignment;
 }
 
+
 static ASTNode *parseAssignment(Token *head) {
     ASTNode *identifier = (ASTNode*) head->value;
 
 }
+
 
 ASTNode *parse(char *buffer, Environment *env, int debugging) {
     if (debugging) printf("\nTokenizing Input\n");
@@ -218,6 +286,8 @@ ASTNode *parse(char *buffer, Environment *env, int debugging) {
 
         return parseFunctionDefinition(head, env);
     }
+
+    if (parseFunctionCalls(&head)) return NULL;
 
     if (debugging) printf("\nCreating RPN\n");
     RPNList *RPN = shuntingYard(head);
