@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <string.h>
+#include <math.h>
 
 #include "lexer.h"
 
@@ -55,7 +56,7 @@ static int handleImplicitMul(Token *cur, Token *prev) {
     // Handle constant and identifier multiplication
     // 2x => 2*x
     else if (cur->type == TOKEN_IDENTIFIER && prev != NULL) {
-        if (prev->type == TOKEN_NUMBER) {
+        if (prev->type == TOKEN_NUMBER || prev->type == TOKEN_IDENTIFIER) {
 
             Token *mult = createToken(TOKEN_OPERATOR, "*", 1);
             if (mult == NULL) {
@@ -273,13 +274,71 @@ static int handleAssignment(Token *cur) {
         if (cur->type != TOKEN_IDENTIFIER &&
             cur->type != TOKEN_SEPERATOR &&
             cur->type != TOKEN_FUNC_DEF) invalid = 1;
+
         if (invalid && cur->type == TOKEN_ASSIGNMENT) {
             printf("Invalid assignment.\n");
             return 0;
         }
+
+        cur = cur->next;
     }
 
     return 1;
+}
+
+
+void handleLocalVariables(Token **ptr, Environment *env, int nParams, char **parameters) {
+    printf("Handling local variables\n");
+    Token *cur = *ptr;
+    Token *prev = NULL;
+    
+    while (cur != NULL) {
+        if (cur->type == TOKEN_IDENTIFIER) {
+            int max = 0;
+            char *id = cur->value;
+            for (int i = 0; id[i] != '\0'; i ++) {
+                //printf("%c\n", id[i]);
+                // Adds the end of string char to only select a part of the buffer
+                char temp = id[i + 1];
+                id[i + 1] = '\0';
+                Component *cmp = searchEnvironment(env, id);
+                id[i + 1] = temp;
+                
+                // Any subsequent iteration will always yeild a larger char size if found, so no check required
+                if (cmp != NULL) {
+                    max = strlen(cmp->identifier);
+                    continue;
+                }
+
+                for (int p = 0; p < nParams; p ++) {
+                    int m = fmin(strlen(id), strlen(parameters[p]));
+                    if (!strncmp(id, parameters[p], m) && m > max) max = m;
+                }
+
+            }
+
+            // If smaller identifer than the current one is found, partition it into two new identifier tokens
+            if (max != strlen(cur->value)) {
+                // create new tokens to split
+                Token *left = createToken(TOKEN_IDENTIFIER, id, max);
+                Token *right = createToken(TOKEN_IDENTIFIER, id + max, strlen(id) - max);
+
+                left->next = right;
+                right->next = cur->next;
+
+                if (prev != NULL) prev->next = left;
+
+                free(cur->value);
+                free(cur);
+
+                cur = left;
+            }
+
+        }
+
+        prev = cur;
+        cur = cur->next;
+    }
 }
 
 Token *lex(Token* head) {

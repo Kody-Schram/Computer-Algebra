@@ -80,7 +80,7 @@ static void parseFunctionCalls(Token *head) {
 
 }
 
-static ASTNode *parseFunctionDefinition(Token *head) {
+static ASTNode *parseFunctionDefinition(Token *head, Environment *env) {
     printf("Parsing function definition.\n");
     FunctionComponent component = IDENTIFIER;
 
@@ -92,7 +92,7 @@ static ASTNode *parseFunctionDefinition(Token *head) {
 
     Token *cur = head;
     while (cur != NULL) {
-        printf("%s, type %d, comp %d,  == %d\n", cur->value, cur->type, component, (cur->type != TOKEN_IDENTIFIER && component == IDENTIFIER));
+        //printf("%s, type %d, comp %d,  == %d\n", cur->value, cur->type, component, (cur->type != TOKEN_IDENTIFIER && component == IDENTIFIER));
         
         // Checks for switching to body
         if (component == PARAMETERS && cur->type == TOKEN_ASSIGNMENT) {
@@ -157,9 +157,19 @@ static ASTNode *parseFunctionDefinition(Token *head) {
         return NULL;
     }
 
+    printf("Second round of parsing.\n");
+
+    printf("\nLexing Tokens\n");
+
+    // Redoes identifier tokens now that local variables for parameters are established, then redoes lexing
+    handleLocalVariables(&cur, env, nParams, parameters);
+    cur = lex(cur);
+    printTokens(cur);
+
     RPNList *rpn = shuntingYard(cur);
     if (rpn == NULL) return NULL;
 
+    printf("\nGenerating AST.\n");
     // Generate ast for body
     ASTNode *ast = astFromRPN(rpn);
     if (ast == NULL) return NULL;
@@ -206,7 +216,7 @@ ASTNode *parse(char *buffer, Environment *env, int debugging) {
         printf("Contains assignment.\n");
         if (!containsFunctionDefinition(head)) return parseAssignment(head);
 
-        return parseFunctionDefinition(head);
+        return parseFunctionDefinition(head, env);
     }
 
     if (debugging) printf("\nCreating RPN\n");
