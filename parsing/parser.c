@@ -17,7 +17,7 @@ typedef enum FunctionComponent {
 } FunctionComponent;
 
 
-void freeTokens(Token *head) {
+static void freeTokens(Token *head) {
     Token* current = head;
     while (current != NULL) {
         Token *next = current->next;
@@ -28,7 +28,7 @@ void freeTokens(Token *head) {
 }
 
 
-int containsFunctionDefinition(Token *head) {
+static int containsFunctionDefinition(Token *head) {
     Token *cur = head;
     while (cur != NULL) {
         if (cur->type == TOKEN_FUNC_DEF) return 1;
@@ -39,7 +39,7 @@ int containsFunctionDefinition(Token *head) {
 }
 
 
-int parseFunctionDefinition(Token *head, Environment *env) {
+static int parseFunctionDefinition(Token *head, Environment *env) {
     printf("parsing function :)\n");
     FunctionComponent component = IDENTIFIER;
 
@@ -118,7 +118,7 @@ int parseFunctionDefinition(Token *head, Environment *env) {
 }
 
 
-void parseFunctionCalls(Token *head) {
+static void parseFunctionCalls(Token *head) {
     Token **parameters = NULL;
     int nParameters = 0;
 

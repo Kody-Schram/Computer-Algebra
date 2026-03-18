@@ -28,7 +28,7 @@ static const int N_MAPPINGS = 10;
  * @param c Buffer
  * @return int Length of found operator
  */
-int getOperatorLength(char *c) {
+static int getOperatorLength(char *c) {
     if (isalnum(c[0])) return 0;
     int max = 0;
     for (int i = 0; i < N_MAPPINGS; i ++) {
@@ -47,7 +47,7 @@ int getOperatorLength(char *c) {
  * @param c Buffer
  * @return int Length of found number
  */
-int getNumber(char *c) {
+static int getNumber(char *c) {
     int i = 0;
     if (isdigit(c[0]) || c[0] == '.') {
         while (isdigit(c[i]) || c[i] == '.') i ++;
@@ -63,7 +63,7 @@ int getNumber(char *c) {
  * @param env Environment
  * @return int Length of largest component found or length of contiuguous valid identifier characters
  */
-int getComponentLength(char *c, Environment *env) {
+static int getComponentLength(char *c, Environment *env) {
     // If not valid character type for variable name, automatically skip check
     if (!isalpha(c[0])) return 0;
 

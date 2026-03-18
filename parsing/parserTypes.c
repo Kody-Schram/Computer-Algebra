@@ -110,7 +110,7 @@ ASTNode *createASTNode(Token *token) {
 }
 
 
-void printASTRec(ASTNode *node, int level) {
+static void printASTRec(ASTNode *node, int level) {
     if (node == NULL) return;
 
     // Print indentation based on depth

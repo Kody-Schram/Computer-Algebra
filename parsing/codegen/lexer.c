@@ -16,7 +16,7 @@
  * @param prev Previous token in list
  * @return int 
  */
-int handleImplicitMul(Token *cur, Token *prev) {
+static int handleImplicitMul(Token *cur, Token *prev) {
     // Handle implicit multiplcation with left bracket or function
     // x(x-1) => x*(x-1)
     if ((cur->type == TOKEN_LEFT_PAREN || cur->type == TOKEN_FUNC_CALL) && prev != NULL) {
@@ -84,7 +84,7 @@ int handleImplicitMul(Token *cur, Token *prev) {
  * @param prev Previous node in the list
  * @return int 
  */
-int handleExponentRewrite(Token **cur, Token *prev) {
+static int handleExponentRewrite(Token **cur, Token *prev) {
     if ((*cur)->value[0] == '*' && (*cur)->next != NULL) {
         if ((*cur)->next->value[0] == '*') {
             Token *exponent = createToken(TOKEN_OPERATOR, "^", 1);
@@ -118,7 +118,7 @@ int handleExponentRewrite(Token **cur, Token *prev) {
  * @param prev Previous node in the list
  * @return int Error code
  */
-int checkInvalidBinop(Token *cur, Token *prev) {
+static int checkInvalidBinop(Token *cur, Token *prev) {
     Token *next = cur->next;
     if (prev != NULL && next != NULL) {
         if (cur->type == TOKEN_OPERATOR) {
@@ -167,7 +167,7 @@ int checkInvalidBinop(Token *cur, Token *prev) {
  * @param cur Current node in the list
  * @return int Error code
  */
-int handleFunctionParens(Token **cur) {
+static int handleFunctionParens(Token **cur) {
     if ((*cur)->type == TOKEN_FUNC_CALL) {
         Token *func = *cur;
         if (func->next != NULL) {
@@ -231,7 +231,7 @@ int handleFunctionParens(Token **cur) {
  * @param prev Pointer to the previous Token
  * @return int Error code
  */
-int handleNegatives(Token **ptr, Token *prev) {
+static int handleNegatives(Token **ptr, Token *prev) {
     Token *cur = *ptr;
 
     // Determines if a '-' is in place

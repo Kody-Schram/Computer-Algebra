@@ -1,12 +1,14 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "ast.h"
 
-int DEFAULT_NODE_STACK_SIZE = 10;
+static int DEFAULT_NODE_STACK_SIZE = 10;
 
-int getPrecedent(char *operator) {
+static int getPrecedent(char *operator) {
     int precedent;
+
     // set precedent for '->'
     switch(operator[0]) {
         case '+':
@@ -25,7 +27,7 @@ int getPrecedent(char *operator) {
     return precedent;
 }
 
-int getLinkedListLength(Token *head) {
+static int getLinkedListLength(Token *head) {
     Token *cur = head;
 
     int i = 0;
@@ -38,7 +40,7 @@ int getLinkedListLength(Token *head) {
 }
 
 
-int reallocStack(Stack *stack) {
+static int reallocStack(Stack *stack) {
     stack->size *= 2;
     void **temp = realloc(stack->items, stack->size * sizeof(void*));
     if (temp == NULL) {
