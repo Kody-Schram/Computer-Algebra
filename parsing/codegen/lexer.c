@@ -318,7 +318,7 @@ void handleLocalVariables(Token **ptr, Environment *env, int nParams, char **par
             }
 
             // If smaller identifer than the current one is found, partition it into two new identifier tokens
-            if (max != strlen(cur->value)) {
+            if (max != strlen(cur->value) && max != 0) {
                 // create new tokens to split
                 Token *left = createToken(TOKEN_IDENTIFIER, id, max);
                 Token *right = createToken(TOKEN_IDENTIFIER, id + max, strlen(id) - max);
