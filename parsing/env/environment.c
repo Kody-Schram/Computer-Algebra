@@ -50,3 +50,18 @@ Component* searchEnvironment(Environment *env, char *identifier) {
     return NULL;
 }
 
+
+void printEnvironment(Environment *env) {
+    for (int i = 0; i < env->entries; i ++) {
+        char *type;
+        switch(env->components[i].type) {
+            case FUNCTION:
+                type = "function";
+                break;
+            default:
+                type = "variable";
+        }
+        
+        printf("%s (%s)", env->components[i].identifier, type);
+    }
+}

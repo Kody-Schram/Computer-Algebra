@@ -30,7 +30,8 @@ typedef enum NodeType {
     NODE_OPERATOR,
     NODE_VARIABLE,
     NODE_FUNC_CALL,
-    NODE_FUNC_DEF
+    NODE_ASSIGN_VAR,
+    NODE_ASSIGN_FUNC
 } NodeType;
 
 
@@ -39,6 +40,7 @@ typedef struct ASTNode {
     union {
         char *identifier;
         double value;
+        void *definition;
     };
 
     struct ASTNode *left;
@@ -63,6 +65,9 @@ void printTokens(Token *head);
 
 
 ASTNode *createASTNode(Token *token);
+
+
+ASTNode *dummyASTNode(NodeType type);
 
 
 void printAST(ASTNode *head);

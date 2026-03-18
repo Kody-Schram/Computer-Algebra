@@ -16,10 +16,28 @@ int main() {
     char *expression = terminalEntry();
     printf("you entered %s\n", expression);
 
-    ASTNode *head = parse(expression, global_env, 0, 1);
-    if (head == NULL) {
-        printf("Error parsing input.\n");
+    ASTNode *head = parse(expression, global_env, 1);
+    if (head == NULL) return 0;
+
+    // Updates environment if an assignment is returned
+    if (head->type == NODE_ASSIGN_FUNC || head->type == NODE_ASSIGN_VAR) {
+        printf("Updating environment.\n");
+        
+        ComponentType type;
+        switch(head->type) {
+            case NODE_ASSIGN_FUNC:
+                type = FUNCTION;
+                break;
+            default:
+                type = VARIABLE;
+        }
+
+        bindComponent(global_env, type, head->left->identifier, head->right);
+
+        // Free assignment nodes after assignment
     }
+
+    printEnvironment(global_env);
 
     return 0;
 }

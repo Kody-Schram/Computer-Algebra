@@ -17,7 +17,7 @@ typedef enum FunctionComponent {
 } FunctionComponent;
 
 
-static void freeTokens(Token *head) {
+void freeTokens(Token *head) {
     Token* current = head;
     while (current != NULL) {
         Token *next = current->next;
@@ -38,85 +38,15 @@ static int containsFunctionDefinition(Token *head) {
     return 0;
 }
 
-
-static int parseFunctionDefinition(Token *head, Environment *env) {
-    printf("parsing function :)\n");
-    FunctionComponent component = IDENTIFIER;
-
-    char *identifier;
-
-    int paramSize = DEFAULT_PARAMETERS_SIZE;
-    char **parameters = malloc(paramSize * sizeof(char*));
-    int nParams = 0;
-
+static int containsAssignment(Token *head) {
     Token *cur = head;
     while (cur != NULL) {
-        printf("%s, type %d, comp %d,  == %d\n", cur->value, cur->type, component, (cur->type != TOKEN_IDENTIFIER && component == IDENTIFIER));
-        if ((cur->type != TOKEN_IDENTIFIER && component == IDENTIFIER)
-            || (cur->type != TOKEN_SEPERATOR && component != PARAMETERS)) {
-                printf("Invalid token within function declaration. %s %d\n", cur->value, component);
-                return 0;
-        }
-        if (cur->type == TOKEN_SEPERATOR) {
-            component = PARAMETERS;
-            cur = cur->next;
-            continue;
-        }
-        if (cur->type == TOKEN_ASSIGNMENT) {
-            component = BODY;
-            cur = cur->next;
-            continue;
-        }
-        if (component == IDENTIFIER) {
-            identifier = strdup(cur->value);
-            component = PARAMETERS;
-        } 
-        else if (component == PARAMETERS) {
-            // Reallocates parameter list if needed
-            if (nParams >= paramSize) {
-                paramSize *= 2;
-                char **temp = realloc(parameters, sizeof(char*) * paramSize);
-                if (temp == NULL) {
-                    printf("Error reallocating more space for function parameters.\n");
-                    return 0;
-                }
-
-                parameters = temp;
-                
-            }
-            parameters[nParams] = strdup(cur->value);
-            nParams ++;
-
-        // Adds remaining tokens to new body linked list
-        } else if (component == BODY) {
-            RPNList *rpn = shuntingYard(cur);
-            if (rpn == NULL) return 0;
-
-            // Generate ast for body
-            ASTNode *head = astFromRPN(rpn);
-            if (head == NULL) return 0;
-
-            // Add to function table
-            Function *function = malloc(sizeof(Function));
-            if (function == NULL) return 0;
-
-            function->nParameters = nParams;
-            function->parameters = parameters;
-            function->type = DEFINED;
-            function->definition = head;
-
-            // Adds function to the environment
-            bindComponent(env, FUNCTION, identifier, function);
-            return 1;
-
-        }
-
+        if (cur->type == TOKEN_ASSIGNMENT) return 1;
         cur = cur->next;
     }
 
     return 0;
 }
-
 
 static void parseFunctionCalls(Token *head) {
     Token **parameters = NULL;
@@ -150,8 +80,110 @@ static void parseFunctionCalls(Token *head) {
 
 }
 
+static ASTNode *parseFunctionDefinition(Token *head) {
+    printf("parsing function :)\n");
+    FunctionComponent component = IDENTIFIER;
 
-ASTNode *parse(char *buffer, Environment *env, int withinFunction, int debugging) {
+    char *id;
+
+    int paramSize = DEFAULT_PARAMETERS_SIZE;
+    char **parameters = malloc(paramSize * sizeof(char*));
+    int nParams = 0;
+
+    Token *cur = head;
+    while (cur != NULL) {
+        //printf("%s, type %d, comp %d,  == %d\n", cur->value, cur->type, component, (cur->type != TOKEN_IDENTIFIER && component == IDENTIFIER));
+        
+        // Checks for switching to body
+        if (component == PARAMETERS && cur->type == TOKEN_ASSIGNMENT) {
+            component = BODY;
+            cur = cur->next;
+            break;
+        } else if (cur->type == TOKEN_ASSIGNMENT) {
+            printf("parameters\n");
+            printf("Invalid token within function declaration. %s %d\n", cur->value, component);
+            return NULL;
+        }
+
+        // Checks for switching to parameters
+        if (component == IDENTIFIER && cur->type == TOKEN_FUNC_DEF) {
+            component = PARAMETERS;
+            cur = cur->next;
+            continue;
+        } else if (cur->type == TOKEN_FUNC_DEF) {
+            printf("identifier\n");
+            printf("Invalid token within function declaration. %s %d\n", cur->value, component);
+            return NULL;
+        }
+
+        if (component == PARAMETERS && (cur->type != TOKEN_IDENTIFIER && cur->type != TOKEN_SEPERATOR)) {
+            printf("Invalid token within function declaration. %s %d\n", cur->value, component);
+            return NULL;
+        }
+
+        // Assignments identifier
+        if (component == IDENTIFIER) {
+            id = cur->value;
+        } else {
+            if (cur->type == TOKEN_SEPERATOR) continue;
+            // Reallocates parameter list if needed
+            if (nParams >= paramSize) {
+                paramSize *= 2;
+                char **temp = realloc(parameters, sizeof(char*) * paramSize);
+                if (temp == NULL) {
+                    printf("Error reallocating more space for function parameters.\n");
+                    return 0;
+                }
+
+                parameters = temp;
+                
+            }
+            parameters[nParams] = strdup(cur->value);
+            nParams ++;
+        }
+        cur = cur->next;
+    }
+
+    if (containsAssignment(cur)) {
+        printf("Cannot have assignment within a function definition.\n");
+        return NULL;
+    }
+
+    RPNList *rpn = shuntingYard(cur);
+    if (rpn == NULL) return NULL;
+
+    // Generate ast for body
+    ASTNode *ast = astFromRPN(rpn);
+    if (ast == NULL) return NULL;
+
+    printAST(ast);
+
+    // Add to function table
+    Function *function = malloc(sizeof(Function));
+    if (function == NULL) return NULL;
+
+    function->nParameters = nParams;
+    function->parameters = parameters;
+    function->type = DEFINED;
+    function->definition = ast;
+
+    ASTNode *assignment = dummyASTNode(NODE_ASSIGN_FUNC);
+    assignment->right = (ASTNode*) function;
+
+    ASTNode *identifier = dummyASTNode(NODE_VARIABLE);
+    identifier->identifier = strdup(id);
+
+    assignment->left = identifier;
+
+    return assignment;
+}
+
+static ASTNode *parseAssignment(Token *head) {
+    ASTNode *identifier = (ASTNode*) head->value;
+
+}
+
+ASTNode *parse(char *buffer, Environment *env, int debugging) {
     if (debugging) printf("\nTokenizing Input\n");
     Token *raw = tokenize(buffer, env);
     if (raw == NULL) return NULL;
@@ -162,30 +194,26 @@ ASTNode *parse(char *buffer, Environment *env, int withinFunction, int debugging
     if (head == NULL) return NULL;
     printTokens(head);
 
-    // Parses function definitions differently than regular expressions
-    if (containsFunctionDefinition(head)) {
-        if (withinFunction) {
-            printf("Cannot have nested functions definitions.\n");
-            return NULL;
-        }
-        parseFunctionDefinition(head, env);
-    } else {
-        if (debugging) printf("\nCreating RPN\n");
-        RPNList *RPN = shuntingYard(head);
-        if (RPN == NULL) return NULL;
-        if (debugging) printRPN(*RPN);
+    if (containsAssignment(head)) {
+        printf("Contains assignment.\n");
+        if (!containsFunctionDefinition(head)) return parseAssignment(head);
 
-        if (debugging) printf("\nGenerating AST.\n");
-        ASTNode *ast = astFromRPN(RPN);
-
-        if (debugging) {
-            printf("\nPrinting AST\n");
-            printAST(ast);
-        }
-
-        freeTokens(head);
-        return ast;
+        return parseFunctionDefinition(head);
     }
 
-    return NULL;
+    if (debugging) printf("\nCreating RPN\n");
+    RPNList *RPN = shuntingYard(head);
+    if (RPN == NULL) return NULL;
+    if (debugging) printRPN(*RPN);
+
+    if (debugging) printf("\nGenerating AST.\n");
+    ASTNode *ast = astFromRPN(RPN);
+
+    if (debugging) {
+        printf("\nPrinting AST\n");
+        printAST(ast);
+    }
+
+    freeTokens(head);
+    return ast;
 }

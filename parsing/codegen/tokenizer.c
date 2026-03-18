@@ -22,23 +22,32 @@ static const OperatorMapping DEFAULT_MAPPING[] = {
 
 static const int N_MAPPINGS = 10;
 
+typedef struct {
+    int len;
+    TokenType type;
+} SymbolReturn;
+
 /**
  * @brief Gets the length of an operator
  * 
  * @param c Buffer
  * @return int Length of found operator
  */
-static int getOperatorLength(char *c) {
-    if (isalnum(c[0])) return 0;
-    int max = 0;
+static SymbolReturn getSymbolLength(char *c) {
+    SymbolReturn result = {0, TOKEN_OPERATOR};
+    if (isalnum(c[0])) return result;
     for (int i = 0; i < N_MAPPINGS; i ++) {
-        if (!strncmp(c, DEFAULT_MAPPING[i].op, strlen(DEFAULT_MAPPING[i].op))) {
-            max = strlen(DEFAULT_MAPPING[i].op);
+        int len = strlen(DEFAULT_MAPPING[i].op);
+        if (!strncmp(c, DEFAULT_MAPPING[i].op, len)) {
+            if (len < result.len) continue;
+
+            result.len = len;
+            result.type = DEFAULT_MAPPING[i].type;
             printf("Match against #%d\n", i);
         }
     }
 
-    return max;
+    return result;
 }
 
 /**
@@ -92,6 +101,7 @@ Token *tokenize(char *buffer, Environment *env) {
     Token *prev = NULL;
 
     int matchLen;
+    SymbolReturn ret;
 
     int spaceI = -1;
     TokenType prevT = -1;
@@ -110,9 +120,9 @@ Token *tokenize(char *buffer, Environment *env) {
         }
 
         // Checks if operator and returns the length if it is
-        else if ((matchLen = getOperatorLength(buffer + i))) {
-            end += matchLen;
-            type = TOKEN_OPERATOR;
+        else if ((ret = getSymbolLength(buffer + i)).len) {
+            end += ret.len;
+            type = ret.type;
         }
 
         // Number can start with a - for a negative number (not implemented yet)

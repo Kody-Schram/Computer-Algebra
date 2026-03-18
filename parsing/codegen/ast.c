@@ -120,7 +120,7 @@ RPNList *shuntingYard(Token *head) {
 
     // Flush remaining operators to output stack
     while (operators.entries > 0) {
-        printf("flushing operators\n");
+        //printf("flushing operators\n");
         output.items[output.entries] = operators.items[operators.entries-1];
         output.entries++;
         operators.entries --;
@@ -157,12 +157,12 @@ ASTNode *astFromRPN(RPNList *rpn) {
     };
 
     for (int i = 0; i < rpn->length; i ++) {
-        printf("creating new node. %s\n", rpn->items[i]->value);
+        //printf("creating new node. %s\n", rpn->items[i]->value);
         ASTNode *node = createASTNode(rpn->items[i]);
         if (node == NULL) return NULL;
 
         if (node->type == NODE_OPERATOR) {
-            printf("adding children\n");
+            //printf("adding children\n");
 
             node->right = nodes.items[nodes.entries - 1];
             node->left = nodes.items[nodes.entries - 2];
@@ -180,6 +180,6 @@ ASTNode *astFromRPN(RPNList *rpn) {
         }
     }
 
-    printf("length %d", nodes.entries);
+    //printf("length %d\n", nodes.entries);
     return nodes.items[0];
 }

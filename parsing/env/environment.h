@@ -46,7 +46,14 @@ typedef struct {
 
 
 Environment *createEnvironment();
+
+
 int bindComponent(Environment *env, ComponentType type, char *identifier, void *component);
+
+
 Component* searchEnvironment(Environment *env, char *identifier);
+
+
+void printEnvironment(Environment *env);
 
 #endif

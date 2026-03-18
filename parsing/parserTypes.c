@@ -110,6 +110,22 @@ ASTNode *createASTNode(Token *token) {
 }
 
 
+ASTNode *dummyASTNode(NodeType type) {
+    ASTNode *node = malloc(sizeof(ASTNode));
+
+    if (node == NULL) {
+        printf("Error allocating for new node.\n");
+        return NULL;
+    }
+
+    node->type = type;
+    node->left = NULL;
+    node->right = NULL;
+
+    return node;
+}
+
+
 static void printASTRec(ASTNode *node, int level) {
     if (node == NULL) return;
 
@@ -130,9 +146,8 @@ static void printASTRec(ASTNode *node, int level) {
         case NODE_FUNC_CALL: 
             printf("[FUNC: %s]\n", node->identifier);
             break;
-        case NODE_FUNC_DEF:
-            printf("no");
-            break;
+        default:
+            printf("no\n");
     }
 
     // Recursively print children

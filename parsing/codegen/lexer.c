@@ -266,6 +266,22 @@ static int handleNegatives(Token **ptr, Token *prev) {
 }
 
 
+static int handleAssignment(Token *cur) {
+    int invalid = 0;
+
+    while (cur != NULL) {
+        if (cur->type != TOKEN_IDENTIFIER &&
+            cur->type != TOKEN_SEPERATOR &&
+            cur->type != TOKEN_FUNC_DEF) invalid = 1;
+        if (invalid && cur->type == TOKEN_ASSIGNMENT) {
+            printf("Invalid assignment.\n");
+            return 0;
+        }
+    }
+
+    return 1;
+}
+
 Token *lex(Token* head) {
     Token *cur = head;
     Token *prev = NULL;
@@ -302,6 +318,8 @@ Token *lex(Token* head) {
         printf("Mismatched parenthesis.\n");
         return NULL;
     } 
+
+    if (!handleAssignment) return NULL;
 
     return head;
 
