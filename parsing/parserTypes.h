@@ -15,12 +15,11 @@ typedef enum TokenType {
     TOKEN_SEPERATOR
 } TokenType;
 
+
 typedef struct Token {
     TokenType type;
 
-    union {
-        char *value;
-    };
+    char *value;
 
     struct Token *next;
 } Token;
@@ -33,6 +32,7 @@ typedef enum NodeType {
     NODE_FUNC_CALL,
     NODE_FUNC_DEF
 } NodeType;
+
 
 typedef struct ASTNode {
     NodeType type;

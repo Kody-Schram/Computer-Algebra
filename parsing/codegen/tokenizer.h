@@ -7,12 +7,17 @@
 /**
  * @brief Tokenizes a string input into an unrefined linked list of tokens
  * 
- * @retval NULL: Error tokenizing the string, space error, unrecognized character, or allocation erorr
- * @retval Token*: Properly tokenized the string
+ * @retval NULL: Error tokenizing the string
+ * @retval Token*: Head of Token linked list
  * 
  * @param buffer Mathmatical string
  * @return Token* 
  */
 Token *tokenize(char *buffer, Environment *env);
+
+typedef struct  {
+    char *op;
+    TokenType type;
+} OperatorMapping;
 
 #endif

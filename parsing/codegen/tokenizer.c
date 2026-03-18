@@ -6,71 +6,45 @@
 #include "tokenizer.h"
 #include "../builtins.h"
 
+
+static const OperatorMapping DEFAULT_MAPPING[] = {
+    {"+", TOKEN_OPERATOR},
+    {"-", TOKEN_OPERATOR},
+    {"*", TOKEN_OPERATOR},
+    {"/", TOKEN_OPERATOR},
+    {"^", TOKEN_OPERATOR},
+    {"->", TOKEN_ASSIGNMENT},
+    {"(", TOKEN_RIGHT_PAREN},
+    {")", TOKEN_LEFT_PAREN},
+    {",", TOKEN_SEPERATOR},
+    {":", TOKEN_FUNC_DEF}
+};
+
+static const int N_MAPPINGS = 10;
+
 /**
- * @brief Get the Builtin Length object
+ * @brief Gets the length of an operator
  * 
- * @retval 0: No match found
- * @retval >0: Length of match found
- * 
- * @param c Start of string to check against
- * @param builtins List of strings
- * @param entries Number of entries in the list
- * @return int 
+ * @param c Buffer
+ * @return int Length of found operator
  */
-int getBuiltinLength(char *c, const char **builtins, int entries) {
-    if (c == NULL) return 0;
-
+int getOperatorLength(char *c) {
+    if (isalnum(c[0])) return 0;
     int max = 0;
-
-    for (int i = 0; i < entries; i++) {
-        int length = strlen(builtins[i]);
-
-        if (strncmp(c, builtins[i], length) == 0 && length > max) max = length;
-
+    for (int i = 0; i < N_MAPPINGS; i ++) {
+        if (!strncmp(c, DEFAULT_MAPPING[i].op, strlen(DEFAULT_MAPPING[i].op))) {
+            max = strlen(DEFAULT_MAPPING[i].op);
+            printf("Match against #%d\n", i);
+        }
     }
 
     return max;
 }
 
 /**
- * @brief Gets the length of any operators found
+ * @brief Gets the length of number found
  * 
- * @retval 0: No operator found
- * @retval >0: Length of operator found
- * 
- * @param c Start of string to check against
- * @return int 
- */
-int getOperatorLength(char *c) {
-    const char *operators[] = {"->"};
-
-    return getBuiltinLength(c, operators, sizeof(operators)/sizeof(operators[0]));
-
-}
-
-/**
- * @brief Gets the length any builtin function found
- * 
- * @retval 0: No builtin function found
- * @retval >0: Length of builtin function found
- * 
- * @param c Start of string to check against
- * @return int 
- */
-int getFunctionLength(char *c, Environment *env) {
-    Component *component = searchEnvironment(env, c);
-    if (component->type != FUNCTION) return 0;
-
-    return strlen(component->identifier);
-}
-
-/**
- * @brief Gets length of number found
- * 
- * @retval 0: No number found
- * @retval >0: Length of number found
- * 
- * @param c Start of string to check against
+ * @param c Buffer
  * @return int Length of found number
  */
 int getNumber(char *c) {
@@ -85,10 +59,7 @@ int getNumber(char *c) {
 /**
  * @brief Get the length of identifiers by checking against the environment registry
  * 
- * @retval 0: No identifier found
- * @retval >0: Length of identifier or component found
- * 
- * @param c Start of buffer to check against
+ * @param c Buffer
  * @param env Environment
  * @return int Length of largest component found or length of contiuguous valid identifier characters
  */
@@ -115,46 +86,6 @@ int getComponentLength(char *c, Environment *env) {
     return i;
 }
 
-/**
- * @brief Check a few single character components
- * 
- * @retval 0: No component recognized
- * @retval 1: Properly found component
- * 
- * @param c Character being checked
- * @param type Pointer to type variable in tokenizer
- * @return int 
- */
-int getSimpleComponents(char c, TokenType *type) {
-
-    //"+", "-", "*", "/", "^"
-    switch(c) {
-        case '(':
-            *type = TOKEN_LEFT_PAREN;
-            break;
-        case ')':
-            *type = TOKEN_RIGHT_PAREN;
-            break;
-        case ':':
-            *type = TOKEN_FUNC_DEF;
-            break;
-        case ',':
-            *type = TOKEN_SEPERATOR;
-            break;
-        case '+':
-        case '-':
-        case '*':
-        case '/':
-        case '^':
-            *type = TOKEN_OPERATOR;
-            break;
-        default:
-            return 0;
-    }
-
-    return 1;
-}
-
 
 Token *tokenize(char *buffer, Environment *env) {
     Token *head = NULL;
@@ -176,11 +107,6 @@ Token *tokenize(char *buffer, Environment *env) {
             spaceI = i;
             i++;
             continue;
-        }
-        
-        // Checks remaining components
-        else if ((matchLen = getSimpleComponents(buffer[i], &type))) {
-            end += matchLen;
         }
 
         // Checks if operator and returns the length if it is
