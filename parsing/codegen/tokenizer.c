@@ -4,7 +4,6 @@
 #include <string.h>
 
 #include "tokenizer.h"
-#include "../builtins.h"
 
 
 static const OperatorMapping DEFAULT_MAPPING[] = {

@@ -12,7 +12,7 @@ char* terminalEntry(int line) {
         return NULL;
     }
     
-    printf("%d> ", line);
+    printf("%d > ", line);
     fflush(stdout);
 
     int size = DEFAULT_INPUT_SIZE;

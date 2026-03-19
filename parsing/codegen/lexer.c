@@ -237,7 +237,7 @@ static int handleNegatives(Token **ptr, Token *prev) {
 
     // Determines if a '-' is in place
     if (cur->type != TOKEN_OPERATOR) return 0;
-    if (strcmp(cur->value, "-") != 0) return 0;
+    if (strcmp(cur->value, "-")) return 0;
 
     // Outlines cases for following negative handling
     // (ie determines this is a negative and not a subtraction)

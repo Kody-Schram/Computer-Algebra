@@ -92,20 +92,13 @@ static int parseFunctionCalls(Token **head) {
                     printf("freed seperator\n");
                 }
 
-                // parens > -1 means final ')' hasn't been reached yet
-                // 
+
                 while(!(parens == 0 && cur->type == TOKEN_SEPERATOR) && !(parens == 0 && cur->type == TOKEN_RIGHT_PAREN)) {
                     printf("\nparameter token %s\n", cur->value);
                     
-                    if (cur->type == TOKEN_LEFT_PAREN) {
-                        parens ++;
-                        printf("found opening paren %d\n", parens);
-                    }
+                    if (cur->type == TOKEN_LEFT_PAREN) parens ++;
 
-                    if (cur->type == TOKEN_RIGHT_PAREN) {
-                        printf("found a right paren %d\n", parens);
-                        parens --;
-                    }
+                    if (cur->type == TOKEN_RIGHT_PAREN) parens --;
                     
                     prev = cur;
                     cur = cur->next;

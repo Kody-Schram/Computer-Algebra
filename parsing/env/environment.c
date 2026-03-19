@@ -42,7 +42,7 @@ int bindComponent(Environment *env, ComponentType type, char *identifier, void *
 
 Component* searchEnvironment(Environment *env, char *identifier) {
     for (int i = 0; i < env->entries; i ++) {
-        if (strcmp(env->components[i].identifier, identifier) == 0) {
+        if (!strcmp(env->components[i].identifier, identifier)) {
             return &env->components[i];
         }
     }

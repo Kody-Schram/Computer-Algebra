@@ -15,7 +15,7 @@ int main() {
 
     int line = 1;
 
-    int first = 1;
+    int first = 0;
     char entry[] = "f:x->2x";
 
     // System loop
