@@ -20,11 +20,13 @@ typedef enum FunctionComponent {
 void freeTokens(Token *head) {
     Token* current = head;
     while (current != NULL) {
+        printf("freeing %s\n", current->value);
         Token *next = current->next;
         free(current->value);
         free(current);
         current = next;
     }
+    printf("done freeing tokens\n");
 }
 
 
@@ -52,15 +54,18 @@ static int containsAssignment(Token *head) {
 
 static int parseFunctionCalls(Token **head) {
     Token *cur = *head;
-    Token *prev = NULL;
+    Token *funcPrev = NULL;
 
     while (cur != NULL) {
+        printf("Current: %s\n", cur->value);
 
         // Recursively parses nested function calls
         if (cur->type == TOKEN_FUNC_CALL) {
-            Token *funcPrev = prev;
-            Token **funcCall = &cur;
+            printf("function found\n");
+            Token *funcCall = cur;
+            Token *prev = NULL;
 
+            // Prepares list of parameters
             int size = DEFAULT_PARAMETERS_SIZE;
             int nParameters = 0;
             ASTNode **paramASTs = malloc(sizeof(ASTNode *) * size);
@@ -69,27 +74,34 @@ static int parseFunctionCalls(Token **head) {
                 return 1;
             }
 
-            char *identifier = cur->value;
+            // Selects opening paren to be freed
+            Token *opening = cur->next;
+            Token *seperator = NULL;
 
-            Token *toFree = cur->next;
+            // skips to start of parameter
+            cur = cur->next->next;
+            prev = cur;
 
-            while (cur->type != TOKEN_RIGHT_PAREN) {
-                 // Skips opening parens, has been handled by the lexer already, also skips seperators
-                prev = cur->next;
-                cur = cur->next->next;
-
+            while (cur != NULL && cur->type != TOKEN_RIGHT_PAREN) {
                 Token *paramHead = cur;
-                do {
+
+                if (seperator != NULL) {
+                    free(seperator->value);
+                    free(seperator);
+                    printf("freed seperator\n");
+                }
+
+                while(cur->type != TOKEN_SEPERATOR && cur->type != TOKEN_RIGHT_PAREN) {
+                    printf("parameter token %s\n", cur->value);
                     prev = cur;
                     cur = cur->next;
-                } while(cur->type != TOKEN_SEPERATOR && cur->type != TOKEN_RIGHT_PAREN);
+                }
 
-                // Frees parenthesis or seperator token
-                free(toFree->value);
-                free(toFree);
-
+                printf("seperator token %s\n", cur->value);
+                // Cur is now at either ',' or ')', so prev is last token in parameter
                 prev->next = NULL;
-                toFree = cur->next;
+                seperator = cur;
+                cur = cur->next;
 
                 if (nParameters >= size - 1) {
                     size += DEFAULT_PARAMETERS_SIZE; 
@@ -107,9 +119,14 @@ static int parseFunctionCalls(Token **head) {
                 printf("\nParameter Tokens\n");
                 printTokens(paramHead);
 
+                printf("Handling recursive calls\n");
+                // Recursively parses calls
+                if (!parseFunctionCalls(&paramHead)) printf("No recursive function calls found\n");
+                else printf("Recursive function calls handled\n");
+
+                // Generates ast for parameter
                 RPNList *rpn = shuntingYard(paramHead);
                 if (rpn == NULL) return 1;
-
                 ASTNode *ast = astFromRPN(rpn);
                 if (ast == NULL) return 1;
 
@@ -119,28 +136,63 @@ static int parseFunctionCalls(Token **head) {
                 paramASTs[nParameters] = ast;
                 nParameters ++;
 
+                printf("freeing parameter tokens\n");
+
+                // Cleanup
+                freeTokens(paramHead);
             }
+
+            printf("finishing call\n");
 
             // Creates new function call token
             Token *callToken = malloc(sizeof(Token));
+            if (callToken == NULL) {
+                printf("Couldn't allocate memory for new function call token.\n");
+                return 1;
+            }
             callToken->type = TOKEN_FUNC_CALL;
-            callToken->call = malloc(sizeof(FunctionCall));
+            printf("setting next\n");
+            callToken->next = seperator->next;
+            printf("identifier %s\n", funcCall->value);
 
-            callToken->call->identifier = strdup(identifier);
-            callToken->call->nParams = nParameters;
-            callToken->call->parameters = paramASTs;
+            FunctionCall *call = malloc(sizeof(FunctionCall));
+            call->identifier = strdup(funcCall->value);
+            call->nParams = nParameters;
+            call->parameters = paramASTs;
+
+            callToken->call = call;
+
+
+            printf("make new token, replacing old one\n");
+
+            if (funcPrev != NULL) {
+                printf("prev %s\n", funcPrev->value);
+                funcPrev->next = callToken;
+            }
+            else *head = callToken;
+
+            // Free opening parenthesis
+            free(opening->value);
+            free(opening);
+            printf("freed opening paren\n");
+
+            free(seperator->value);
+            free(seperator);
+            printf("freed closing paren\n");
 
             // Replaces original funciton call token
-            callToken->next = (*funcCall)->next;
-            funcPrev->next = callToken;
+            free(funcCall->value);
+            free(funcCall);
 
-            free((*funcCall)->value);
-            free((*funcCall));
+            printf("finished will handling call\n");
+            continue;
         }
 
-        prev = cur;
+        funcPrev = cur;
         cur = cur->next;
     }
+
+    printf("Finished parsing all calls, returning\n");
 
     return 0;
 }
@@ -230,6 +282,7 @@ static ASTNode *parseFunctionDefinition(Token *head, Environment *env) {
     // Redoes identifier tokens now that local variables for parameters are established, then redoes lexing
     handleLocalVariables(&cur, env, nParams, parameters);
     cur = lex(cur);
+    printf("\nFunction Lexing\n");
     printTokens(cur);
 
     RPNList *rpn = shuntingYard(cur);
@@ -259,13 +312,16 @@ static ASTNode *parseFunctionDefinition(Token *head, Environment *env) {
 
     assignment->left = identifier;
 
+    freeTokens(head);
+
     return assignment;
 }
 
 
 static ASTNode *parseAssignment(Token *head) {
-    ASTNode *identifier = (ASTNode*) head->value;
-
+    //ASTNode *identifier = (ASTNode*) head->value;
+    printf("%s", head->value);
+    return NULL;
 }
 
 
@@ -287,7 +343,13 @@ ASTNode *parse(char *buffer, Environment *env, int debugging) {
         return parseFunctionDefinition(head, env);
     }
 
-    if (parseFunctionCalls(&head)) return NULL;
+    if (parseFunctionCalls(&head)) {
+        printf("Error parsing function call(s)\n");
+        return NULL;
+    }
+
+    printf("\nPost Function Call Tokens\n");
+    printTokens(head);
 
     if (debugging) printf("\nCreating RPN\n");
     RPNList *RPN = shuntingYard(head);

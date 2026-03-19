@@ -14,8 +14,8 @@ static const OperatorMapping DEFAULT_MAPPING[] = {
     {"/", TOKEN_OPERATOR},
     {"^", TOKEN_OPERATOR},
     {"->", TOKEN_ASSIGNMENT},
-    {"(", TOKEN_RIGHT_PAREN},
-    {")", TOKEN_LEFT_PAREN},
+    {"(", TOKEN_LEFT_PAREN},
+    {")", TOKEN_RIGHT_PAREN},
     {",", TOKEN_SEPERATOR},
     {":", TOKEN_FUNC_DEF}
 };
@@ -26,6 +26,11 @@ typedef struct {
     int len;
     TokenType type;
 } SymbolReturn;
+
+typedef struct {
+    int len;
+    Component *cmp;
+} ComponentReturn;
 
 /**
  * @brief Gets the length of an operator
@@ -71,27 +76,34 @@ static int getNumber(char *c) {
  * @param env Environment
  * @return int Length of largest component found or length of contiuguous valid identifier characters
  */
-static int getComponentLength(char *c, Environment *env) {
+static ComponentReturn getComponentLength(char *c, Environment *env) {
+    ComponentReturn result = {0, NULL};
     // If not valid character type for variable name, automatically skip check
-    if (!isalpha(c[0])) return 0;
+    if (!isalpha(c[0])) return result;
 
-    int i = 0;
     int max = 0;
-    while (isalnum(c[i]) || c[i] == '_') {
-        char temp = c[i + 1];
+    while (isalnum(c[result.len]) || c[result.len] == '_') {
+        char temp = c[result.len + 1];
         
         // Adds the end of string char to only select a part of the buffer
-        c[i + 1] = '\0';
+        c[result.len + 1] = '\0';
         Component *cmp = searchEnvironment(env, c);
-        c[i + 1] = temp;
+        c[result.len + 1] = temp;
 
-        if (cmp != NULL) max = i + 1;
+        if (cmp != NULL) {
+            max = result.len + 1;
+            result.cmp = cmp;
+            printf("Matched with component %s\n", cmp->identifier);
+        }
 
-        i++;
+        result.len++;
     }
 
-    if (max > 0) return max;
-    return i;
+    if (max > 0) {
+        result.len = max;
+        return result;
+    }
+    return result;
 }
 
 
@@ -101,6 +113,7 @@ Token *tokenize(char *buffer, Environment *env) {
 
     int matchLen;
     SymbolReturn ret;
+    ComponentReturn cRet;
 
     int spaceI = -1;
     TokenType prevT = -1;
@@ -131,15 +144,11 @@ Token *tokenize(char *buffer, Environment *env) {
         }
         
         // Checks if builtin function and return the length if it is
-        else if ((matchLen = getComponentLength(buffer + i, env))) {
-            end += matchLen;
+        else if ((cRet = getComponentLength(buffer + i, env)).len) {
+            if (cRet.cmp != NULL) printf("largest component found was %s\n", cRet.cmp->identifier);
+            end += cRet.len;
 
-            char temp = buffer[end];
-            buffer[end] = '\0';
-            Component *cmp = searchEnvironment(env, buffer + i);
-            buffer[end] = temp;
-
-            if (cmp == NULL || cmp->type == VARIABLE) type = TOKEN_IDENTIFIER;
+            if (cRet.cmp == NULL || cRet.cmp->type == VARIABLE) type = TOKEN_IDENTIFIER;
             else type = TOKEN_FUNC_CALL;
         }
         
@@ -185,6 +194,7 @@ Token *tokenize(char *buffer, Environment *env) {
         spaceI = -1;
         prevT = type;
 
+        //if (type == -1) printf("Error getting token type\n");
         Token *newToken = createToken(type, buffer + i, end - i);
         if (newToken == NULL) return NULL;
 

@@ -7,6 +7,8 @@
 
 
 Token *createToken(TokenType type, char *value, int l) {
+    printf("creating token '%s' %d, of type %d\n", value, l, type);
+
     // Allocates new token
     Token *token = (Token*) malloc(sizeof(Token));
     if (token == NULL) {
@@ -55,18 +57,27 @@ void printTokens(Token *head) {
             case TOKEN_RIGHT_PAREN:
                 type = "RIGHT_PAREN";
                 break;
-            case TOKEN_FUNC_CALL:
-                type = "FUNC_CALL";
-                break;
             case TOKEN_FUNC_DEF:
                 type = "FUNC_DEF";
                 break;
             case TOKEN_SEPERATOR:
                 type = "SEPERATOR";
                 break;
+            default:
+                type = "FUNC_CALL";
         }
 
-        printf("    <type: %s, value: '%s'>\n", type, cur->value);
+        if (cur->type == TOKEN_FUNC_CALL) {
+            printf("printing funciton \n");
+            printf("    <type: %s>\n", type);
+            // if (cur->call != NULL) {
+            //     printf("    <type: %s, value: '%s'>\n", type, cur->call->identifier);
+            // } else {
+            //     printf("call not defined\n");
+            //     printf("    <type: %s, value: '%s'>\n", type, cur->value);
+            // }
+        }
+        else printf("    <type: %s, value: '%s'>\n", type, cur->value);
         cur = cur->next;
     }
 
@@ -99,6 +110,7 @@ ASTNode *createASTNode(Token *token) {
     case TOKEN_FUNC_CALL:
         node->type = NODE_FUNC_CALL;
         node->identifier = strdup(token->value);
+        node->call = token->call;
         break;
     default:
         return NULL;
@@ -135,16 +147,16 @@ static void printASTRec(ASTNode *node, int level) {
     // Print node info
     switch(node->type) {
         case NODE_NUMBER:
-            printf("[NUM: %f]\n", node->value);
+            printf("<type: %s, value: %f>\n", "NUMBER", node->value);
             break;
         case NODE_OPERATOR:
-            printf("[OP: %s]\n", node->identifier);
+            printf("<type: %s, symbol: %s>\n", "OPERATOR", node->identifier);
             break;
         case NODE_VARIABLE:
-            printf("[VAR: %s]\n", node->identifier);
+            printf("<type: %s, identifier: %s>\n", "VARIABLE", node->identifier);
             break;
         case NODE_FUNC_CALL: 
-            printf("[FUNC: %s]\n", node->identifier);
+            printf("<type: %s, value: '%s'>\n", "FUNC_CALL", node->call->identifier);
             break;
         default:
             printf("no\n");

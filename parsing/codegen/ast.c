@@ -143,7 +143,8 @@ void printRPN(RPNList list) {
     printf("RPN: ");
 
     for (int i = 0; i < list.length; i ++) {
-        printf("%s ", list.items[i]->value);
+        if (list.items[i]->type != TOKEN_FUNC_CALL) printf("%s ", list.items[i]->value);
+        else printf("%s ", list.items[i]->call->identifier);
     }
 
     printf("\n");

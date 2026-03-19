@@ -15,15 +15,25 @@ int main() {
 
     int line = 1;
 
+    int first = 1;
+    char entry[] = "f:x,y->2xy";
+
     // System loop
     while (1) {
-        char *input = terminalEntry(line);
+        char *input;
+        if (first) {
+            input = entry;
+            first = 0;
+        } else input = terminalEntry(line);
+
         line ++;
 
         if (!strcmp(input, "quit")) break;
 
         ASTNode *head = parse(input, global_env, 1);
         if (head == NULL) return 0;
+
+        printf("\nInput Parsed\n");
 
         // Updates environment if an assignment is returned
         if (head->type == NODE_ASSIGN_FUNC || head->type == NODE_ASSIGN_VAR) {
