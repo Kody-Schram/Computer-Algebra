@@ -7,7 +7,7 @@
 
 
 Token *createToken(TokenType type, char *value, int l) {
-    printf("creating token '%s' %d, of type %d\n", value, l, type);
+    //printf("creating token '%s' %d, of type %d\n", value, l, type);
 
     // Allocates new token
     Token *token = (Token*) malloc(sizeof(Token));
@@ -68,7 +68,7 @@ void printTokens(Token *head) {
         }
 
         if (cur->type == TOKEN_FUNC_CALL) {
-            printf("printing funciton \n");
+            //printf("printing funciton \n");
             printf("    <type: %s>\n", type);
             // if (cur->call != NULL) {
             //     printf("    <type: %s, value: '%s'>\n", type, cur->call->identifier);

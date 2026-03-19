@@ -84,6 +84,7 @@ static int parseFunctionCalls(Token **head) {
 
             while (cur != NULL && cur->type != TOKEN_RIGHT_PAREN) {
                 Token *paramHead = cur;
+                int parens = 0;
 
                 if (seperator != NULL) {
                     free(seperator->value);
@@ -91,12 +92,26 @@ static int parseFunctionCalls(Token **head) {
                     printf("freed seperator\n");
                 }
 
-                while(cur->type != TOKEN_SEPERATOR && cur->type != TOKEN_RIGHT_PAREN) {
-                    printf("parameter token %s\n", cur->value);
+                // parens > -1 means final ')' hasn't been reached yet
+                // 
+                while(!(parens == 0 && cur->type == TOKEN_SEPERATOR) && !(parens == 0 && cur->type == TOKEN_RIGHT_PAREN)) {
+                    printf("\nparameter token %s\n", cur->value);
+                    
+                    if (cur->type == TOKEN_LEFT_PAREN) {
+                        parens ++;
+                        printf("found opening paren %d\n", parens);
+                    }
+
+                    if (cur->type == TOKEN_RIGHT_PAREN) {
+                        printf("found a right paren %d\n", parens);
+                        parens --;
+                    }
+                    
                     prev = cur;
                     cur = cur->next;
                 }
 
+                printf("out of loop\n");
                 printf("seperator token %s\n", cur->value);
                 // Cur is now at either ',' or ')', so prev is last token in parameter
                 prev->next = NULL;

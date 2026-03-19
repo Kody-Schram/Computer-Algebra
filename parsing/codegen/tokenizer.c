@@ -93,7 +93,7 @@ static ComponentReturn getComponentLength(char *c, Environment *env) {
         if (cmp != NULL) {
             max = result.len + 1;
             result.cmp = cmp;
-            printf("Matched with component %s\n", cmp->identifier);
+            //printf("Matched with component %s\n", cmp->identifier);
         }
 
         result.len++;
@@ -145,7 +145,7 @@ Token *tokenize(char *buffer, Environment *env) {
         
         // Checks if builtin function and return the length if it is
         else if ((cRet = getComponentLength(buffer + i, env)).len) {
-            if (cRet.cmp != NULL) printf("largest component found was %s\n", cRet.cmp->identifier);
+            //if (cRet.cmp != NULL) printf("largest component found was %s\n", cRet.cmp->identifier);
             end += cRet.len;
 
             if (cRet.cmp == NULL || cRet.cmp->type == VARIABLE) type = TOKEN_IDENTIFIER;
