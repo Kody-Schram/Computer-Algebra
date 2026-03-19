@@ -2,13 +2,14 @@
 
 # Define the compiler and flags
 CC = gcc
-CFLAGS = -Wall -Wextra
+CFLAGS = -Wall -Wextra -Isource -Isource/parsing -Isource/parsing/codegen -Isource/utils -Isource/utils/env
 
 # Builds for normal execution
-SRC = $(wildcard *.c) \
-	  $(wildcard parsing/*.c) \
-	  $(wildcard parsing/codegen/*.c) \
-	  $(wildcard parsing/env/*.c)
+SRC = $(wildcard source/*.c) \
+	  $(wildcard source/parsing/*.c) \
+	  $(wildcard source/parsing/codegen/*.c) \
+	  $(wildcard source/utils/*.c) \
+	  $(wildcard source/utils/env/*.c)
 
 OBJ = $(SRC:.c=.o)
 EXEC = main
@@ -18,9 +19,9 @@ $(EXEC): $(OBJ)
 
 # Builds for testing
 TEST_SRC = $(wildcard testing/*.c) \
-		   $(wildcard parsing/*.c) \
-	       $(wildcard parsing/codegen/*.c) \
-		   $(wildcard parsing/env/*.c)
+		   $(wildcard source/parsing/*.c) \
+	       $(wildcard source/parsing/codegen/*.c) \
+		   $(wildcard source\utils/env/*.c)
 
 TEST_OBJ = $(TEST_SRC:.c=.o)
 TEST_EXEC = test

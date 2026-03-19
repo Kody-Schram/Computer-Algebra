@@ -6,7 +6,7 @@
 #include "codegen/tokenizer.h"
 #include "codegen/lexer.h"
 #include "codegen/ast.h"
-#include "env/environment.h"
+#include "../utils/env/environment.h"
 
 static const int DEFAULT_PARAMETERS_SIZE = 3;
 

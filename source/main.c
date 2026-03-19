@@ -2,9 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "input.h"
-#include "parsing/env/environment.h"
-
+#include "utils/input.h"
+#include "utils/env/environment.h"
 #include "parsing/parser.h"
 #include "parsing/parserTypes.h"
 

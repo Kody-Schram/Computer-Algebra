@@ -2,7 +2,7 @@
 #define TOKENIZER_H
 
 #include "../parserTypes.h"
-#include "../env/environment.h"
+#include "../utils/env/environment.h"
 
 /**
  * @brief Tokenizes a string input into an unrefined linked list of tokens
