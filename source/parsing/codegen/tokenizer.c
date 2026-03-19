@@ -4,7 +4,12 @@
 #include <string.h>
 
 #include "tokenizer.h"
+#include "parserUtils.h"
 
+typedef struct  {
+    char *op;
+    TokenType type;
+} OperatorMapping;
 
 static const OperatorMapping DEFAULT_MAPPING[] = {
     {"+", TOKEN_OPERATOR},

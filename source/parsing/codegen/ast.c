@@ -3,9 +3,16 @@
 #include <string.h>
 
 #include "ast.h"
+#include "./parserUtils.h"
 
 static int DEFAULT_NODE_STACK_SIZE = 10;
 
+/**
+ * @brief Gets the precedent of operator
+ * 
+ * @param operator 
+ * @return int Precedent of operator
+ */
 static int getPrecedent(char *operator) {
     int precedent;
 
@@ -27,6 +34,13 @@ static int getPrecedent(char *operator) {
     return precedent;
 }
 
+
+/**
+ * @brief Gets the length of linked list
+ * 
+ * @param head Start of Token linked list
+ * @return int Length of linked list
+ */
 static int getLinkedListLength(Token *head) {
     Token *cur = head;
 
@@ -39,7 +53,15 @@ static int getLinkedListLength(Token *head) {
     return i;
 }
 
-
+/**
+ * @brief Reallocates a stack
+ * 
+ * @retval 0: Successfully reallocated
+ * @retval 1: Error reallocating
+ * 
+ * @param stack 
+ * @return int Result
+ */
 static int reallocStack(Stack *stack) {
     stack->size *= 2;
     void **temp = realloc(stack->items, stack->size * sizeof(void*));
@@ -51,6 +73,7 @@ static int reallocStack(Stack *stack) {
     stack->items = temp;
     return 0;
 }
+
 
 RPNList *shuntingYard(Token *head) {
     Token *cur = head;
@@ -139,16 +162,6 @@ RPNList *shuntingYard(Token *head) {
     return list;
 }
 
-void printRPN(RPNList list) {
-    printf("RPN: ");
-
-    for (int i = 0; i < list.length; i ++) {
-        if (list.items[i]->type != TOKEN_FUNC_CALL) printf("%s ", list.items[i]->value);
-        else printf("%s ", list.items[i]->call->identifier);
-    }
-
-    printf("\n");
-}
 
 ASTNode *astFromRPN(RPNList *rpn) {
     Stack nodes = {

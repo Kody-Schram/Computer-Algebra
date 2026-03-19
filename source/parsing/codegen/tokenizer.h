@@ -2,7 +2,7 @@
 #define TOKENIZER_H
 
 #include "../parserTypes.h"
-#include "../utils/env/environment.h"
+#include "../utils/types.h"
 
 /**
  * @brief Tokenizes a string input into an unrefined linked list of tokens
@@ -14,10 +14,5 @@
  * @return Token* 
  */
 Token *tokenize(char *buffer, Environment *env);
-
-typedef struct  {
-    char *op;
-    TokenType type;
-} OperatorMapping;
 
 #endif

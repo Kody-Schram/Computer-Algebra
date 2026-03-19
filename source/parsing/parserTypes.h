@@ -3,7 +3,16 @@
 
 #include "../utils/env/environment.h"
 
-typedef enum TokenType {
+// Forward declaring types
+typedef enum TokenType TokenType;
+typedef struct Token Token;
+
+typedef struct RPNList RPNList;
+typedef struct Stack Stack;
+
+
+// Token related definitions
+enum TokenType {
     TOKEN_NUMBER,
     TOKEN_OPERATOR,
     TOKEN_IDENTIFIER,
@@ -13,10 +22,9 @@ typedef enum TokenType {
     TOKEN_FUNC_CALL,
     TOKEN_FUNC_DEF,
     TOKEN_SEPERATOR
-} TokenType;
+};
 
-
-typedef struct Token {
+struct Token {
     TokenType type;
 
     union {
@@ -25,55 +33,19 @@ typedef struct Token {
     };
 
     struct Token *next;
-} Token;
+};
 
 
-typedef enum NodeType {
-    NODE_NUMBER,
-    NODE_OPERATOR,
-    NODE_VARIABLE,
-    NODE_FUNC_CALL,
-    NODE_ASSIGN_VAR,
-    NODE_ASSIGN_FUNC
-} NodeType;
+// RPN related definitions
+struct RPNList {
+    int length;
+    Token **items;
+};
 
-
-typedef struct ASTNode {
-    NodeType type;
-    union {
-        char *identifier;
-        double value;
-        void *definition;
-        FunctionCall *call;
-    };
-
-    struct ASTNode *left;
-    struct ASTNode *right;
-} ASTNode;
-
-/**
- * @brief Creates a Token object
- * 
- * @retval NULL: Error creating the new token
- * @retval Token*: Properly created the new token
- * 
- * @param type The type of the Token
- * @param value String value of the Token
- * @param l Length of the string value
- * @return Token* 
- */
-Token *createToken(TokenType type, char *value, int l);
-
-
-void printTokens(Token *head);
-
-
-ASTNode *createASTNode(Token *token);
-
-
-ASTNode *dummyASTNode(NodeType type);
-
-
-void printAST(ASTNode *head);
+struct Stack {
+    int size;
+    int entries;
+    void **items;
+};
 
 #endif

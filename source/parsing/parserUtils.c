@@ -3,7 +3,7 @@
 #include <string.h>
 #include <math.h>
 
-#include "parserTypes.h"
+#include "parserUtils.h"
 
 
 Token *createToken(TokenType type, char *value, int l) {
@@ -170,4 +170,16 @@ static void printASTRec(ASTNode *node, int level) {
 
 void printAST(ASTNode *root) {
     printASTRec(root, 0);
+}
+
+
+void printRPN(RPNList list) {
+    printf("RPN: ");
+
+    for (int i = 0; i < list.length; i ++) {
+        if (list.items[i]->type != TOKEN_FUNC_CALL) printf("%s ", list.items[i]->value);
+        else printf("%s ", list.items[i]->call->identifier);
+    }
+
+    printf("\n");
 }

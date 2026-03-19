@@ -1,25 +1,24 @@
 #ifndef AST_H
 #define AST_H
 
-#include "../parserTypes.h"
+#include "../utils/types.h"
+#include "./parserTypes.h"
 
-typedef struct RPNList {
-    int length;
-    Token **items;
-} RPNList;
 
-typedef struct Stack {
-    int size;
-    int entries;
-    void **items;
-} Stack;
-
+/**
+ * @brief Generates intermediate data type, RPN, for use in AST generation
+ * 
+ * @param head Start of Token linked list
+ * @return RPNList* 
+ */
 RPNList *shuntingYard(Token *head);
 
-
-void printRPN(RPNList list);
-
-
+/**
+ * @brief Generates AST from RPN list
+ * 
+ * @param rpn 
+ * @return ASTNode* Root of AST
+ */
 ASTNode *astFromRPN(RPNList *rpn);
 
 #endif

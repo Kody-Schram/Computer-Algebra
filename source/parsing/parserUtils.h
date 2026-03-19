@@ -1,0 +1,37 @@
+#ifndef PARSERUTILS_H
+#define PARSERUTILS_H
+
+#include "../utils/types.h"
+#include "parserTypes.h"
+
+
+/**
+ * @brief Creates a Token object
+ * 
+ * @retval NULL: Error creating the new token
+ * @retval Token*: Properly created the new token
+ * 
+ * @param type The type of the Token
+ * @param value String value of the Token
+ * @param l Length of the string value
+ * @return Token* 
+ */
+Token *createToken(TokenType type, char *value, int l);
+
+
+void printTokens(Token *head);
+
+
+ASTNode *createASTNode(Token *token);
+
+
+ASTNode *dummyASTNode(NodeType type);
+
+
+void printAST(ASTNode *head);
+
+
+void printRPN(RPNList list);
+
+
+#endif
