@@ -77,12 +77,11 @@ static int parseFunctionCalls(Token **head, Config *config) {
                 if (seperator != NULL) {
                     free(seperator->value);
                     free(seperator);
-                    if (config->LOG_LEVEL >= DEBUG) fprintf(config->LOG_STREAM, "freed seperator\n");
                 }
 
 
                 while(!(parens == 0 && cur->type == TOKEN_SEPERATOR) && !(parens == 0 && cur->type == TOKEN_RIGHT_PAREN)) {
-                    if (config->LOG_LEVEL >= DEBUG) fprintf(config->LOG_STREAM, "\nparameter token %s\n", cur->value);
+                    if (config->LOG_LEVEL >= DEBUG) fprintf(config->LOG_STREAM, "Handling parameter token: %s.\n", cur->value);
                     
                     if (cur->type == TOKEN_LEFT_PAREN) parens ++;
 
@@ -92,10 +91,6 @@ static int parseFunctionCalls(Token **head, Config *config) {
                     cur = cur->next;
                 }
 
-                if (config->LOG_LEVEL >= DEBUG) {
-                    fprintf(config->LOG_STREAM, "out of loop\n");
-                    fprintf(config->LOG_STREAM, "seperator token %s\n", cur->value);
-                }
                 // Cur is now at either ',' or ')', so prev is last token in parameter
                 prev->next = NULL;
                 seperator = cur;
@@ -138,14 +133,12 @@ static int parseFunctionCalls(Token **head, Config *config) {
                 paramASTs[nParameters] = ast;
                 nParameters ++;
 
-                if (config->LOG_LEVEL >= DEBUG) fprintf(config->LOG_STREAM, "freeing parameter tokens\n");
+                if (config->LOG_LEVEL >= DEBUG) fprintf(config->LOG_STREAM, "Freeing parameter tokens.\n");
 
                 // Cleanup
                 freeTokens(paramHead);
             }
-
-            if (config->LOG_LEVEL >= DEBUG) fprintf(config->LOG_STREAM, "finishing call\n");
-
+            
             // Creates new function call token
             if (config->LOG_LEVEL >= DEBUG) fprintf(config->LOG_STREAM, "Creating new function call token.\n");
             Token *callToken = malloc(sizeof(Token));
@@ -181,7 +174,7 @@ static int parseFunctionCalls(Token **head, Config *config) {
             free(funcCall->value);
             free(funcCall);
 
-            if (config->LOG_LEVEL >= DEBUG) fprintf(config->LOG_STREAM, "finished will handling call\n");
+            if (config->LOG_LEVEL >= DEBUG) fprintf(config->LOG_STREAM, "Finished with handling call to: %s.\n", call->identifier);
             continue;
         }
 
@@ -189,7 +182,7 @@ static int parseFunctionCalls(Token **head, Config *config) {
         cur = cur->next;
     }
 
-    if (config->LOG_LEVEL >= DEBUG) fprintf(config->LOG_STREAM, "Finished parsing all calls, returning\n");
+    if (config->LOG_LEVEL >= DEBUG) fprintf(config->LOG_STREAM, "Finished parsing all calls, returning.\n");
 
     return 0;
 }
@@ -255,7 +248,7 @@ static ASTNode *parseFunctionDefinition(Token *head, Environment *env, Config *c
                     
                 }
 
-                printf("Adding parameter: %s\n", cur->value);
+                if (config->LOG_LEVEL >= DEBUG) fprintf(config->LOG_STREAM, "Adding parameter: %s\n", cur->value);
                 parameters[nParams] = strdup(cur->value);
                 nParams ++;
             }
@@ -269,17 +262,17 @@ static ASTNode *parseFunctionDefinition(Token *head, Environment *env, Config *c
         return NULL;
     }
 
-    if (config->LOG_LEVEL >= DEBUG) fprintf(config->LOG_STREAM, "Second round of parsing.\n");
+    // if (config->LOG_LEVEL >= DEBUG) fprintf(config->LOG_STREAM, "Second round of parsing.\n");
 
-    if (config->LOG_LEVEL >= DEBUG) fprintf(config->LOG_STREAM, "\nLexing Tokens\n");
+    // if (config->LOG_LEVEL >= DEBUG) fprintf(config->LOG_STREAM, "\nLexing Tokens\n");
 
     // Redoes identifier tokens now that local variables for parameters are established, then redoes lexing
     handleLocalVariables(&cur, env, nParams, parameters);
-    cur = lex(cur);
-    if (config->LOG_LEVEL >= DEBUG) {
-        fprintf(config->LOG_STREAM, "\nFunction Lexing\n");
-        printTokens(cur, config->LOG_STREAM);
-    }
+    // cur = lex(cur);
+    // if (config->LOG_LEVEL >= DEBUG) {
+    //     fprintf(config->LOG_STREAM, "\nFunction Lexing\n");
+    //     printTokens(cur, config->LOG_STREAM);
+    // }
 
     if (parseFunctionCalls(&head, config)) {
         fprintf(config->LOG_STREAM, "Error parsing function call(s)\n");

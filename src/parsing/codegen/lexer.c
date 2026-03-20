@@ -289,7 +289,6 @@ static int handleAssignment(Token *cur) {
 
 
 void handleLocalVariables(Token **ptr, Environment *env, int nParams, char **parameters) {
-    printf("Handling local variables\n");
     Token *cur = *ptr;
     Token *prev = NULL;
     

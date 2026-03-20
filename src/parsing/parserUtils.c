@@ -154,7 +154,7 @@ static void printASTRec(ASTNode *node, int level, FILE *stream) {
     if (node == NULL) return;
 
     // Print indentation based on depth
-    for (int i = 0; i < level; i++) printf("  ");
+    for (int i = 0; i < level; i++) fprintf(stream, "  ");
 
     // Print node info
     switch(node->type) {
@@ -169,6 +169,11 @@ static void printASTRec(ASTNode *node, int level, FILE *stream) {
             break;
         case NODE_FUNC_CALL: 
             fprintf(stream, "<type: %s, value: '%s'>\n", "FUNC_CALL", node->call->identifier);
+            for (int i = 0; i < level + 1; i++) fprintf(stream, "  ");
+            fprintf(stream, "Parameters:\n");
+            for (int p = 0; p < node->call->nParams; p ++) {
+                printASTRec(node->call->parameters[p], level+1, stream);
+            }
             break;
         default:
             fprintf(stream, "no\n");
@@ -181,7 +186,9 @@ static void printASTRec(ASTNode *node, int level, FILE *stream) {
 
 
 void printAST(ASTNode *root, FILE *stream) {
+    fprintf(stream, "[\n");
     printASTRec(root, 0, stream);
+    fprintf(stream, "]\n");
 }
 
 

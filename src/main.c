@@ -39,7 +39,7 @@ int main() {
             } else {
                 ASTNode *head = parse(line, global_env, config);
                 if (head) {
-                    execute(head, global_env, config);
+                    if (execute(head, global_env, config) && config->LOG_LEVEL >= INFO) fprintf(config->LOG_STREAM, "Successfully Executed.\n");
                 }
             }
             line = strtok(NULL, "\n");
@@ -59,7 +59,7 @@ int main() {
         ASTNode *head = parse(input, global_env, config);
         if (head == NULL) continue;
 
-        if (!execute(head, global_env, config)) continue;
+        if (execute(head, global_env, config) && config->LOG_LEVEL >= INFO) fprintf(config->LOG_STREAM, "Successfully Executed.\n");
     }
 
     freeConfig(config);
