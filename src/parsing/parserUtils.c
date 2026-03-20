@@ -1,5 +1,4 @@
 #include <stdlib.h>
-#include <stdio.h>
 #include <string.h>
 #include <math.h>
 
@@ -31,10 +30,10 @@ Token *createToken(TokenType type, char *value, int l) {
 }
 
 
-void printTokens(Token *head) {
+void printTokens(Token *head, FILE *stream) {
     Token *cur = head;
 
-    printf("[\n");
+    fprintf(stream, "[\n");
     while (cur != NULL) {
         const char *type = NULL;
 
@@ -69,7 +68,7 @@ void printTokens(Token *head) {
 
         if (cur->type == TOKEN_FUNC_CALL) {
             //printf("printing funciton \n");
-            printf("    <type: %s>\n", type);
+            fprintf(stream, "    <type: %s>\n", type);
             // if (cur->call != NULL) {
             //     printf("    <type: %s, value: '%s'>\n", type, cur->call->identifier);
             // } else {
@@ -77,11 +76,11 @@ void printTokens(Token *head) {
             //     printf("    <type: %s, value: '%s'>\n", type, cur->value);
             // }
         }
-        else printf("    <type: %s, value: '%s'>\n", type, cur->value);
+        else fprintf(stream, "    <type: %s, value: '%s'>\n", type, cur->value);
         cur = cur->next;
     }
 
-    printf("]\n");
+    fprintf(stream, "]\n");
 }
 
 
@@ -138,7 +137,7 @@ ASTNode *dummyASTNode(NodeType type) {
 }
 
 
-static void printASTRec(ASTNode *node, int level) {
+static void printASTRec(ASTNode *node, int level, FILE *stream) {
     if (node == NULL) return;
 
     // Print indentation based on depth
@@ -147,39 +146,39 @@ static void printASTRec(ASTNode *node, int level) {
     // Print node info
     switch(node->type) {
         case NODE_NUMBER:
-            printf("<type: %s, value: %f>\n", "NUMBER", node->value);
+            fprintf(stream, "<type: %s, value: %f>\n", "NUMBER", node->value);
             break;
         case NODE_OPERATOR:
-            printf("<type: %s, symbol: %s>\n", "OPERATOR", node->identifier);
+            fprintf(stream, "<type: %s, symbol: %s>\n", "OPERATOR", node->identifier);
             break;
         case NODE_VARIABLE:
-            printf("<type: %s, identifier: %s>\n", "VARIABLE", node->identifier);
+            fprintf(stream, "<type: %s, identifier: %s>\n", "VARIABLE", node->identifier);
             break;
         case NODE_FUNC_CALL: 
-            printf("<type: %s, value: '%s'>\n", "FUNC_CALL", node->call->identifier);
+            fprintf(stream, "<type: %s, value: '%s'>\n", "FUNC_CALL", node->call->identifier);
             break;
         default:
-            printf("no\n");
+            fprintf(stream, "no\n");
     }
 
     // Recursively print children
-    printASTRec(node->left, level + 1);
-    printASTRec(node->right, level + 1);
+    printASTRec(node->left, level + 1, stream);
+    printASTRec(node->right, level + 1, stream);
 }
 
 
-void printAST(ASTNode *root) {
-    printASTRec(root, 0);
+void printAST(ASTNode *root, FILE *stream) {
+    printASTRec(root, 0, stream);
 }
 
 
-void printRPN(RPNList list) {
-    printf("RPN: ");
+void printRPN(RPNList list, FILE *stream) {
+    fprintf(stream, "RPN: ");
 
     for (int i = 0; i < list.length; i ++) {
-        if (list.items[i]->type != TOKEN_FUNC_CALL) printf("%s ", list.items[i]->value);
-        else printf("%s ", list.items[i]->call->identifier);
+        if (list.items[i]->type != TOKEN_FUNC_CALL) fprintf(stream, "%s ", list.items[i]->value);
+        else fprintf(stream, "%s ", list.items[i]->call->identifier);
     }
 
-    printf("\n");
+    fprintf(stream, "\n");
 }

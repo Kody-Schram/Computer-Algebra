@@ -3,7 +3,7 @@
 #include <string.h>
 
 #include "utils/types.h"
-#include "utils/config/config.h"
+#include "utils/config.h"
 
 #include "utils/input.h"
 #include "utils/env/environment.h"
@@ -11,9 +11,10 @@
 #include "parsing/parserTypes.h"
 
 int main() {
-
     Config *config = loadConfig();
     if (config == NULL) return 0;
+
+    if (config->LOG_LEVEL >= INFO) printConfig(config);
 
     Environment *global_env = createEnvironment();
     if (global_env == NULL) return 0;
@@ -35,7 +36,7 @@ int main() {
 
         if (!strcmp(input, "quit")) break;
 
-        ASTNode *head = parse(input, global_env, 1);
+        ASTNode *head = parse(input, global_env, config);
         if (head == NULL) return 0;
 
         printf("\nInput Parsed\n");
@@ -60,6 +61,8 @@ int main() {
 
         printEnvironment(global_env);
     }
+
+    freeConfig(config);
 
     return 0;
 }

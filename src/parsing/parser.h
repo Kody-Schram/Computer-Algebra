@@ -2,6 +2,7 @@
 #define PARSER_H
 
 #include "utils/types.h"
+#include "utils/config.h"
 #include "parserTypes.h"
 
 /**
@@ -23,6 +24,6 @@ int parseFunction(Token *head);
  * @param buffer Mathematical string
  * @return Token* 
  */
-ASTNode *parse(char *buffer, Environment *env, int debugging);
+ASTNode *parse(char *buffer, Environment *env, Config *config);
 
 #endif

@@ -1,6 +1,8 @@
 #ifndef PARSERUTILS_H
 #define PARSERUTILS_H
 
+#include <stdio.h>
+
 #include "utils/types.h"
 #include "parserTypes.h"
 
@@ -22,7 +24,7 @@ Token *createToken(TokenType type, char *value, int l);
  * 
  * @param head Head of linked list
  */
-void printTokens(Token *head);
+void printTokens(Token *head, FILE *stream);
 
 
 ASTNode *createASTNode(Token *token);
@@ -31,10 +33,10 @@ ASTNode *createASTNode(Token *token);
 ASTNode *dummyASTNode(NodeType type);
 
 
-void printAST(ASTNode *head);
+void printAST(ASTNode *head, FILE *stream);
 
 
-void printRPN(RPNList list);
+void printRPN(RPNList list, FILE *stream);
 
 
 #endif
