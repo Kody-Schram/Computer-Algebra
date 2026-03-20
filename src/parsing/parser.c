@@ -372,10 +372,12 @@ ASTNode *parse(char *buffer, Environment *env, Config *config) {
     if (config->LOG_LEVEL >= DEBUG) fprintf(config->LOG_STREAM, "\nGenerating AST.\n");
     ASTNode *ast = astFromRPN(RPN);
 
-    if (config->LOG_LEVEL >= DEBUG) {
+    if (config->LOG_LEVEL >= DEBUG && ast != NULL) {
         fprintf(config->LOG_STREAM, "\nPrinting AST\n");
         printAST(ast, config->LOG_STREAM);
     }
+
+    if (config->LOG_LEVEL >= INFO) fprintf(config->LOG_STREAM, "\nInput Parsed\n");
 
     freeTokens(head);
     return ast;

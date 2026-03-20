@@ -1,2 +1,4 @@
 log_level: None
-log_location: 
+startup: |
+  f:x->2x
+  g:y->5y

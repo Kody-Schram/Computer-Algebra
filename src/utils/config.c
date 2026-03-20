@@ -14,12 +14,13 @@ typedef enum {
     STATE_LOG_LEVEL,
     STATE_LOG_LOCATION,
 
+    STATE_STARTUP,
+
     STATE_STOP
 } State;
 
 
 static int consumeEvent(State *state, yaml_event_t *event, Config *config) {
-    printf("State: %d\n", *state);
     char *value;
 
     switch (*state) {
@@ -69,6 +70,7 @@ static int consumeEvent(State *state, yaml_event_t *event, Config *config) {
                 value = event->data.scalar.value;
                 if (!strcmp(value, "log_level")) *state = STATE_LOG_LEVEL;
                 else if (!strcmp(value, "log_location")) *state = STATE_LOG_LOCATION;
+                else if (!strcmp(value, "startup")) *state = STATE_STARTUP;
                 else {
                     printf("Unexpected scalar: %s\n", value);
                     return 0;
@@ -76,6 +78,9 @@ static int consumeEvent(State *state, yaml_event_t *event, Config *config) {
                 break;
             case YAML_DOCUMENT_END_EVENT:
                 *state = STATE_STREAM;
+                break;
+            case YAML_MAPPING_END_EVENT:
+                *state = STATE_DOCUMENT;
                 break;
             default:
                 printf("Unexpected event %d in state %d.\n", event->type, *state);
@@ -99,11 +104,25 @@ static int consumeEvent(State *state, yaml_event_t *event, Config *config) {
                     config->LOG_LEVEL = DEBUG;
                 } else {
                     printf("Unexpected log level: %s.\n", value);
+                    return 0;
                 }
+                *state = STATE_SECTION;
                 break;
             default:
                 printf("Unexpected event %d in state %d.\n", event->type, *state);
                 return 0;
+        }
+        break;
+
+    case STATE_STARTUP:
+        switch (event->type) {
+            case YAML_MAPPING_END_EVENT:
+                *state = STATE_SECTION;
+                break;
+            case YAML_SCALAR_EVENT:
+                config->STARTUP = strdup((char *) event->data.scalar.value);
+                *state = STATE_SECTION;
+                break;
         }
         break;
     
@@ -118,6 +137,7 @@ static int consumeEvent(State *state, yaml_event_t *event, Config *config) {
 static void initConfig(Config *config) {
     config->LOG_LEVEL = 0;
     config->LOG_STREAM = stdout;
+    config->STARTUP = NULL;
 }
 
 
@@ -180,6 +200,7 @@ Config *loadConfig() {
 void printConfig(Config *config) {
     fprintf(config->LOG_STREAM, "\nConfig\n");
     fprintf(config->LOG_STREAM, "Log Level: %d\n", config->LOG_LEVEL);
+    fprintf(config->LOG_STREAM, "Startup: \n%s\n", config->STARTUP);
 }
 
 void freeConfig(Config *config) {

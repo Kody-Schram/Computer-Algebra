@@ -14,6 +14,7 @@ enum LOG_LEVEL {
 struct Config {
     LOG_LEVEL LOG_LEVEL;
     FILE *LOG_STREAM;
+    char *STARTUP;
 };
 
 

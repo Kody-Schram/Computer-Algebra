@@ -10,6 +10,8 @@
 #include "parsing/parser.h"
 #include "parsing/parserTypes.h"
 
+#include "execute.h"
+
 int main() {
     Config *config = loadConfig();
     if (config == NULL) return 0;
@@ -21,45 +23,43 @@ int main() {
 
     int line = 1;
 
-    int first = 0;
-    char entry[] = "f:x->2x";
+    // Load startup script
+    if (config->STARTUP != NULL) {
+        if (config->LOG_LEVEL >= INFO) fprintf(config->LOG_STREAM, "\nRunning Startup Script\n");
+        char *line = strtok(config->STARTUP, "\n");
+
+        while (line != NULL) {
+            if (!strcmp(line, "FILE")) {
+                
+                line = strtok(config->STARTUP, "\n");
+                if (line) {
+                    // load startup script from file and leave loop
+                }
+                break;
+            } else {
+                ASTNode *head = parse(line, global_env, config);
+                if (head) {
+                    execute(head, global_env, config);
+                }
+            }
+            line = strtok(NULL, "\n");
+        }
+
+        free(config->STARTUP);
+        config->STARTUP = NULL;
+    }
 
     // System loop
     while (1) {
-        char *input;
-        if (first) {
-            input = entry;
-            first = 0;
-        } else input = terminalEntry(line);
-
+        char *input = terminalEntry(line);
         line ++;
 
         if (!strcmp(input, "quit")) break;
 
         ASTNode *head = parse(input, global_env, config);
-        if (head == NULL) return 0;
+        if (head == NULL) continue;
 
-        printf("\nInput Parsed\n");
-
-        // Updates environment if an assignment is returned
-        if (head->type == NODE_ASSIGN_FUNC || head->type == NODE_ASSIGN_VAR) {
-            printf("Updating environment.\n");
-            
-            ComponentType type;
-            switch(head->type) {
-                case NODE_ASSIGN_FUNC:
-                    type = FUNCTION;
-                    break;
-                default:
-                    type = VARIABLE;
-            }
-
-            bindComponent(global_env, type, head->left->identifier, head->right);
-
-            // Free assignment nodes after assignment
-        }
-
-        printEnvironment(global_env);
+        if (!execute(head, global_env, config)) continue;
     }
 
     freeConfig(config);
