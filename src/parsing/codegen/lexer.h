@@ -1,8 +1,8 @@
 #ifndef LEXER_H
 #define LEXER_H
 
-#include "../utils/types.h"
-#include "../parserTypes.h"
+#include "utils/types.h"
+#include "parsing/parserTypes.h"
 
 
 void handleLocalVariables(Token **ptr, Environment *env, int nParams, char **parameters);

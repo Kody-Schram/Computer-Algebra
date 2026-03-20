@@ -1,8 +1,8 @@
 #ifndef AST_H
 #define AST_H
 
-#include "../utils/types.h"
-#include "./parserTypes.h"
+#include "utils/types.h"
+#include "parsing/parserTypes.h"
 
 
 /**

@@ -3,7 +3,7 @@
 #include <string.h>
 
 #include "ast.h"
-#include "./parserUtils.h"
+#include "parsing/parserUtils.h"
 
 static int DEFAULT_NODE_STACK_SIZE = 10;
 

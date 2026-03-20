@@ -1,7 +1,7 @@
 #ifndef PARSERUTILS_H
 #define PARSERUTILS_H
 
-#include "../utils/types.h"
+#include "utils/types.h"
 #include "parserTypes.h"
 
 

@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
 #include "environment.h"
 
 const int DEFAULT_TABLE_SIZE = 10;

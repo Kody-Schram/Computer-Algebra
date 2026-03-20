@@ -3,10 +3,10 @@
 #include <string.h>
 
 #include "parser.h"
-#include "codegen/tokenizer.h"
-#include "codegen/lexer.h"
-#include "codegen/ast.h"
-#include "../utils/env/environment.h"
+#include "parsing/codegen/tokenizer.h"
+#include "parsing/codegen/lexer.h"
+#include "parsing/codegen/ast.h"
+#include "utils/env/environment.h"
 
 static const int DEFAULT_PARAMETERS_SIZE = 3;
 

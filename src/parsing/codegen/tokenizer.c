@@ -4,7 +4,7 @@
 #include <string.h>
 
 #include "tokenizer.h"
-#include "parserUtils.h"
+#include "parsing/parserUtils.h"
 
 typedef struct  {
     char *op;
