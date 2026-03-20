@@ -56,7 +56,7 @@ dkms.conf
 
 # Builds
 build/
-main
+config.yaml
 test
 
 *.ps1

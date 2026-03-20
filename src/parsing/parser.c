@@ -294,6 +294,11 @@ static ASTNode *parseFunctionDefinition(Token *head, Environment *env, Config *c
         printTokens(cur, config->LOG_STREAM);
     }
 
+    if (parseFunctionCalls(&head, config)) {
+        fprintf(config->LOG_STREAM, "Error parsing function call(s)\n");
+        return NULL;
+    }
+
     RPNList *rpn = shuntingYard(cur);
     if (rpn == NULL) return NULL;
 

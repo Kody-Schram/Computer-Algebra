@@ -1,0 +1,16 @@
+# Valid levels are:
+# - None/0
+# - Info/1
+# - Debug/2
+
+log_level: Debug
+
+# Enables the use of scripts to run during startup
+# Can be inline commands or define a file with the startup script
+# startup: |
+#   FILE
+#   (file path).txt
+
+startup: |
+  f:x->2x
+  g:y->2f(y)
