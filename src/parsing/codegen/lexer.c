@@ -5,6 +5,7 @@
 #include <math.h>
 
 #include "lexer.h"
+#include "parsing/parserUtils.h"
 
 /**
  * @brief Adds * where it is implied through standard math notation

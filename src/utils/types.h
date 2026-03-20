@@ -1,7 +1,11 @@
 #ifndef TYPES_H
 #define TYPES_H
 
+#define APP_NAME "algebra"
+
 // Forward declaring types
+typedef struct Config Config;
+
 typedef enum NodeType NodeType;
 typedef struct ASTNode ASTNode;
 
@@ -13,6 +17,10 @@ typedef enum ComponentType ComponentType;
 typedef struct Component Component;
 typedef struct Environment Environment;
 
+// Config related defintions
+struct Config {
+
+};
 
 // ASTNode related definitions
 enum NodeType {

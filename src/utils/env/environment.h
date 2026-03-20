@@ -1,7 +1,7 @@
 #ifndef ENVIRONMENT_H
 #define ENVIRONMENT_H
 
-#include "./types.h"
+#include "utils/types.h"
 
 
 Environment *createEnvironment();

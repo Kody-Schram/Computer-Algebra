@@ -4,7 +4,6 @@
 #include "utils/types.h"
 #include "parserTypes.h"
 
-
 /**
  * @brief Creates a Token object
  * 
@@ -18,7 +17,11 @@
  */
 Token *createToken(TokenType type, char *value, int l);
 
-
+/**
+ * @brief Prints linked token list in a easy to read format
+ * 
+ * @param head Head of linked list
+ */
 void printTokens(Token *head);
 
 

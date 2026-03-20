@@ -2,12 +2,18 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "utils/types.h"
+#include "utils/config/config.h"
+
 #include "utils/input.h"
 #include "utils/env/environment.h"
 #include "parsing/parser.h"
 #include "parsing/parserTypes.h"
 
 int main() {
+
+    Config *config = loadConfig();
+    if (config == NULL) return 0;
 
     Environment *global_env = createEnvironment();
     if (global_env == NULL) return 0;

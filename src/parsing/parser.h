@@ -11,12 +11,6 @@
  */
 void freeTokens(Token *head);
 
-/**
- * @brief Prints linked token list in a easy to read format
- * 
- * @param head Head of linked list
- */
-void printTokens(Token *head);
 
 int parseFunction(Token *head);
 
