@@ -5,6 +5,19 @@
 #include "parserUtils.h"
 
 
+void freeTokens(Token *head) {
+    Token* current = head;
+    while (current != NULL) {
+        //printf("freeing %s\n", current->value);
+        Token *next = current->next;
+        free(current->value);
+        free(current);
+        current = next;
+    }
+    //printf("done freeing tokens\n");
+}
+
+
 Token *createToken(TokenType type, char *value, int l) {
     //printf("creating token '%s' %d, of type %d\n", value, l, type);
 

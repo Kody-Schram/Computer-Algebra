@@ -5,12 +5,7 @@
 #include "utils/config.h"
 #include "parserTypes.h"
 
-/**
- * @brief Frees the memory of old tokens
- * 
- * @param head Head of linked list
- */
-void freeTokens(Token *head);
+
 
 
 int parseFunction(Token *head);

@@ -18,19 +18,6 @@ typedef enum FunctionComponent {
 } FunctionComponent;
 
 
-void freeTokens(Token *head) {
-    Token* current = head;
-    while (current != NULL) {
-        printf("freeing %s\n", current->value);
-        Token *next = current->next;
-        free(current->value);
-        free(current);
-        current = next;
-    }
-    printf("done freeing tokens\n");
-}
-
-
 static int containsFunctionDefinition(Token *head) {
     Token *cur = head;
     while (cur != NULL) {
@@ -58,11 +45,11 @@ static int parseFunctionCalls(Token **head, Config *config) {
     Token *funcPrev = NULL;
 
     while (cur != NULL) {
-        if (config->LOG_LEVEL >= DEBUG) fprintf(config->LOG_STREAM, "Current: %s\n", cur->value);
+        //if (config->LOG_LEVEL >= DEBUG) fprintf(config->LOG_STREAM, "Current: %s\n", cur->value);
 
         // Recursively parses nested function calls
         if (cur->type == TOKEN_FUNC_CALL) {
-            if (config->LOG_LEVEL >= DEBUG) fprintf(config->LOG_STREAM, "function found\n");
+            if (config->LOG_LEVEL >= DEBUG) fprintf(config->LOG_STREAM, "Function call: %s found\n", cur->value);
             Token *funcCall = cur;
             Token *prev = NULL;
 
@@ -326,6 +313,7 @@ static ASTNode *parseFunctionDefinition(Token *head, Environment *env, Config *c
 
     assignment->left = identifier;
 
+    if (config->LOG_LEVEL >= DEBUG) fprintf(config->LOG_STREAM, "Freeing tokens.\n");
     freeTokens(head);
 
     return assignment;
@@ -340,12 +328,12 @@ static ASTNode *parseAssignment(Token *head) {
 
 
 ASTNode *parse(char *buffer, Environment *env, Config *config) {
-    if (config->LOG_LEVEL >= INFO) fprintf(config->LOG_STREAM, "\nParsing\n");
+    if (config->LOG_LEVEL >= INFO) fprintf(config->LOG_STREAM, "\nParsing: '%s'\n", buffer);
     
     if (config->LOG_LEVEL >= DEBUG) fprintf(config->LOG_STREAM, "\nTokenizing\n");
     Token *raw = tokenize(buffer, env);
     if (raw == NULL) return NULL;
-    if (config->LOG_LEVEL >= DEBUG) printTokens(raw, config->LOG_STREAM);
+    //if (config->LOG_LEVEL >= DEBUG) printTokens(raw, config->LOG_STREAM);
 
     if (config->LOG_LEVEL >= DEBUG) fprintf(config->LOG_STREAM, "\nLexing Tokens\n");
     Token *head = lex(raw);
@@ -384,6 +372,8 @@ ASTNode *parse(char *buffer, Environment *env, Config *config) {
 
     if (config->LOG_LEVEL >= INFO) fprintf(config->LOG_STREAM, "\nInput Parsed\n");
 
+    if (config->LOG_LEVEL >= DEBUG) fprintf(config->LOG_STREAM, "Freeing tokens.\n");
     freeTokens(head);
+
     return ast;
 }

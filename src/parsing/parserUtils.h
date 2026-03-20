@@ -6,6 +6,14 @@
 #include "utils/types.h"
 #include "parserTypes.h"
 
+
+/**
+ * @brief Frees the memory of old tokens
+ * 
+ * @param head Head of linked list
+ */
+void freeTokens(Token *head);
+
 /**
  * @brief Creates a Token object
  * 
