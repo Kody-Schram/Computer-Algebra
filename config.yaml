@@ -1,4 +1,0 @@
-log_level: None
-startup: |
-  f:x->2x
-  g:y->5y
