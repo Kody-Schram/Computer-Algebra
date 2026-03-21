@@ -14,3 +14,15 @@ void Debug(const char *c, ...) {
         fflush(GLOBALCONTEXT->config->LOG_STREAM);
     }
 }
+
+
+void Info(const char *c, ...) {
+    if (GLOBALCONTEXT->config->LOG_LEVEL >= INFO) {
+        va_list args;
+        va_start(args, c);
+        vfprintf(GLOBALCONTEXT->config->LOG_STREAM, c, args);
+        va_end(args);
+
+        fflush(GLOBALCONTEXT->config->LOG_STREAM);
+    }
+}

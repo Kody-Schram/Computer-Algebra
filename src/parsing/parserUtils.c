@@ -12,6 +12,8 @@ void freeTokens(Token *head) {
 
     Token* current = head;
     while (current != NULL) {
+        Debug("Freeing token\n");
+        printToken(current);
         Token *next = current->next;
         free(current->value);
         free(current);

@@ -9,38 +9,29 @@ int execute(ASTNode *ast) {
     Config *config = GLOBALCONTEXT->config;
     Environment *env = GLOBALCONTEXT->env;
 
+    Debug("Executing\n");
+
     // Updates environment if an assignment is returned
-    if (ast->type == NODE_ASSIGN_FUNC || ast->type == NODE_ASSIGN_VAR) {
-        if (config->LOG_LEVEL >= DEBUG) fprintf(config->LOG_STREAM, "Updating environment\n");
-        
-        ComponentType type;
-        switch(ast->type) {
-            case NODE_ASSIGN_FUNC:
-                type = FUNCTION;
-                break;
-            default:
-                type = VARIABLE;
-        }
+    switch (ast->type) {
+        case NODE_ASSIGN_FUNC:
+            Info("\nBinding function %s to global environment\n", ast->left->identifier);
 
-        bindComponent(env, type, ast->left->identifier, ast->right->func);
-        if (config->LOG_LEVEL >= DEBUG) fprintf(config->LOG_STREAM, "Binded to global env.\n");
-        if (config->LOG_LEVEL >= DEBUG) {
-            //Function *func = ast->right->func;
-            // fprintf(config->LOG_STREAM, "Handling assingment of '%s'.\nPrinting function\n", ast->left->identifier);
-            // fprintf(config->LOG_STREAM, "Function: '%s(", ast->left->identifier);
+            bindComponent(env, FUNCTION, ast->left->identifier, ast->right->func);
+            if (config->LOG_LEVEL >= DEBUG) {
+                printEnvironment(ast->right->func->env);
+            }
 
-            // for (int j = 0; j < func->env->entries - 1; j ++) {
-            //     fprintf(config->LOG_STREAM, "%s,", func->env->components[j].identifier);
-            // }
-            // fprintf(config->LOG_STREAM, "%s)\n", func->env->components[func->env->entries-1].identifier);
-            printEnvironment(ast->right->func->env);
-        }
+            // Free assignment nodes after assignment
+            free(ast->left->identifier);
+            free(ast->left);
 
-        // Free assignment nodes after assignment
-        free(ast->left->identifier);
-        free(ast->left);
-
-        free(ast->right);
+            free(ast->right);
+            break;
+        case NODE_ASSIGN_VAR:
+            Info("\nBinding variable to global environment\n");
+            break;
+        default:
+            
     }
 
     Debug("Successfully Executed.\n");

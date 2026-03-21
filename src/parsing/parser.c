@@ -207,6 +207,7 @@ static ASTNode *parseFunctionDefinition(Token *head) {
     int nParams = 0;
 
     Token *cur = head;
+    Token *asgn = NULL;
     while (cur != NULL) {
         //printf("%s, type %d, comp %d,  == %d\n", cur->value, cur->type, component, (cur->type != TOKEN_IDENTIFIER && component == IDENTIFIER));
         
@@ -214,6 +215,7 @@ static ASTNode *parseFunctionDefinition(Token *head) {
         if (component == PARAMETERS && cur->type == TOKEN_ASSIGNMENT) {
             Debug("Moving to function body.\n");
             component = BODY;
+            asgn = cur;
             cur = cur->next;
             break;
         } else if (cur->type == TOKEN_ASSIGNMENT) {
@@ -264,8 +266,8 @@ static ASTNode *parseFunctionDefinition(Token *head) {
     Debug("\nRechecking identifiers with local parameters.\n");
 
     // Redoes identifier tokens now that local variables for parameters are established, then redoes lexing
-    handleLocalVariables(&cur, localEnv);
-    //cur = lex(cur);
+    handleLocalVariables(&asgn, localEnv);
+    cur = lex(cur);
 
     if (parseFunctionCalls(&head)) {
         printf("Error parsing function call(s)\n");
@@ -293,7 +295,9 @@ static ASTNode *parseFunctionDefinition(Token *head) {
     function->definition = ast;
 
     ASTNode *assignment = dummyASTNode(NODE_ASSIGN_FUNC);
-    assignment->right = (ASTNode*) function;
+    ASTNode *func = dummyASTNode(NODE_ASSIGN_FUNC);
+    func->func = function;
+    assignment->right = func;
 
     ASTNode *identifier = dummyASTNode(NODE_VARIABLE);
     identifier->identifier = strdup(id);
@@ -302,6 +306,8 @@ static ASTNode *parseFunctionDefinition(Token *head) {
 
     Debug("Freeing tokens used for function definition.\n");
     freeTokens(head);
+
+    printTokens(head);
 
     return assignment;
 }
@@ -318,7 +324,7 @@ ASTNode *parse(char *buffer) {
     Config *config = GLOBALCONTEXT->config;
     Environment *env = GLOBALCONTEXT->env;
 
-    if (config->LOG_LEVEL >= INFO) fprintf(config->LOG_STREAM, "\nParsing: '%s'\n", buffer);
+    Info("\nParsing: '%s'\n", buffer);
     
     Token *raw = tokenize(buffer);
     if (raw == NULL) return NULL;
@@ -345,14 +351,18 @@ ASTNode *parse(char *buffer) {
     }
 
     RPNList *RPN = shuntingYard(head);
-    if (RPN == NULL) return NULL;
+    if (RPN == NULL) {
+        freeTokens(head);
+        return NULL;
+    }
 
     ASTNode *ast = astFromRPN(RPN);
-    if (ast == NULL) return NULL;
-
-    Debug("\nInput Parsed\n");
+    if (ast == NULL) {
+        freeTokens(head);
+        return NULL;
+    }
 
     freeTokens(head);
-
+    Info("\nFinished parsing\n");
     return ast;
 }

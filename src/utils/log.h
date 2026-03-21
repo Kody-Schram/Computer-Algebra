@@ -5,4 +5,6 @@
 
 void Debug(const char *c, ...);
 
+void Info(const char *c, ...);
+
 #endif

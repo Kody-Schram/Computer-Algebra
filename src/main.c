@@ -39,9 +39,7 @@ int main() {
             } else {
                 printf("S > %s\n", line);
                 ASTNode *head = parse(line);
-                if (head) {
-                    execute(head);
-                }
+                if (head != NULL) execute(head);
             }
             line = strtok(NULL, "\n");
         }
@@ -60,9 +58,7 @@ int main() {
         if (!strcmp(input, "quit")) break;
 
         ASTNode *head = parse(input);
-        if (head == NULL) {
-            execute(head);
-        }
+        if (head != NULL) execute(head);
     }
 
     freeConfig(config);

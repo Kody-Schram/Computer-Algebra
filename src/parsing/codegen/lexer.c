@@ -302,6 +302,7 @@ void handleLocalVariables(Token **ptr, Environment *localEnv) {
         if (cur->type == TOKEN_IDENTIFIER) {
             Debug("Rechecking identifier %s\n", cur->value);
             int max = 0;
+            Component *cmp;
             char *id = cur->value;
 
             for (int i = 0; id[i] != '\0'; i ++) {
@@ -317,6 +318,7 @@ void handleLocalVariables(Token **ptr, Environment *localEnv) {
                 if (local != NULL) {
                     Debug("Local identifier %s found\n", local->identifier);
                     max = strlen(local->identifier);
+                    cmp = local;
                     continue;
                 }
                 
@@ -324,6 +326,7 @@ void handleLocalVariables(Token **ptr, Environment *localEnv) {
                 if (global != NULL) {
                     Debug("Global identifier %s found\n", global->identifier);
                     max = strlen(global->identifier);
+                    cmp = global;
                     continue;
                 }
 
@@ -332,18 +335,28 @@ void handleLocalVariables(Token **ptr, Environment *localEnv) {
             // If smaller identifer than the current one is found, partition it into two new identifier tokens
             if (max != strlen(cur->value) && max != 0) {
                 // create new tokens to split
-                Token *left = createToken(TOKEN_IDENTIFIER, id, max);
-                Token *right = createToken(TOKEN_IDENTIFIER, id + max + 1, strlen(id) - max);
+                Token *left = createToken(TOKEN_IDENTIFIER, cmp->identifier, max);
+                Debug("string: '%s', right: '%s', right len: %d\n", cur->value, id + max, strlen(id) - max);
+                Token *right = createToken(TOKEN_IDENTIFIER, id + max, strlen(id) - max);
+
+                //printToken(prev);
+                printToken(left);
+                printToken(right);
 
                 left->next = right;
                 right->next = cur->next;
 
                 if (prev != NULL) prev->next = left;
+                else *ptr = left;
 
                 free(cur->value);
                 free(cur);
 
+                prev = right;
                 cur = left;
+
+                Debug("Intermediate token list\n");
+                printTokens(*ptr);
             }
 
         }
@@ -353,7 +366,7 @@ void handleLocalVariables(Token **ptr, Environment *localEnv) {
     }
 
     if (config->LOG_LEVEL >= DEBUG) {
-        fprintf(config->LOG_STREAM, "Updated tokens.\n");
+        fprintf(config->LOG_STREAM, "Updated for local vars\n");
         printTokens(*ptr);
     }
 }

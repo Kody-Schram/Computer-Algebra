@@ -29,12 +29,10 @@ int bindComponent(Environment *env, ComponentType type, char *identifier, void *
         env->components = temp;
     }
 
-    printf("Creating component struct.\n");
     // Creates new component
     Component *new = &env->components[env->entries];
     new->type = type;
     new->identifier = strdup(identifier);
-    printf("adding data to component.\n");
 
     if (type == FUNCTION) new->func = (Function *) data;
     else new->value = (ASTNode *) data;
@@ -58,17 +56,12 @@ Component* searchEnvironment(Environment *env, char *identifier) {
 void printEnvironment(Environment *env) {
     Config *config = GLOBALCONTEXT->config;
 
-    if (config->LOG_LEVEL >= DEBUG) fprintf(config->LOG_STREAM, "Printing env with %d entires\n", env->entries);
     for (int i = 0; i < env->entries; i ++) {
         switch(env->components[i].type) {
             case FUNCTION:
-                if (config->LOG_LEVEL >= DEBUG) fprintf(config->LOG_STREAM, "printing function in env.\n");
                 Function *func = env->components[i].func;
-                if (config->LOG_LEVEL >= DEBUG) fprintf(config->LOG_STREAM, "func is null: %d\n", func == NULL);
-                if (config->LOG_LEVEL >= DEBUG) fprintf(config->LOG_STREAM, "env is null: %d\n", func->env == NULL);
 
                 if (env->components[i].func->env->entries > 0) {
-                    if (config->LOG_LEVEL >= DEBUG) fprintf(config->LOG_STREAM, "entries: %d\n", func->env == NULL);
                     if (config->LOG_LEVEL >= DEBUG) fprintf(config->LOG_STREAM, "%s(", env->components[i].identifier);
                     for (int j = 0; j < func->env->entries - 1; j ++) {
                         if (config->LOG_LEVEL >= DEBUG) fprintf(config->LOG_STREAM, "%s,", func->env->components[j].identifier);
