@@ -306,7 +306,6 @@ void handleLocalVariables(Token **ptr, Environment *localEnv) {
             char *id = cur->value;
 
             for (int i = 0; id[i] != '\0'; i ++) {
-                //printf("%c\n", id[i]);
                 // Adds the end of string char to only select a part of the buffer
                 char temp = id[i + 1];
                 id[i + 1] = '\0';

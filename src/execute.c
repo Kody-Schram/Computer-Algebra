@@ -69,7 +69,6 @@ int execute(ASTNode **ptr, ASTNode *parent) {
         default:
             if (!execute(&ast->left, ast)) return 0;
             if (!execute(&ast->right, ast)) return 0;
-            //simplifications here
             
     }
 

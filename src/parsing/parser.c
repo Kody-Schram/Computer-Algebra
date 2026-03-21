@@ -260,7 +260,7 @@ static ASTNode *parseFunctionDefinition(Token *head) {
 
     // Redoes identifier tokens now that local variables for parameters are established, then redoes lexing
     handleLocalVariables(&asgn, localEnv);
-    cur = lex(cur);
+    cur = lex(asgn->next);
 
     if (parseFunctionCalls(&head)) {
         printf("Error parsing function call(s)\n");
