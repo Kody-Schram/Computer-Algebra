@@ -5,6 +5,9 @@
 
 log_level: Debug
 
+# Set the location for logs to appear
+log_location: log.txt
+
 # Enables the use of scripts to run during startup
 # Can be inline commands or define a file with the startup script
 # startup: |

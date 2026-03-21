@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include "ast.h"
+#include "utils/context/context.h"
 #include "parsing/parserUtils.h"
 
 static int DEFAULT_NODE_STACK_SIZE = 10;
@@ -76,6 +77,9 @@ static int reallocStack(Stack *stack) {
 
 
 RPNList *shuntingYard(Token *head) {
+    Config *config = GLOBALCONTEXT->config;
+
+    if (config->LOG_LEVEL >=DEBUG) fprintf(config->LOG_STREAM, "\nCreating RPN List.\n");
     Token *cur = head;
 
     int size = getLinkedListLength(head);
@@ -159,11 +163,17 @@ RPNList *shuntingYard(Token *head) {
     list->length = output.entries;
     list->items = (Token**) output.items;
 
+    if (list != NULL && config->LOG_LEVEL >= DEBUG) printRPN(list);
+
     return list;
 }
 
 
 ASTNode *astFromRPN(RPNList *rpn) {
+    Config *config = GLOBALCONTEXT->config;
+
+    if (config->LOG_LEVEL >= DEBUG) fprintf(config->LOG_STREAM, "\nGenerating AST.\n");
+
     Stack nodes = {
         DEFAULT_NODE_STACK_SIZE,
         0,
@@ -171,18 +181,13 @@ ASTNode *astFromRPN(RPNList *rpn) {
     };
 
     for (int i = 0; i < rpn->length; i ++) {
-        //printf("creating new node. %s\n", rpn->items[i]->value);
         ASTNode *node = createASTNode(rpn->items[i]);
         if (node == NULL) return NULL;
 
         if (node->type == NODE_OPERATOR) {
-            //printf("adding children\n");
 
             node->right = nodes.items[nodes.entries - 1];
             node->left = nodes.items[nodes.entries - 2];
-
-            // printf("left %s", node->left->identifier);
-            // printf("right %s", node->right->value);
 
             nodes.entries -= 2;
         }
@@ -194,6 +199,10 @@ ASTNode *astFromRPN(RPNList *rpn) {
         }
     }
 
-    //printf("length %d\n", nodes.entries);
+    if (config->LOG_LEVEL >= DEBUG && nodes.items[0] != NULL) {
+        fprintf(config->LOG_STREAM, "\nPrinting AST\n");
+        printAST(nodes.items[0]);
+    }
+
     return nodes.items[0];
 }

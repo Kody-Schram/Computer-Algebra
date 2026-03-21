@@ -57,6 +57,7 @@ dkms.conf
 # Builds
 build/
 config.yaml
+log.txt
 test
 
 *.ps1

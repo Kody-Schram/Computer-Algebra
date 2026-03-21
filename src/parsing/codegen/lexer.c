@@ -5,6 +5,7 @@
 #include <math.h>
 
 #include "lexer.h"
+#include "utils/context/context.h"
 #include "parsing/parserUtils.h"
 
 /**
@@ -288,14 +289,20 @@ static int handleAssignment(Token *cur) {
 }
 
 
-void handleLocalVariables(Token **ptr, Environment *env, int nParams, char **parameters) {
+void handleLocalVariables(Token **ptr, int nParams, char **parameters) {
+    Config *config = GLOBALCONTEXT->config;
+    Environment *env = GLOBALCONTEXT->env;
+
+    if (config->LOG_LEVEL >= DEBUG) fprintf(config->LOG_STREAM, "\nRechecking identifiers again local variables.\n");
     Token *cur = *ptr;
     Token *prev = NULL;
     
     while (cur != NULL) {
         if (cur->type == TOKEN_IDENTIFIER) {
+            if (config->LOG_LEVEL >= DEBUG) fprintf(config->LOG_STREAM, "Rechecking identifier %s\n", cur->value);
             int max = 0;
             char *id = cur->value;
+
             for (int i = 0; id[i] != '\0'; i ++) {
                 //printf("%c\n", id[i]);
                 // Adds the end of string char to only select a part of the buffer
@@ -321,7 +328,7 @@ void handleLocalVariables(Token **ptr, Environment *env, int nParams, char **par
             if (max != strlen(cur->value) && max != 0) {
                 // create new tokens to split
                 Token *left = createToken(TOKEN_IDENTIFIER, id, max);
-                Token *right = createToken(TOKEN_IDENTIFIER, id + max, strlen(id) - max);
+                Token *right = createToken(TOKEN_IDENTIFIER, id + max + 1, strlen(id) - max);
 
                 left->next = right;
                 right->next = cur->next;
@@ -339,9 +346,16 @@ void handleLocalVariables(Token **ptr, Environment *env, int nParams, char **par
         prev = cur;
         cur = cur->next;
     }
+
+    if (config->LOG_LEVEL >= DEBUG) {
+        fprintf(config->LOG_STREAM, "Updated tokens.\n");
+        printTokens(*ptr);
+    }
 }
 
 Token *lex(Token* head) {
+    Config *config = GLOBALCONTEXT->config;
+    if (config->LOG_LEVEL >= DEBUG) fprintf(config->LOG_STREAM, "\nLexing Tokens\n");
     Token *cur = head;
     Token *prev = NULL;
 

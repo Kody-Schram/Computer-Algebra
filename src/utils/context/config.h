@@ -26,4 +26,5 @@ void printConfig(Config *config);
 
 void freeConfig(Config *config);
 
+
 #endif

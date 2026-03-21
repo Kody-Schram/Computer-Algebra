@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include "tokenizer.h"
+#include "utils/context/context.h"
 #include "parsing/parserUtils.h"
 
 typedef struct  {
@@ -80,38 +81,79 @@ static int getNumber(char *c) {
  * @param env Environment
  * @return int Length of largest component found or length of contiuguous valid identifier characters
  */
-static ComponentReturn getComponentLength(char *c, Environment *env) {
+static ComponentReturn getComponentLength(char *c, Environment *env, Config *config) {
     ComponentReturn result = {0, NULL};
     // If not valid character type for variable name, automatically skip check
     if (!isalpha(c[0])) return result;
 
-    int max = 0;
-    while (isalnum(c[result.len]) || c[result.len] == '_') {
-        char temp = c[result.len + 1];
-        
-        // Adds the end of string char to only select a part of the buffer
-        c[result.len + 1] = '\0';
+    // Gets length of valid identifer characters
+    int length = 0;
+    while (isalnum(c[length]) || c[length] == '_') length ++;
+    if (config->LOG_LEVEL >= DEBUG) fprintf(config->LOG_STREAM, "\nLength of identifer valid characters is %d.\n", length);
+
+    // Check left
+    if (config->LOG_LEVEL >= DEBUG) fprintf(config->LOG_STREAM, "Checking left identifiers.\n");
+    for (int i = 0; i < length; i ++) {
+        char temp = c[length - i];
+        c[length - i] = '\0';
+        if (config->LOG_LEVEL >= DEBUG) fprintf(config->LOG_STREAM, "Checking '%s'\n", c);
         Component *cmp = searchEnvironment(env, c);
-        c[result.len + 1] = temp;
+        c[length - i] = temp;
 
         if (cmp != NULL) {
-            max = result.len + 1;
+            if (config->LOG_LEVEL >= DEBUG) fprintf(config->LOG_STREAM, "found left side component: %s\n", cmp->identifier);
+            result.len = length - i;
             result.cmp = cmp;
-            //printf("Matched with component %s\n", cmp->identifier);
         }
-
-        result.len++;
     }
 
-    if (max > 0) {
-        result.len = max;
-        return result;
+    if (result.len == length) return result;
+    
+    // Check right
+    if (config->LOG_LEVEL >= DEBUG) fprintf(config->LOG_STREAM, "Checking right identifiers.\n");
+    for (int i = 1; i < length; i ++) {
+        char temp = c[length];
+        c[length] = '\0';
+        if (config->LOG_LEVEL >= DEBUG) fprintf(config->LOG_STREAM, "Checking '%s'\n", c + i);
+        Component *cmp = searchEnvironment(env, c + i);
+        c[length] = temp;
+
+        if (cmp != NULL && result.len < length - i) {
+            if (config->LOG_LEVEL >= DEBUG) fprintf(config->LOG_STREAM, "found right side component: %s, %d characters in.\n", cmp->identifier, i);
+            result.len = i;
+        }
     }
+
+    if (result.len == length) return result;
+
+    if (config->LOG_LEVEL >= DEBUG) fprintf(config->LOG_STREAM, "Checking middle identifiers.\n");
+    for (int i = 1; i < length; i ++) {
+        for (int end = i + 1; end < length; end ++) {
+            char temp = c[end];
+            c[end] = '\0';
+            if (config->LOG_LEVEL >= DEBUG) fprintf(config->LOG_STREAM, "Checking '%s'\n", c + i);
+            Component *cmp = searchEnvironment(env, c + i);
+            c[end] = temp;
+
+            if (cmp != NULL && result.len < end - i) {
+                if (config->LOG_LEVEL >= DEBUG) fprintf(config->LOG_STREAM, "found nested component: %s\n", cmp->identifier);
+                result.len = i;
+                return result;
+            }
+        }
+    }
+
+    if (result.len == 0) result.len = length;
     return result;
 }
 
 
-Token *tokenize(char *buffer, Environment *env) {
+Token *tokenize(char *buffer) {
+    Config *config = GLOBALCONTEXT->config;
+    Environment *env = GLOBALCONTEXT->env;
+
+    if (config->LOG_LEVEL >= DEBUG) fprintf(config->LOG_STREAM, "\nTokenizing '%s'\n", buffer);
+
     Token *head = NULL;
     Token *prev = NULL;
 
@@ -148,7 +190,7 @@ Token *tokenize(char *buffer, Environment *env) {
         }
         
         // Checks if builtin function and return the length if it is
-        else if ((cRet = getComponentLength(buffer + i, env)).len) {
+        else if ((cRet = getComponentLength(buffer + i, env, config)).len) {
             //if (cRet.cmp != NULL) printf("largest component found was %s\n", cRet.cmp->identifier);
             end += cRet.len;
 
@@ -202,6 +244,8 @@ Token *tokenize(char *buffer, Environment *env) {
         Token *newToken = createToken(type, buffer + i, end - i);
         if (newToken == NULL) return NULL;
 
+        //if (config->LOG_LEVEL >= DEBUG) printToken(newToken, config->LOG_STREAM);
+
         // Updates linked list
         if (prev != NULL) {
             prev->next = newToken;
@@ -213,6 +257,8 @@ Token *tokenize(char *buffer, Environment *env) {
         i = end;
 
     }
+
+    if (config->LOG_LEVEL >= DEBUG) printTokens(head);
 
     return head;
 }

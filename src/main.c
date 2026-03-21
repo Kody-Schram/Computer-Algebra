@@ -2,24 +2,23 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "utils/context/context.h"
 #include "utils/types.h"
-#include "utils/config.h"
 
 #include "utils/input.h"
-#include "utils/env/environment.h"
 #include "parsing/parser.h"
 #include "parsing/parserTypes.h"
 
 #include "execute.h"
 
 int main() {
-    Config *config = loadConfig();
-    if (config == NULL) return 0;
+    if (!initContext()) return 0;
+    Config *config = GLOBALCONTEXT->config;
 
-    if (config->LOG_LEVEL >= INFO) printConfig(config);
-
-    Environment *global_env = createEnvironment();
-    if (global_env == NULL) return 0;
+    if (config->LOG_LEVEL >= INFO) {
+        fprintf(config->LOG_STREAM, "Context created.\n");
+        printConfig(config);
+    }
 
     int line = 1;
 
@@ -37,9 +36,10 @@ int main() {
                 }
                 break;
             } else {
-                ASTNode *head = parse(line, global_env, config);
+                printf("S > %s\n", line);
+                ASTNode *head = parse(line);
                 if (head) {
-                    if (execute(head, global_env, config) && config->LOG_LEVEL >= INFO) fprintf(config->LOG_STREAM, "Successfully Executed.\n");
+                    if (execute(head) && config->LOG_LEVEL >= INFO) fprintf(config->LOG_STREAM, "Successfully Executed.\n");
                 }
             }
             line = strtok(NULL, "\n");
@@ -56,10 +56,11 @@ int main() {
 
         if (!strcmp(input, "quit")) break;
 
-        ASTNode *head = parse(input, global_env, config);
-        if (head == NULL) continue;
+        ASTNode *head = parse(input);
+        if (head == NULL) {
 
-        if (execute(head, global_env, config) && config->LOG_LEVEL >= INFO) fprintf(config->LOG_STREAM, "Successfully Executed.\n");
+            if (execute(head) && config->LOG_LEVEL >= INFO) fprintf(config->LOG_STREAM, "Successfully Executed.\n");
+        }
     }
 
     freeConfig(config);

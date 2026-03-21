@@ -27,12 +27,14 @@ void freeTokens(Token *head);
  */
 Token *createToken(TokenType type, char *value, int l);
 
+void printToken(Token *head);
+
 /**
  * @brief Prints linked token list in a easy to read format
  * 
  * @param head Head of linked list
  */
-void printTokens(Token *head, FILE *stream);
+void printTokens(Token *head);
 
 
 ASTNode *createASTNode(Token *token);
@@ -41,10 +43,10 @@ ASTNode *createASTNode(Token *token);
 ASTNode *dummyASTNode(NodeType type);
 
 
-void printAST(ASTNode *head, FILE *stream);
+void printAST(ASTNode *head);
 
 
-void printRPN(RPNList list, FILE *stream);
+void printRPN(RPNList *list);
 
 
 #endif

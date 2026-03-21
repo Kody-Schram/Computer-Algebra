@@ -3,7 +3,7 @@
 #include <string.h>
 
 #include "config.h"
-#include "types.h"
+#include "utils/types.h"
 
 typedef enum {
     STATE_START,
@@ -114,6 +114,25 @@ static int consumeEvent(State *state, yaml_event_t *event, Config *config) {
         }
         break;
 
+    case STATE_LOG_LOCATION:
+        switch (event->type) {
+            case YAML_MAPPING_END_EVENT:
+                *state = STATE_SECTION;
+                break;
+            case YAML_SCALAR_EVENT:
+                value = (char *) event->data.scalar.value;
+
+                FILE *location = fopen(value, "wb+");
+                config->LOG_STREAM = location;
+
+                *state = STATE_SECTION;
+                break;
+            default:
+                printf("Unexpected event %d in state %d.\n", event->type, *state);
+                return 0;
+        }
+        break;
+
     case STATE_STARTUP:
         switch (event->type) {
             case YAML_MAPPING_END_EVENT:
@@ -142,7 +161,7 @@ static void initConfig(Config *config) {
 
 
 Config *loadConfig() {
-    Config *config = malloc(sizeof(config));
+    Config *config = malloc(sizeof(Config));
     if (config == NULL) {
         fprintf(stdout, "Error allocating for config.\n");
         return NULL;
@@ -194,16 +213,36 @@ Config *loadConfig() {
 
     yaml_parser_delete(&parser);
 
+    if (config->LOG_STREAM != stdout) {
+        setvbuf(config->LOG_STREAM, NULL, _IONBF, 0); 
+    }
+
     return config;
 }
 
+
 void printConfig(Config *config) {
     fprintf(config->LOG_STREAM, "\nConfig\n");
-    fprintf(config->LOG_STREAM, "Log Level: %d\n", config->LOG_LEVEL);
+    char *level;
+    switch(config->LOG_LEVEL) {
+        case NONE:
+            level = "None";
+            break;
+        case INFO:
+            level = "Info";
+            break;
+        case DEBUG:
+            level = "Debug";
+            break;
+        default:
+            level = "GRIFFITH!";
+    }
+    fprintf(config->LOG_STREAM, "Log Level: %s\n", level);
     fprintf(config->LOG_STREAM, "Startup: \n%s\n", config->STARTUP);
 }
 
 void freeConfig(Config *config) {
     free(config);
+    fclose(config->LOG_STREAM);
     // will need more later on
 }

@@ -13,9 +13,6 @@ typedef struct FunctionCall FunctionCall;
 typedef enum FunctionType FunctionType;
 typedef struct Function Function;
 
-typedef enum ComponentType ComponentType;
-typedef struct Component Component;
-typedef struct Environment Environment;
 
 // ASTNode related definitions
 enum NodeType {
@@ -66,28 +63,5 @@ struct Function {
     };
 };
 
-
-// Environment related definitions
-enum ComponentType{
-    VARIABLE,
-    FUNCTION
-};
-
-struct Component {
-    ComponentType type;
-    char *identifier;
-
-    union {
-        Function *function;
-        double value;
-    };
-
-};
-
-struct Environment {
-    int entries;
-    int size;
-    Component *components;
-};
 
 #endif

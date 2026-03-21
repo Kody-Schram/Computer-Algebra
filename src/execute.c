@@ -2,8 +2,12 @@
 #include <stdio.h>
 
 #include "execute.h"
+#include "utils/context/context.h"
 
-int execute(ASTNode *ast, Environment *env, Config *config) {
+int execute(ASTNode *ast) {
+    Config *config = GLOBALCONTEXT->config;
+    Environment *env = GLOBALCONTEXT->env;
+
     // Updates environment if an assignment is returned
     if (ast->type == NODE_ASSIGN_FUNC || ast->type == NODE_ASSIGN_VAR) {
         if (config->LOG_LEVEL >= DEBUG) fprintf(config->LOG_STREAM, "Updating environment\n");

@@ -13,6 +13,6 @@
  * @param buffer Mathmatical string
  * @return Token* 
  */
-Token *tokenize(char *buffer, Environment *env);
+Token *tokenize(char *buffer);
 
 #endif

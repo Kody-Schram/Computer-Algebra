@@ -3,18 +3,19 @@
 #include <math.h>
 
 #include "parserUtils.h"
+#include "utils/context/context.h"
 
 
 void freeTokens(Token *head) {
+    if (GLOBALCONTEXT->config->LOG_LEVEL >= DEBUG) fprintf(GLOBALCONTEXT->config->LOG_STREAM, "Freeing tokens.\n");
+
     Token* current = head;
     while (current != NULL) {
-        //printf("freeing %s\n", current->value);
         Token *next = current->next;
         free(current->value);
         free(current);
         current = next;
     }
-    //printf("done freeing tokens\n");
 }
 
 
@@ -43,14 +44,12 @@ Token *createToken(TokenType type, char *value, int l) {
 }
 
 
-void printTokens(Token *head, FILE *stream) {
-    Token *cur = head;
+void printToken(Token *token) {
+    FILE *stream = GLOBALCONTEXT->config->LOG_STREAM;
 
-    fprintf(stream, "[\n");
-    while (cur != NULL) {
-        const char *type = NULL;
+    const char *type = NULL;
 
-        switch(cur->type) {
+        switch(token->type) {
             case TOKEN_NUMBER:
                 type = "NUMBER";
                 break;
@@ -79,17 +78,21 @@ void printTokens(Token *head, FILE *stream) {
                 type = "FUNC_CALL";
         }
 
-        if (cur->type == TOKEN_FUNC_CALL) {
-            //printf("printing funciton \n");
+        if (token->type == TOKEN_FUNC_CALL) {
             fprintf(stream, "    <type: %s>\n", type);
-            // if (cur->call != NULL) {
-            //     printf("    <type: %s, value: '%s'>\n", type, cur->call->identifier);
-            // } else {
-            //     printf("call not defined\n");
-            //     printf("    <type: %s, value: '%s'>\n", type, cur->value);
-            // }
         }
-        else fprintf(stream, "    <type: %s, value: '%s'>\n", type, cur->value);
+        else fprintf(stream, "    <type: %s, value: '%s'>\n", type, token->value);
+}
+
+
+void printTokens(Token *head) {
+    FILE *stream = GLOBALCONTEXT->config->LOG_STREAM;
+
+    Token *cur = head;
+
+    fprintf(stream, "[\n");
+    while (cur != NULL) {
+        printToken(cur);
         cur = cur->next;
     }
 
@@ -150,8 +153,9 @@ ASTNode *dummyASTNode(NodeType type) {
 }
 
 
-static void printASTRec(ASTNode *node, int level, FILE *stream) {
+static void printASTRec(ASTNode *node, int level) {
     if (node == NULL) return;
+    FILE *stream = GLOBALCONTEXT->config->LOG_STREAM;
 
     // Print indentation based on depth
     for (int i = 0; i < level; i++) fprintf(stream, "  ");
@@ -172,7 +176,7 @@ static void printASTRec(ASTNode *node, int level, FILE *stream) {
             for (int i = 0; i < level + 1; i++) fprintf(stream, "  ");
             fprintf(stream, "Parameters:\n");
             for (int p = 0; p < node->call->nParams; p ++) {
-                printASTRec(node->call->parameters[p], level+1, stream);
+                printASTRec(node->call->parameters[p], level+1);
             }
             break;
         default:
@@ -180,24 +184,28 @@ static void printASTRec(ASTNode *node, int level, FILE *stream) {
     }
 
     // Recursively print children
-    printASTRec(node->left, level + 1, stream);
-    printASTRec(node->right, level + 1, stream);
+    printASTRec(node->left, level + 1);
+    printASTRec(node->right, level + 1);
 }
 
 
-void printAST(ASTNode *root, FILE *stream) {
+void printAST(ASTNode *root) {
+    FILE *stream = GLOBALCONTEXT->config->LOG_STREAM;
+
     fprintf(stream, "[\n");
-    printASTRec(root, 0, stream);
+    printASTRec(root, 0);
     fprintf(stream, "]\n");
 }
 
 
-void printRPN(RPNList list, FILE *stream) {
+void printRPN(RPNList *list) {
+    FILE *stream = GLOBALCONTEXT->config->LOG_STREAM;
+
     fprintf(stream, "RPN: ");
 
-    for (int i = 0; i < list.length; i ++) {
-        if (list.items[i]->type != TOKEN_FUNC_CALL) fprintf(stream, "%s ", list.items[i]->value);
-        else fprintf(stream, "%s ", list.items[i]->call->identifier);
+    for (int i = 0; i < list->length; i ++) {
+        if (list->items[i]->type != TOKEN_FUNC_CALL) fprintf(stream, "%s ", list->items[i]->value);
+        else fprintf(stream, "%s ", list->items[i]->call->identifier);
     }
 
     fprintf(stream, "\n");

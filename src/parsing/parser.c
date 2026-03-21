@@ -3,10 +3,11 @@
 #include <string.h>
 
 #include "parser.h"
+#include "utils/context/context.h"
+
 #include "parsing/codegen/tokenizer.h"
 #include "parsing/codegen/lexer.h"
 #include "parsing/codegen/ast.h"
-#include "utils/env/environment.h"
 #include "parserUtils.h"
 
 static const int DEFAULT_PARAMETERS_SIZE = 3;
@@ -40,7 +41,9 @@ static int containsAssignment(Token *head) {
 }
 
 
-static int parseFunctionCalls(Token **head, Config *config) {
+static int parseFunctionCalls(Token **head) {
+    Config *config = GLOBALCONTEXT->config;
+
     Token *cur = *head;
     Token *funcPrev = NULL;
 
@@ -111,23 +114,24 @@ static int parseFunctionCalls(Token **head, Config *config) {
 
                 if (config->LOG_LEVEL >= DEBUG) {
                     fprintf(config->LOG_STREAM, "\nParameter Tokens\n");
-                    printTokens(paramHead, config->LOG_STREAM);
+                    printTokens(paramHead);
 
                     fprintf(config->LOG_STREAM, "Handling recursive calls\n");
                 }
                 // Recursively parses calls
-                if (!parseFunctionCalls(&paramHead, config) && config->LOG_LEVEL >= DEBUG) fprintf(config->LOG_STREAM, "No recursive function calls found\n");
+                if (!parseFunctionCalls(&paramHead) && config->LOG_LEVEL >= DEBUG) fprintf(config->LOG_STREAM, "No recursive function calls found\n");
                 else if(config->LOG_LEVEL >= DEBUG) fprintf(config->LOG_STREAM, "Recursive function calls handled\n");
 
                 // Generates ast for parameter
                 RPNList *rpn = shuntingYard(paramHead);
                 if (rpn == NULL) return 1;
+                
                 ASTNode *ast = astFromRPN(rpn);
                 if (ast == NULL) return 1;
 
                 if (config->LOG_LEVEL >= DEBUG) {
-                    printf("\nParameter AST\n");
-                    printAST(ast, config->LOG_STREAM);
+                    fprintf(config->LOG_STREAM, "\nParameter AST\n");
+                    printAST(ast);
                 }
 
                 paramASTs[nParameters] = ast;
@@ -188,7 +192,10 @@ static int parseFunctionCalls(Token **head, Config *config) {
 }
 
 
-static ASTNode *parseFunctionDefinition(Token *head, Environment *env, Config *config) {
+static ASTNode *parseFunctionDefinition(Token *head) {
+    Config *config = GLOBALCONTEXT->config;
+    Environment *env = GLOBALCONTEXT->env;
+
     if (config->LOG_LEVEL >= DEBUG) fprintf(config->LOG_STREAM, "Parsing function definition.\n");
     FunctionComponent component = IDENTIFIER;
 
@@ -264,17 +271,13 @@ static ASTNode *parseFunctionDefinition(Token *head, Environment *env, Config *c
 
     // if (config->LOG_LEVEL >= DEBUG) fprintf(config->LOG_STREAM, "Second round of parsing.\n");
 
-    // if (config->LOG_LEVEL >= DEBUG) fprintf(config->LOG_STREAM, "\nLexing Tokens\n");
+    if (config->LOG_LEVEL >= DEBUG) fprintf(config->LOG_STREAM, "\nRechecking identifiers with local parameters.\n");
 
     // Redoes identifier tokens now that local variables for parameters are established, then redoes lexing
-    handleLocalVariables(&cur, env, nParams, parameters);
-    // cur = lex(cur);
-    // if (config->LOG_LEVEL >= DEBUG) {
-    //     fprintf(config->LOG_STREAM, "\nFunction Lexing\n");
-    //     printTokens(cur, config->LOG_STREAM);
-    // }
+    handleLocalVariables(&cur, nParams, parameters);
+    //cur = lex(cur);
 
-    if (parseFunctionCalls(&head, config)) {
+    if (parseFunctionCalls(&head)) {
         fprintf(config->LOG_STREAM, "Error parsing function call(s)\n");
         return NULL;
     }
@@ -282,12 +285,12 @@ static ASTNode *parseFunctionDefinition(Token *head, Environment *env, Config *c
     RPNList *rpn = shuntingYard(cur);
     if (rpn == NULL) return NULL;
 
-    if (config->LOG_LEVEL >= DEBUG) fprintf(config->LOG_STREAM, "\nGenerating AST.\n");
+    if (config->LOG_LEVEL >= DEBUG) fprintf(config->LOG_STREAM, "\nFunction Defintion AST.\n");
     // Generate ast for body
     ASTNode *ast = astFromRPN(rpn);
     if (ast == NULL) return NULL;
 
-    if (config->LOG_LEVEL >= DEBUG) printAST(ast, config->LOG_STREAM);
+    if (config->LOG_LEVEL >= DEBUG) printAST(ast);
 
     // Add to function table
     Function *function = malloc(sizeof(Function));
@@ -320,52 +323,44 @@ static ASTNode *parseAssignment(Token *head) {
 }
 
 
-ASTNode *parse(char *buffer, Environment *env, Config *config) {
+ASTNode *parse(char *buffer) {
+    Config *config = GLOBALCONTEXT->config;
+    Environment *env = GLOBALCONTEXT->env;
+
     if (config->LOG_LEVEL >= INFO) fprintf(config->LOG_STREAM, "\nParsing: '%s'\n", buffer);
     
-    if (config->LOG_LEVEL >= DEBUG) fprintf(config->LOG_STREAM, "\nTokenizing\n");
-    Token *raw = tokenize(buffer, env);
+    Token *raw = tokenize(buffer);
     if (raw == NULL) return NULL;
     //if (config->LOG_LEVEL >= DEBUG) printTokens(raw, config->LOG_STREAM);
 
-    if (config->LOG_LEVEL >= DEBUG) fprintf(config->LOG_STREAM, "\nLexing Tokens\n");
     Token *head = lex(raw);
     if (head == NULL) return NULL;
-    if (config->LOG_LEVEL >= DEBUG) printTokens(head, config->LOG_STREAM);
 
     if (containsAssignment(head)) {
-        if (config->LOG_LEVEL >= DEBUG) fprintf(config->LOG_STREAM, "Contains assignment.\n");
+        if (config->LOG_LEVEL >= DEBUG) fprintf(config->LOG_STREAM, "Assignment found.\n");
         if (!containsFunctionDefinition(head)) return parseAssignment(head);
 
-        return parseFunctionDefinition(head, env, config);
+        return parseFunctionDefinition(head);
     }
 
-    if (parseFunctionCalls(&head, config)) {
-        fprintf(config->LOG_STREAM, "Error parsing function call(s)\n");
+    if (parseFunctionCalls(&head)) {
+        printf("Error parsing function call(s)\n");
         return NULL;
     }
 
     if (config->LOG_LEVEL >= DEBUG) {
         fprintf(config->LOG_STREAM, "\nPost Function Call Tokens\n");
-        printTokens(head, config->LOG_STREAM);
+        printTokens(head);
     }
 
-    if (config->LOG_LEVEL >= DEBUG) fprintf(config->LOG_STREAM, "\nCreating RPN\n");
     RPNList *RPN = shuntingYard(head);
     if (RPN == NULL) return NULL;
-    if (config->LOG_LEVEL >= DEBUG) printRPN(*RPN, config->LOG_STREAM);
 
-    if (config->LOG_LEVEL >= DEBUG) fprintf(config->LOG_STREAM, "\nGenerating AST.\n");
     ASTNode *ast = astFromRPN(RPN);
-
-    if (config->LOG_LEVEL >= DEBUG && ast != NULL) {
-        fprintf(config->LOG_STREAM, "\nPrinting AST\n");
-        printAST(ast, config->LOG_STREAM);
-    }
+    if (ast == NULL) return NULL;
 
     if (config->LOG_LEVEL >= INFO) fprintf(config->LOG_STREAM, "\nInput Parsed\n");
 
-    if (config->LOG_LEVEL >= DEBUG) fprintf(config->LOG_STREAM, "Freeing tokens.\n");
     freeTokens(head);
 
     return ast;
