@@ -6,14 +6,6 @@
 #include "utils/types.h"
 #include "parserTypes.h"
 
-
-/**
- * @brief Frees the memory of old tokens
- * 
- * @param head Head of linked list
- */
-void freeTokens(Token *head);
-
 /**
  * @brief Creates a Token object
  * 
@@ -47,6 +39,16 @@ void printAST(ASTNode *head);
 
 
 void printRPN(RPNList *list);
+
+/**
+ * @brief Frees the memory of old tokens
+ * 
+ * @param head Head of linked list
+ */
+void freeTokens(Token *head);
+
+
+void freeAST(ASTNode *ast);
 
 
 #endif

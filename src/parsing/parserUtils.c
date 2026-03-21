@@ -7,21 +7,6 @@
 #include "utils/log.h"
 
 
-void freeTokens(Token *head) {
-    Debug("Freeing tokens.\n");
-
-    Token* current = head;
-    while (current != NULL) {
-        Debug("Freeing token\n");
-        printToken(current);
-        Token *next = current->next;
-        free(current->value);
-        free(current);
-        current = next;
-    }
-}
-
-
 Token *createToken(TokenType type, char *value, int l) {
     //printf("creating token '%s' %d, of type %d\n", value, l, type);
 
@@ -123,7 +108,26 @@ ASTNode *createASTNode(Token *token) {
         break;
     case TOKEN_OPERATOR:
         node->type = NODE_OPERATOR;
-        node->identifier = strdup(token->value);
+        char id = token->value[0];
+        switch (id) {
+            case '+':
+                node->op = OP_ADDITION;
+                break;
+            case '-':
+                node->op = OP_SUBTRACTION;
+                break;
+            case '*':
+                node->op = OP_MULTIPLICATION;
+                break;
+            case '/':
+                node->op = OP_DIVISION;
+                break;
+            case '^':
+                node->op = OP_EXPONTENTIATION;
+                break;
+            default:
+                printf("Unknown operator '%s'\n", id);
+        }
         break;
     case TOKEN_FUNC_CALL:
         node->type = NODE_FUNC_CALL;
@@ -166,24 +170,45 @@ static void printASTRec(ASTNode *node, int level) {
     // Print node info
     switch(node->type) {
         case NODE_NUMBER:
-            fprintf(stream, "<type: %s, value: %f>\n", "NUMBER", node->value);
+            fprintf(stream, "<type: NUMBER, value: %f>\n", node->value);
             break;
         case NODE_OPERATOR:
-            fprintf(stream, "<type: %s, symbol: %s>\n", "OPERATOR", node->identifier);
+            char id;
+            switch (node->op) {
+                case OP_ADDITION:
+                    id = '+';
+                    break;
+                case OP_SUBTRACTION:
+                    id = '-';
+                    break;
+                case OP_MULTIPLICATION:
+                    id = '*';
+                    break;
+                case OP_DIVISION:
+                    id = '/';
+                    break;
+                case OP_EXPONTENTIATION:
+                    id = '^';
+                    break;
+            }
+            fprintf(stream, "<type: OPERATOR, symbol: %c>\n", id);
             break;
         case NODE_VARIABLE:
-            fprintf(stream, "<type: %s, identifier: %s>\n", "VARIABLE", node->identifier);
+            fprintf(stream, "<type: VARIABLE, identifier: %s>\n", node->identifier);
             break;
         case NODE_FUNC_CALL: 
-            fprintf(stream, "<type: %s, value: '%s'>\n", "FUNC_CALL", node->call->identifier);
+            fprintf(stream, "<type: FUNC_CALL, value: '%s'>\n", node->call->identifier);
             for (int i = 0; i < level + 1; i++) fprintf(stream, "  ");
             fprintf(stream, "Parameters:\n");
             for (int p = 0; p < node->call->nParams; p ++) {
                 printASTRec(node->call->parameters[p], level+1);
             }
             break;
+        case NODE_ASSIGN_FUNC:
+            fprintf(stream, "<type ASSIGN_FUNC>\n");
+            break;
         default:
-            fprintf(stream, "no\n");
+            fprintf(stream, "no %d\n", node->type);
     }
 
     // Recursively print children
@@ -212,4 +237,52 @@ void printRPN(RPNList *list) {
     }
 
     fprintf(stream, "\n");
+}
+
+
+void freeTokens(Token *head) {
+    Debug("Freeing tokens.\n");
+
+    Token* current = head;
+    while (current != NULL) {
+        Token *next = current->next;
+        free(current->value);
+        free(current);
+        current = next;
+    }
+}
+
+
+void freeAST(ASTNode *ast) {
+    if (ast == NULL) return;
+
+    freeAST(ast->left);
+    freeAST(ast->right);
+
+    switch (ast->type) {
+        case NODE_ASSIGN_FUNC:
+            Debug("Free Func Assign\n");
+            if (ast->func != NULL) free(ast);
+            break;
+
+        case NODE_FUNC_CALL:
+            Debug("Free Func Call '%s'\n");
+            free(ast->call->identifier);
+            free(ast->call->parameters);
+            free(ast->call);
+
+            free(ast);
+            break;
+
+        case NODE_VARIABLE:
+            Debug("Free Variable '%s'\n", ast->identifier);
+            free(ast->identifier);
+            free(ast);
+            break;
+
+        default:
+            Debug("Free Default\n");
+            free(ast);
+            break;
+    }
 }

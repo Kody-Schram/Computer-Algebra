@@ -294,7 +294,7 @@ void handleLocalVariables(Token **ptr, Environment *localEnv) {
     Config *config = GLOBALCONTEXT->config;
     Environment *env = GLOBALCONTEXT->env;
 
-    Debug("\nRechecking identifiers again local variables.\n");
+    Debug("\nRechecking identifiers against local variables.\n");
     Token *cur = *ptr;
     Token *prev = NULL;
     

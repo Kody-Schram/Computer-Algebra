@@ -12,6 +12,7 @@ typedef struct Environment Environment;
 
 // Forward declaring types
 typedef enum NodeType NodeType;
+typedef enum OperationType OperationType;
 typedef struct ASTNode ASTNode;
 
 typedef struct FunctionCall FunctionCall;
@@ -29,9 +30,18 @@ enum NodeType {
     NODE_ASSIGN_FUNC
 };
 
+enum OperationType {
+    OP_ADDITION,
+    OP_SUBTRACTION,
+    OP_MULTIPLICATION,
+    OP_DIVISION,
+    OP_EXPONTENTIATION
+};
+
 struct ASTNode {
     NodeType type;
     union {
+        OperationType op;
         char *identifier;
         double value;
         Function *func;

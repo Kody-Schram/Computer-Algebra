@@ -127,10 +127,8 @@ static int parseFunctionCalls(Token **head) {
                 ASTNode *ast = astFromRPN(rpn);
                 if (ast == NULL) return 1;
 
-                if (config->LOG_LEVEL >= DEBUG) {
-                    fprintf(config->LOG_STREAM, "\nParameter AST\n");
-                    printAST(ast);
-                }
+                Debug("\nParameter AST\n");
+                if (config->LOG_LEVEL >= DEBUG) printAST(ast);
 
                 paramASTs[nParameters] = ast;
                 nParameters ++;
@@ -249,7 +247,6 @@ static ASTNode *parseFunctionDefinition(Token *head) {
                 dummy->identifier = 0;
 
                 if (!bindComponent(localEnv, VARIABLE, cur->value, dummy)) return NULL;
-                Debug("Binded\n");
             }
         }
 
@@ -260,10 +257,6 @@ static ASTNode *parseFunctionDefinition(Token *head) {
         printf("Cannot have assignment within a function definition.\n");
         return NULL;
     }
-
-    // if (config->LOG_LEVEL >= DEBUG) fprintf(config->LOG_STREAM, "Second round of parsing.\n");
-
-    Debug("\nRechecking identifiers with local parameters.\n");
 
     // Redoes identifier tokens now that local variables for parameters are established, then redoes lexing
     handleLocalVariables(&asgn, localEnv);
@@ -285,29 +278,26 @@ static ASTNode *parseFunctionDefinition(Token *head) {
     Function *function = malloc(sizeof(Function));
     if (function == NULL) return NULL;
 
-    if (config->LOG_LEVEL >= DEBUG) {
-        fprintf(config->LOG_STREAM, "Local Environment.\n");
-        printEnvironment(localEnv);
-    }
+    Debug("Local Environment.\n");
+    if (config->LOG_LEVEL >= DEBUG) printEnvironment(localEnv);
 
     function->env = localEnv;
     function->type = DEFINED;
     function->definition = ast;
 
     ASTNode *assignment = dummyASTNode(NODE_ASSIGN_FUNC);
+
     ASTNode *func = dummyASTNode(NODE_ASSIGN_FUNC);
     func->func = function;
-    assignment->right = func;
 
     ASTNode *identifier = dummyASTNode(NODE_VARIABLE);
     identifier->identifier = strdup(id);
 
     assignment->left = identifier;
+    assignment->right = func;
 
     Debug("Freeing tokens used for function definition.\n");
     freeTokens(head);
-
-    printTokens(head);
 
     return assignment;
 }
@@ -345,10 +335,8 @@ ASTNode *parse(char *buffer) {
         return NULL;
     }
 
-    if (config->LOG_LEVEL >= DEBUG) {
-        fprintf(config->LOG_STREAM, "\nPost Function Call Tokens\n");
-        printTokens(head);
-    }
+    Debug("\nPost Function Call Tokens\n");
+    if (config->LOG_LEVEL >= DEBUG) printTokens(head);
 
     RPNList *RPN = shuntingYard(head);
     if (RPN == NULL) {
@@ -362,6 +350,7 @@ ASTNode *parse(char *buffer) {
         return NULL;
     }
 
+    Debug("Freeing tokens at end of parsing\n");
     freeTokens(head);
     Info("\nFinished parsing\n");
     return ast;

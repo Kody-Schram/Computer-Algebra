@@ -17,6 +17,7 @@ Environment *createEnvironment() {
     return env;
 }
 
+
 int bindComponent(Environment *env, ComponentType type, char *identifier, void *data) {
     if (env->entries >= env->size) {
         env->size += DEFAULT_INCREASE_SIZE;
@@ -41,6 +42,7 @@ int bindComponent(Environment *env, ComponentType type, char *identifier, void *
     return 1;
 
 }
+
 
 Component* searchEnvironment(Environment *env, char *identifier) {
     for (int i = 0; i < env->entries; i ++) {
