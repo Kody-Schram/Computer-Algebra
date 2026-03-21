@@ -6,6 +6,7 @@
 
 #include "lexer.h"
 #include "utils/context/context.h"
+#include "utils/log.h"
 #include "parsing/parserUtils.h"
 
 /**
@@ -289,17 +290,17 @@ static int handleAssignment(Token *cur) {
 }
 
 
-void handleLocalVariables(Token **ptr, int nParams, char **parameters) {
+void handleLocalVariables(Token **ptr, Environment *localEnv) {
     Config *config = GLOBALCONTEXT->config;
     Environment *env = GLOBALCONTEXT->env;
 
-    if (config->LOG_LEVEL >= DEBUG) fprintf(config->LOG_STREAM, "\nRechecking identifiers again local variables.\n");
+    Debug("\nRechecking identifiers again local variables.\n");
     Token *cur = *ptr;
     Token *prev = NULL;
     
     while (cur != NULL) {
         if (cur->type == TOKEN_IDENTIFIER) {
-            if (config->LOG_LEVEL >= DEBUG) fprintf(config->LOG_STREAM, "Rechecking identifier %s\n", cur->value);
+            Debug("Rechecking identifier %s\n", cur->value);
             int max = 0;
             char *id = cur->value;
 
@@ -308,18 +309,22 @@ void handleLocalVariables(Token **ptr, int nParams, char **parameters) {
                 // Adds the end of string char to only select a part of the buffer
                 char temp = id[i + 1];
                 id[i + 1] = '\0';
-                Component *cmp = searchEnvironment(env, id);
+                Component *local = searchEnvironment(localEnv, id);
+                Component *global = searchEnvironment(env, id);
                 id[i + 1] = temp;
-                
-                // Any subsequent iteration will always yeild a larger char size if found, so no check required
-                if (cmp != NULL) {
-                    max = strlen(cmp->identifier);
+
+                // If local var is found take it 
+                if (local != NULL) {
+                    Debug("Local identifier %s found\n", local->identifier);
+                    max = strlen(local->identifier);
                     continue;
                 }
-
-                for (int p = 0; p < nParams; p ++) {
-                    int m = fmin(strlen(id), strlen(parameters[p]));
-                    if (!strncmp(id, parameters[p], m) && m > max) max = m;
+                
+                // Any subsequent iteration will always yeild a larger char size if found, so no check required
+                if (global != NULL) {
+                    Debug("Global identifier %s found\n", global->identifier);
+                    max = strlen(global->identifier);
+                    continue;
                 }
 
             }
@@ -355,7 +360,8 @@ void handleLocalVariables(Token **ptr, int nParams, char **parameters) {
 
 Token *lex(Token* head) {
     Config *config = GLOBALCONTEXT->config;
-    if (config->LOG_LEVEL >= DEBUG) fprintf(config->LOG_STREAM, "\nLexing Tokens\n");
+    Debug("\nLexing Tokens\n");
+
     Token *cur = head;
     Token *prev = NULL;
 
@@ -393,6 +399,11 @@ Token *lex(Token* head) {
     } 
 
     if (!handleAssignment) return NULL;
+    
+    if (config->LOG_LEVEL >= DEBUG) {
+        fprintf(config->LOG_STREAM, "Updated Tokens.\n");
+        printTokens(head);
+    }
 
     return head;
 

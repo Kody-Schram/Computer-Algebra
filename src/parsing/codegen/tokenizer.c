@@ -5,6 +5,7 @@
 
 #include "tokenizer.h"
 #include "utils/context/context.h"
+#include "utils/log.h"
 #include "parsing/parserUtils.h"
 
 typedef struct  {
@@ -89,19 +90,19 @@ static ComponentReturn getComponentLength(char *c, Environment *env, Config *con
     // Gets length of valid identifer characters
     int length = 0;
     while (isalnum(c[length]) || c[length] == '_') length ++;
-    if (config->LOG_LEVEL >= DEBUG) fprintf(config->LOG_STREAM, "\nLength of identifer valid characters is %d.\n", length);
+    Debug("\nLength of identifer valid characters is %d.\n", length);
 
     // Check left
-    if (config->LOG_LEVEL >= DEBUG) fprintf(config->LOG_STREAM, "Checking left identifiers.\n");
+    Debug("Checking left identifiers.\n");
     for (int i = 0; i < length; i ++) {
         char temp = c[length - i];
         c[length - i] = '\0';
-        if (config->LOG_LEVEL >= DEBUG) fprintf(config->LOG_STREAM, "Checking '%s'\n", c);
+        Debug("Checking '%s'\n", c);
         Component *cmp = searchEnvironment(env, c);
         c[length - i] = temp;
 
         if (cmp != NULL) {
-            if (config->LOG_LEVEL >= DEBUG) fprintf(config->LOG_STREAM, "found left side component: %s\n", cmp->identifier);
+            Debug("found left side component: %s\n", cmp->identifier);
             result.len = length - i;
             result.cmp = cmp;
         }
@@ -110,33 +111,33 @@ static ComponentReturn getComponentLength(char *c, Environment *env, Config *con
     if (result.len == length) return result;
     
     // Check right
-    if (config->LOG_LEVEL >= DEBUG) fprintf(config->LOG_STREAM, "Checking right identifiers.\n");
+    Debug("Checking right identifiers.\n");
     for (int i = 1; i < length; i ++) {
         char temp = c[length];
         c[length] = '\0';
-        if (config->LOG_LEVEL >= DEBUG) fprintf(config->LOG_STREAM, "Checking '%s'\n", c + i);
+        Debug("Checking '%s'\n", c + i);
         Component *cmp = searchEnvironment(env, c + i);
         c[length] = temp;
 
         if (cmp != NULL && result.len < length - i) {
-            if (config->LOG_LEVEL >= DEBUG) fprintf(config->LOG_STREAM, "found right side component: %s, %d characters in.\n", cmp->identifier, i);
+            Debug("found right side component: %s, %d characters in.\n", cmp->identifier, i);
             result.len = i;
         }
     }
 
     if (result.len == length) return result;
 
-    if (config->LOG_LEVEL >= DEBUG) fprintf(config->LOG_STREAM, "Checking middle identifiers.\n");
+    Debug("Checking middle identifiers.\n");
     for (int i = 1; i < length; i ++) {
         for (int end = i + 1; end < length; end ++) {
             char temp = c[end];
             c[end] = '\0';
-            if (config->LOG_LEVEL >= DEBUG) fprintf(config->LOG_STREAM, "Checking '%s'\n", c + i);
+            Debug("Checking '%s'\n", c + i);
             Component *cmp = searchEnvironment(env, c + i);
             c[end] = temp;
 
             if (cmp != NULL && result.len < end - i) {
-                if (config->LOG_LEVEL >= DEBUG) fprintf(config->LOG_STREAM, "found nested component: %s\n", cmp->identifier);
+                Debug("found nested component: %s\n", cmp->identifier);
                 result.len = i;
                 return result;
             }
@@ -152,7 +153,7 @@ Token *tokenize(char *buffer) {
     Config *config = GLOBALCONTEXT->config;
     Environment *env = GLOBALCONTEXT->env;
 
-    if (config->LOG_LEVEL >= DEBUG) fprintf(config->LOG_STREAM, "\nTokenizing '%s'\n", buffer);
+    Debug("\nTokenizing '%s'\n", buffer);
 
     Token *head = NULL;
     Token *prev = NULL;

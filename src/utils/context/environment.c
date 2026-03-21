@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include "environment.h"
+#include "context.h"
 
 const int DEFAULT_TABLE_SIZE = 10;
 const int DEFAULT_INCREASE_SIZE = 5;
@@ -16,7 +17,7 @@ Environment *createEnvironment() {
     return env;
 }
 
-int bindComponent(Environment *env, ComponentType type, char *identifier, void *component) {
+int bindComponent(Environment *env, ComponentType type, char *identifier, void *data) {
     if (env->entries >= env->size) {
         env->size += DEFAULT_INCREASE_SIZE;
         Component* temp = realloc(env->components, sizeof(Component) * env->size);
@@ -28,15 +29,17 @@ int bindComponent(Environment *env, ComponentType type, char *identifier, void *
         env->components = temp;
     }
 
+    printf("Creating component struct.\n");
     // Creates new component
     Component *new = &env->components[env->entries];
     new->type = type;
     new->identifier = strdup(identifier);
-    if (type == VARIABLE) new->value = *(double*) component;
-    else new->function = (Function*) component;
+    printf("adding data to component.\n");
+
+    if (type == FUNCTION) new->func = (Function *) data;
+    else new->value = (ASTNode *) data;
 
     env->entries ++;
-
     return 1;
 
 }
@@ -53,18 +56,28 @@ Component* searchEnvironment(Environment *env, char *identifier) {
 
 
 void printEnvironment(Environment *env) {
+    Config *config = GLOBALCONTEXT->config;
+
+    if (config->LOG_LEVEL >= DEBUG) fprintf(config->LOG_STREAM, "Printing env with %d entires\n", env->entries);
     for (int i = 0; i < env->entries; i ++) {
         switch(env->components[i].type) {
             case FUNCTION:
-                Function *func = env->components[i].function;
-                printf("%s(", env->components[i].identifier);
-                for (int i = 0; i < func->nParameters - 1; i ++) {
-                    printf("%s,", func->parameters[i]);
+                if (config->LOG_LEVEL >= DEBUG) fprintf(config->LOG_STREAM, "printing function in env.\n");
+                Function *func = env->components[i].func;
+                if (config->LOG_LEVEL >= DEBUG) fprintf(config->LOG_STREAM, "func is null: %d\n", func == NULL);
+                if (config->LOG_LEVEL >= DEBUG) fprintf(config->LOG_STREAM, "env is null: %d\n", func->env == NULL);
+
+                if (env->components[i].func->env->entries > 0) {
+                    if (config->LOG_LEVEL >= DEBUG) fprintf(config->LOG_STREAM, "entries: %d\n", func->env == NULL);
+                    if (config->LOG_LEVEL >= DEBUG) fprintf(config->LOG_STREAM, "%s(", env->components[i].identifier);
+                    for (int j = 0; j < func->env->entries - 1; j ++) {
+                        if (config->LOG_LEVEL >= DEBUG) fprintf(config->LOG_STREAM, "%s,", func->env->components[j].identifier);
+                    }
+                    if (config->LOG_LEVEL >= DEBUG) fprintf(config->LOG_STREAM, "%s)\n", func->env->components[func->env->entries-1].identifier);
+                    break;
                 }
-                printf("%s)\n", func->parameters[func->nParameters-1]);
-                break;
             default:
-                printf("%s (variable)", env->components[i].identifier);
+                if (config->LOG_LEVEL >= DEBUG) fprintf(config->LOG_STREAM, "%s = %f (variable)\n", env->components[i].identifier, env->components[i].value);
         }
         
     }

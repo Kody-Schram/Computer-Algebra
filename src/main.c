@@ -4,6 +4,7 @@
 
 #include "utils/context/context.h"
 #include "utils/types.h"
+#include "utils/log.h"
 
 #include "utils/input.h"
 #include "parsing/parser.h"
@@ -15,8 +16,8 @@ int main() {
     if (!initContext()) return 0;
     Config *config = GLOBALCONTEXT->config;
 
+    Debug("Context created.\n");
     if (config->LOG_LEVEL >= INFO) {
-        fprintf(config->LOG_STREAM, "Context created.\n");
         printConfig(config);
     }
 
@@ -24,7 +25,7 @@ int main() {
 
     // Load startup script
     if (config->STARTUP != NULL) {
-        if (config->LOG_LEVEL >= INFO) fprintf(config->LOG_STREAM, "\nRunning Startup Script\n");
+        Debug("\nRunning Startup Script\n");
         char *line = strtok(config->STARTUP, "\n");
 
         while (line != NULL) {
@@ -39,7 +40,7 @@ int main() {
                 printf("S > %s\n", line);
                 ASTNode *head = parse(line);
                 if (head) {
-                    if (execute(head) && config->LOG_LEVEL >= INFO) fprintf(config->LOG_STREAM, "Successfully Executed.\n");
+                    execute(head);
                 }
             }
             line = strtok(NULL, "\n");
@@ -47,6 +48,8 @@ int main() {
 
         free(config->STARTUP);
         config->STARTUP = NULL;
+
+        printEnvironment(GLOBALCONTEXT->env);
     }
 
     // System loop
@@ -58,8 +61,7 @@ int main() {
 
         ASTNode *head = parse(input);
         if (head == NULL) {
-
-            if (execute(head) && config->LOG_LEVEL >= INFO) fprintf(config->LOG_STREAM, "Successfully Executed.\n");
+            execute(head);
         }
     }
 

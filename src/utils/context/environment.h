@@ -2,36 +2,43 @@
 #define ENVIRONMENT_H
 
 #include "utils/types.h"
+typedef struct Function Function;
+typedef struct ASTNode ASTNode;
+
+typedef enum ComponentType ComponentType;
+typedef struct ComponentData ComponentData;
+typedef struct Component Component;
+typedef struct Environment Environment;
+
 
 // Environment related definitions
-typedef enum {
+enum ComponentType {
     VARIABLE,
     FUNCTION
-} ComponentType;
+};
 
-typedef struct {
+struct Component {
     ComponentType type;
     char *identifier;
 
     union {
-        Function *function;
-        double value;
+        Function *func;
+        ASTNode *value;
     };
+};
 
-} Component;
-
-typedef struct {
+struct Environment {
     int entries;
     int size;
     Component *components;
-} Environment;
+};
 
 
 
 Environment *createEnvironment();
 
 
-int bindComponent(Environment *env, ComponentType type, char *identifier, void *component);
+int bindComponent(Environment *env, ComponentType type, char *identifier, void *data);
 
 
 Component* searchEnvironment(Environment *env, char *identifier);

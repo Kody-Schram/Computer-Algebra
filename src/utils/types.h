@@ -5,6 +5,11 @@
     #define PROJECT_NAME "project"
 #endif
 
+#include "utils/context/environment.h"
+typedef enum ComponentType ComponentType;
+typedef struct Component Component;
+typedef struct Environment Environment;
+
 // Forward declaring types
 typedef enum NodeType NodeType;
 typedef struct ASTNode ASTNode;
@@ -29,7 +34,7 @@ struct ASTNode {
     union {
         char *identifier;
         double value;
-        void *definition;
+        Function *func;
         FunctionCall *call;
     };
 
@@ -52,14 +57,13 @@ enum FunctionType {
 };
 
 struct Function {
-    char **parameters;
-    int nParameters;
+    Environment *env;
     FunctionType type;
 
     union {
         ASTNode *definition;
         double (*builtin) (double);
-        ASTNode* (*transform) (ASTNode **args, int nArgs);
+        ASTNode *(*transform) (ASTNode **args, int nArgs);
     };
 };
 

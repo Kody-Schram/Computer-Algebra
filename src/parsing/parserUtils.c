@@ -4,10 +4,11 @@
 
 #include "parserUtils.h"
 #include "utils/context/context.h"
+#include "utils/log.h"
 
 
 void freeTokens(Token *head) {
-    if (GLOBALCONTEXT->config->LOG_LEVEL >= DEBUG) fprintf(GLOBALCONTEXT->config->LOG_STREAM, "Freeing tokens.\n");
+    Debug("Freeing tokens.\n");
 
     Token* current = head;
     while (current != NULL) {

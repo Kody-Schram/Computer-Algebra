@@ -4,6 +4,7 @@
 
 #include "ast.h"
 #include "utils/context/context.h"
+#include "utils/log.h"
 #include "parsing/parserUtils.h"
 
 static int DEFAULT_NODE_STACK_SIZE = 10;
@@ -79,7 +80,7 @@ static int reallocStack(Stack *stack) {
 RPNList *shuntingYard(Token *head) {
     Config *config = GLOBALCONTEXT->config;
 
-    if (config->LOG_LEVEL >=DEBUG) fprintf(config->LOG_STREAM, "\nCreating RPN List.\n");
+    Debug("\nCreating RPN List.\n");
     Token *cur = head;
 
     int size = getLinkedListLength(head);
@@ -172,7 +173,7 @@ RPNList *shuntingYard(Token *head) {
 ASTNode *astFromRPN(RPNList *rpn) {
     Config *config = GLOBALCONTEXT->config;
 
-    if (config->LOG_LEVEL >= DEBUG) fprintf(config->LOG_STREAM, "\nGenerating AST.\n");
+    Debug("\nGenerating AST.\n");
 
     Stack nodes = {
         DEFAULT_NODE_STACK_SIZE,
