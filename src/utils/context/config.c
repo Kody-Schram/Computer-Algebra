@@ -11,6 +11,7 @@ typedef enum {
     STATE_DOCUMENT,
     STATE_SECTION,
 
+    STATE_LOG,
     STATE_LOG_LEVEL,
     STATE_LOG_LOCATION,
 
@@ -68,8 +69,7 @@ static int consumeEvent(State *state, yaml_event_t *event, Config *config) {
         switch (event->type) {
             case YAML_SCALAR_EVENT:
                 value = event->data.scalar.value;
-                if (!strcmp(value, "log_level")) *state = STATE_LOG_LEVEL;
-                else if (!strcmp(value, "log_location")) *state = STATE_LOG_LOCATION;
+                if (!strcmp(value, "log")) *state = STATE_LOG;
                 else if (!strcmp(value, "startup")) *state = STATE_STARTUP;
                 else {
                     printf("Unexpected scalar: %s\n", value);
@@ -87,11 +87,29 @@ static int consumeEvent(State *state, yaml_event_t *event, Config *config) {
                 return 0;
         }
         break;
+
+    case STATE_LOG:
+        switch (event->type) {
+            case YAML_MAPPING_END_EVENT:
+                printf("moving out of log section\n");
+                *state = STATE_SECTION;
+                break;
+            case YAML_SCALAR_EVENT:
+                value = event->data.scalar.value;
+                if (!strcmp(value, "level")) *state = STATE_LOG_LEVEL;
+                else if (!strcmp(value, "location")) *state = STATE_LOG_LOCATION;
+                else {
+                    printf("Unexpected scalar: %s\n", value);
+                    return 0;
+                }
+                break;
+        }
+        break;
     
     case STATE_LOG_LEVEL:
         switch (event->type) {
             case YAML_MAPPING_END_EVENT:
-                *state = STATE_SECTION;
+                *state = STATE_LOG;
                 break;
             case YAML_SCALAR_EVENT:
                 value = (char *) event->data.scalar.value;
@@ -106,7 +124,7 @@ static int consumeEvent(State *state, yaml_event_t *event, Config *config) {
                     printf("Unexpected log level: %s.\n", value);
                     return 0;
                 }
-                *state = STATE_SECTION;
+                *state = STATE_LOG;
                 break;
             default:
                 printf("Unexpected event %d in state %d.\n", event->type, *state);
@@ -117,7 +135,7 @@ static int consumeEvent(State *state, yaml_event_t *event, Config *config) {
     case STATE_LOG_LOCATION:
         switch (event->type) {
             case YAML_MAPPING_END_EVENT:
-                *state = STATE_SECTION;
+                *state = STATE_LOG;
                 break;
             case YAML_SCALAR_EVENT:
                 value = (char *) event->data.scalar.value;
@@ -125,7 +143,7 @@ static int consumeEvent(State *state, yaml_event_t *event, Config *config) {
                 FILE *location = fopen(value, "wb+");
                 config->LOG_STREAM = location;
 
-                *state = STATE_SECTION;
+                *state = STATE_LOG;
                 break;
             default:
                 printf("Unexpected event %d in state %d.\n", event->type, *state);
