@@ -79,7 +79,7 @@ struct Function {
 
 
 ASTNode *dummyASTNode(NodeType type);
-void printAST(ASTNode *root);
+FILE *printAST(ASTNode *root);
 void freeAST(ASTNode *ast);
 
 

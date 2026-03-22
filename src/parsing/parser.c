@@ -53,7 +53,7 @@ static int parseFunctionCalls(Token **head) {
 
         // Recursively parses nested function calls
         if (cur->type == TOKEN_FUNC_CALL) {
-            Debug("Function call: %s found\n", cur->value);
+            Debug(0, "Function call: %s found\n", cur->value);
             Token *funcCall = cur;
             Token *prev = NULL;
 
@@ -85,7 +85,7 @@ static int parseFunctionCalls(Token **head) {
 
 
                 while(!(parens == 0 && cur->type == TOKEN_SEPERATOR) && !(parens == 0 && cur->type == TOKEN_RIGHT_PAREN)) {
-                    Debug("Handling parameter token: %s.\n", cur->value);
+                    Debug(0, "Handling parameter token: %s.\n", cur->value);
                     
                     if (cur->type == TOKEN_LEFT_PAREN) parens ++;
 
@@ -113,7 +113,7 @@ static int parseFunctionCalls(Token **head) {
 
                 }
 
-                Debug("\nParameter Tokens\n");
+                Debug(0, "\nParameter Tokens\n");
                 if (config->LOG_LEVEL >= DEBUG) printTokens(paramHead);
 
                 // Recursively parses calls
@@ -130,14 +130,14 @@ static int parseFunctionCalls(Token **head) {
                 paramASTs[nParameters] = ast;
                 nParameters ++;
 
-                Debug("Freeing parameter tokens.\n");
+                Debug(0, "Freeing parameter tokens.\n");
 
                 // Cleanup
                 freeTokens(paramHead);
             }
             
             // Creates new function call token
-            Debug("Creating new function call token.\n");
+            Debug(0, "Creating new function call token.\n");
             Token *callToken = malloc(sizeof(Token));
             if (callToken == NULL) {
                 printf("Couldn't allocate memory for new function call token.\n");
@@ -154,12 +154,12 @@ static int parseFunctionCalls(Token **head) {
             callToken->call = call;
 
 
-            Debug("Replacing old call token with new one.\n");
+            Debug(0, "Replacing old call token with new one.\n");
 
             if (funcPrev != NULL) funcPrev->next = callToken;
             else *head = callToken;
 
-            Debug("Freeing old tokens.\n");
+            Debug(0, "Freeing old tokens.\n");
             // Free opening parenthesis
             free(opening->value);
             free(opening);
@@ -171,7 +171,7 @@ static int parseFunctionCalls(Token **head) {
             free(funcCall->value);
             free(funcCall);
 
-            Debug("Finished with handling call to: %s.\n", call->identifier);
+            Debug(0, "Finished with handling call to: %s.\n", call->identifier);
             continue;
         }
 
@@ -179,7 +179,7 @@ static int parseFunctionCalls(Token **head) {
         cur = cur->next;
     }
 
-    Debug("Finished parsing all calls, returning.\n");
+    Debug(0, "Finished parsing all calls, returning.\n");
 
     return 0;
 }
@@ -189,7 +189,7 @@ static ASTNode *parseFunctionDefinition(Token *head) {
     Config *config = GLOBALCONTEXT->config;
     Environment *env = GLOBALCONTEXT->env;
 
-    Debug("Parsing function definition.\n");
+    Debug(0, "Parsing function definition.\n");
     FunctionComponent component = IDENTIFIER;
 
     char *id;
@@ -208,7 +208,7 @@ static ASTNode *parseFunctionDefinition(Token *head) {
         
         // Checks for switching to body
         if (component == PARAMETERS && cur->type == TOKEN_ASSIGNMENT) {
-            Debug("Moving to function body.\n");
+            Debug(0, "Moving to function body.\n");
             component = BODY;
             asgn = cur;
             cur = cur->next;
@@ -220,7 +220,7 @@ static ASTNode *parseFunctionDefinition(Token *head) {
 
         // Checks for switching to parameters
         if (component == IDENTIFIER && cur->type == TOKEN_FUNC_DEF) {
-            Debug("Moving to function parameters.\n");
+            Debug(0, "Moving to function parameters.\n");
             component = PARAMETERS;
             cur = cur->next;
             continue;
@@ -239,7 +239,7 @@ static ASTNode *parseFunctionDefinition(Token *head) {
             id = cur->value;
         } else {
             if (cur->type != TOKEN_SEPERATOR) {
-                Debug("Binding parameter '%s' to local environment.\n", cur->value);
+                Debug(0, "Binding parameter '%s' to local environment.\n", cur->value);
                 ASTNode *dummy = dummyASTNode(NODE_NUMBER);
                 dummy->identifier = 0;
 
@@ -275,7 +275,7 @@ static ASTNode *parseFunctionDefinition(Token *head) {
     Function *function = malloc(sizeof(Function));
     if (function == NULL) return NULL;
 
-    Debug("Local Environment.\n");
+    Debug(0, "Local Environment.\n");
     if (config->LOG_LEVEL >= DEBUG) printEnvironment(localEnv);
 
     function->env = localEnv;
@@ -294,7 +294,7 @@ static ASTNode *parseFunctionDefinition(Token *head) {
     assignment->left = identifier;
     assignment->right = func;
 
-    Debug("Freeing tokens used for function definition.\n");
+    Debug(0, "Freeing tokens used for function definition.\n");
     freeTokens(head);
 
     return assignment;
@@ -312,7 +312,7 @@ ASTNode *parse(char *buffer) {
     Config *config = GLOBALCONTEXT->config;
     Environment *env = GLOBALCONTEXT->env;
 
-    Info("\nParsing: '%s'\n", buffer);
+    Info(0, "\nParsing: '%s'\n", buffer);
     
     Token *raw = tokenize(buffer);
     if (raw == NULL) return NULL;
@@ -322,7 +322,7 @@ ASTNode *parse(char *buffer) {
     if (head == NULL) return NULL;
 
     if (containsAssignment(head)) {
-        Debug("Assignment found.\n");
+        Debug(0, "Assignment found.\n");
         if (!containsFunctionDefinition(head)) return parseAssignment(head);
 
         return parseFunctionDefinition(head);
@@ -333,7 +333,7 @@ ASTNode *parse(char *buffer) {
         return NULL;
     }
 
-    Debug("\nPost Function Call Tokens\n");
+    Debug(0, "\nPost Function Call Tokens\n");
     if (config->LOG_LEVEL >= DEBUG) printTokens(head);
 
     RPNList *RPN = shuntingYard(head);
@@ -349,6 +349,6 @@ ASTNode *parse(char *buffer) {
     }
     
     freeTokens(head);
-    Info("\nFinished parsing\n");
+    Info(0, "\nFinished parsing\n");
     return ast;
 }

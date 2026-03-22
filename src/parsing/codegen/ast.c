@@ -80,7 +80,7 @@ static int reallocStack(Stack *stack) {
 RPNList *shuntingYard(Token *head) {
     Config *config = GLOBALCONTEXT->config;
 
-    Debug("\nCreating RPN List.\n");
+    Debug(0, "\nCreating RPN List.\n");
     Token *cur = head;
 
     int size = getLinkedListLength(head);
@@ -164,7 +164,7 @@ RPNList *shuntingYard(Token *head) {
     list->length = output.entries;
     list->items = (Token**) output.items;
 
-    if (list != NULL && config->LOG_LEVEL >= DEBUG) printRPN(list);
+    Debug(1, printRPN(list));
 
     return list;
 }
@@ -173,7 +173,7 @@ RPNList *shuntingYard(Token *head) {
 ASTNode *astFromRPN(RPNList *rpn) {
     Config *config = GLOBALCONTEXT->config;
 
-    Debug("\nGenerating AST.\n");
+    Debug(0, "\nGenerating AST.\n");
 
     Stack nodes = {
         DEFAULT_NODE_STACK_SIZE,
@@ -200,9 +200,9 @@ ASTNode *astFromRPN(RPNList *rpn) {
         }
     }
 
-    if (config->LOG_LEVEL >= DEBUG && nodes.items[0] != NULL) {
-        fprintf(config->LOG_STREAM, "\nAST\n");
-        printAST(nodes.items[0]);
+    if (nodes.items[0] != NULL) {
+        Debug(0,"\nAST\n");
+        Debug(1, printAST(nodes.items[0]));
     }
 
     return nodes.items[0];

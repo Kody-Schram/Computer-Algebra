@@ -32,8 +32,9 @@ Token *createToken(TokenType type, char *value, int l) {
 }
 
 
-void printToken(Token *token) {
-    FILE *stream = GLOBALCONTEXT->config->LOG_STREAM;
+FILE *printToken(Token *token) {
+    FILE *stream = tmpfile();
+    if (stream == NULL) return NULL;
 
     const char *type = NULL;
 
@@ -70,21 +71,30 @@ void printToken(Token *token) {
             fprintf(stream, "    <type: %s>\n", type);
         }
         else fprintf(stream, "    <type: %s, value: '%s'>\n", type, token->value);
+    return stream;
 }
 
 
-void printTokens(Token *head) {
-    FILE *stream = GLOBALCONTEXT->config->LOG_STREAM;
+FILE *printTokens(Token *head) {
+    FILE *stream = tmpfile();
+    if (stream == NULL) return NULL;
 
     Token *cur = head;
 
     fprintf(stream, "[\n");
     while (cur != NULL) {
-        printToken(cur);
+        FILE *token = printToken(cur);
+        if (token == NULL) return NULL;
+        char buffer[128];
+        while (fgets(buffer, 128, token)) {
+            fprintf(stream, "%s", buffer);
+        }
+        fclose(token);
         cur = cur->next;
     }
 
     fprintf(stream, "]\n");
+    return stream;
 }
 
 
@@ -126,7 +136,7 @@ ASTNode *createASTNode(Token *token) {
                 node->op = OP_EXPONTENTIATION;
                 break;
             default:
-                printf("Unknown operator '%s'\n", id);
+                printf("Unknown operator '%c'\n", id);
         }
         break;
     case TOKEN_FUNC_CALL:
@@ -144,8 +154,9 @@ ASTNode *createASTNode(Token *token) {
 }
 
 
-void printRPN(RPNList *list) {
-    FILE *stream = GLOBALCONTEXT->config->LOG_STREAM;
+FILE *printRPN(RPNList *list) {
+    FILE *stream = tmpfile();
+    if (stream == NULL) return NULL;
 
     fprintf(stream, "RPN: ");
 
@@ -155,11 +166,12 @@ void printRPN(RPNList *list) {
     }
 
     fprintf(stream, "\n");
+    return stream;
 }
 
 
 void freeTokens(Token *head) {
-    Debug("Freeing tokens.\n");
+    Debug(0, "Freeing tokens.\n");
 
     Token* current = head;
     while (current != NULL) {

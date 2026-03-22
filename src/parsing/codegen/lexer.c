@@ -294,13 +294,13 @@ void handleLocalVariables(Token **ptr, Environment *localEnv) {
     Config *config = GLOBALCONTEXT->config;
     Environment *env = GLOBALCONTEXT->env;
 
-    Debug("\nRechecking identifiers against local variables.\n");
+    Debug(0, "\nRechecking identifiers against local variables.\n");
     Token *cur = *ptr;
     Token *prev = NULL;
     
     while (cur != NULL) {
         if (cur->type == TOKEN_IDENTIFIER) {
-            Debug("Rechecking identifier %s\n", cur->value);
+            Debug(0, "Rechecking identifier %s\n", cur->value);
             int max = 0;
             Component *cmp;
             char *id = cur->value;
@@ -315,7 +315,7 @@ void handleLocalVariables(Token **ptr, Environment *localEnv) {
 
                 // If local var is found take it 
                 if (local != NULL) {
-                    Debug("Local identifier %s found\n", local->identifier);
+                    Debug(0, "Local identifier %s found\n", local->identifier);
                     max = strlen(local->identifier);
                     cmp = local;
                     continue;
@@ -323,7 +323,7 @@ void handleLocalVariables(Token **ptr, Environment *localEnv) {
                 
                 // Any subsequent iteration will always yeild a larger char size if found, so no check required
                 if (global != NULL) {
-                    Debug("Global identifier %s found\n", global->identifier);
+                    Debug(0, "Global identifier %s found\n", global->identifier);
                     max = strlen(global->identifier);
                     cmp = global;
                     continue;
@@ -335,7 +335,7 @@ void handleLocalVariables(Token **ptr, Environment *localEnv) {
             if (max != strlen(cur->value) && max != 0) {
                 // create new tokens to split
                 Token *left = createToken(TOKEN_IDENTIFIER, cmp->identifier, max);
-                Debug("string: '%s', right: '%s', right len: %d\n", cur->value, id + max, strlen(id) - max);
+                Debug(0, "string: '%s', right: '%s', right len: %d\n", cur->value, id + max, strlen(id) - max);
                 Token *right = createToken(TOKEN_IDENTIFIER, id + max, strlen(id) - max);
 
                 //printToken(prev);
@@ -354,7 +354,7 @@ void handleLocalVariables(Token **ptr, Environment *localEnv) {
                 prev = right;
                 cur = left;
 
-                Debug("Intermediate token list\n");
+                Debug(0, "Intermediate token list\n");
                 printTokens(*ptr);
             }
 
@@ -372,7 +372,7 @@ void handleLocalVariables(Token **ptr, Environment *localEnv) {
 
 Token *lex(Token* head) {
     Config *config = GLOBALCONTEXT->config;
-    Debug("\nLexing Tokens\n");
+    Debug(0, "\nLexing Tokens\n");
 
     Token *cur = head;
     Token *prev = NULL;

@@ -3,8 +3,13 @@
 
 #include "utils/context/context.h"
 
-void Debug(const char *c, ...);
 
-void Info(const char *c, ...);
+void printStream(FILE *stream);
+
+
+void Debug(const int fileStream, const void *stream, ...);
+
+
+void Info(const int fileStream, const void *stream, ...);
 
 #endif

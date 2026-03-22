@@ -19,20 +19,20 @@
  */
 Token *createToken(TokenType type, char *value, int l);
 
-void printToken(Token *head);
+FILE *printToken(Token *head);
 
 /**
  * @brief Prints linked token list in a easy to read format
  * 
  * @param head Head of linked list
  */
-void printTokens(Token *head);
+FILE *printTokens(Token *head);
 
 
 ASTNode *createASTNode(Token *token);
 
 
-void printRPN(RPNList *list);
+FILE *printRPN(RPNList *list);
 
 /**
  * @brief Frees the memory of old tokens

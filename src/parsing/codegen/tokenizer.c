@@ -87,25 +87,25 @@ static ComponentReturn getComponentLength(char *c) {
     // If not valid character type for variable name, automatically skip check
     if (!isalpha(c[0])) return result;
     Environment *env = GLOBALCONTEXT->env;
-    Debug("printing env\n");
+    Debug(0, "printing env\n");
     printEnvironment(env);
 
     // Gets length of valid identifer characters
     int length = 0;
     while (isalnum(c[length]) || c[length] == '_') length ++;
-    Debug("\nLength of identifer valid characters is %d.\n", length);
+    Debug(0, "\nLength of identifer valid characters is %d.\n", length);
 
     // Check left
-    Debug("Checking left identifiers.\n");
+    Debug(0, "Checking left identifiers.\n");
     for (int i = 0; i < length; i ++) {
         char temp = c[length - i];
         c[length - i] = '\0';
-        Debug("Checking '%s'\n", c);
+        Debug(0, "Checking '%s'\n", c);
         Component *cmp = searchEnvironment(env, c);
         c[length - i] = temp;
 
         if (cmp != NULL) {
-            Debug("found left side component: %s\n", cmp->identifier);
+            Debug(0, "found left side component: %s\n", cmp->identifier);
             result.len = length - i;
             result.cmp = cmp;
         }
@@ -114,33 +114,33 @@ static ComponentReturn getComponentLength(char *c) {
     if (result.len == length) return result;
     
     // Check right
-    Debug("Checking right identifiers.\n");
+    Debug(0, "Checking right identifiers.\n");
     for (int i = 1; i < length; i ++) {
         char temp = c[length];
         c[length] = '\0';
-        Debug("Checking '%s'\n", c + i);
+        Debug(0, "Checking '%s'\n", c + i);
         Component *cmp = searchEnvironment(env, c + i);
         c[length] = temp;
 
         if (cmp != NULL && result.len < length - i) {
-            Debug("found right side component: %s, %d characters in.\n", cmp->identifier, i);
+            Debug(0, "found right side component: %s, %d characters in.\n", cmp->identifier, i);
             result.len = i;
         }
     }
 
     if (result.len == length) return result;
 
-    Debug("Checking middle identifiers.\n");
+    Debug(0, "Checking middle identifiers.\n");
     for (int i = 1; i < length; i ++) {
         for (int end = i + 1; end < length; end ++) {
             char temp = c[end];
             c[end] = '\0';
-            Debug("Checking '%s'\n", c + i);
+            Debug(0, "Checking '%s'\n", c + i);
             Component *cmp = searchEnvironment(env, c + i);
             c[end] = temp;
 
             if (cmp != NULL && result.len < end - i) {
-                Debug("found nested component: %s\n", cmp->identifier);
+                Debug(0, "found nested component: %s\n", cmp->identifier);
                 result.len = i;
                 return result;
             }
@@ -155,7 +155,7 @@ static ComponentReturn getComponentLength(char *c) {
 Token *tokenize(char *buffer) {
     Config *config = GLOBALCONTEXT->config;
 
-    Debug("\nTokenizing '%s'\n", buffer);
+    Debug(0, "\nTokenizing '%s'\n", buffer);
 
     Token *head = NULL;
     Token *prev = NULL;
@@ -247,8 +247,6 @@ Token *tokenize(char *buffer) {
         Token *newToken = createToken(type, buffer + i, end - i);
         if (newToken == NULL) return NULL;
 
-        //if (config->LOG_LEVEL >= DEBUG) printToken(newToken, config->LOG_STREAM);
-
         // Updates linked list
         if (prev != NULL) {
             prev->next = newToken;
@@ -261,7 +259,7 @@ Token *tokenize(char *buffer) {
 
     }
 
-    if (config->LOG_LEVEL >= DEBUG) printTokens(head);
+    Debug(1, printTokens(head));
 
     return head;
 }

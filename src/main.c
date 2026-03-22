@@ -16,7 +16,7 @@ int main() {
     if (!initContext()) return 0;
     Config *config = GLOBALCONTEXT->config;
 
-    Debug("Context created.\n");
+    Debug(0, "Context created.\n");
     if (config->LOG_LEVEL >= INFO) {
         printConfig(config);
     }
@@ -25,7 +25,7 @@ int main() {
 
     // Load startup script
     if (config->STARTUP != NULL) {
-        Debug("\nRunning Startup Script\n");
+        Debug(0, "\nRunning Startup Script\n");
         char *line = strtok(config->STARTUP, "\n");
 
         while (line != NULL) {

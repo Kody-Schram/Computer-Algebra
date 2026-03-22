@@ -22,9 +22,8 @@ ASTNode *dummyASTNode(NodeType type) {
 }
 
 
-static void printASTRec(ASTNode *node, int level) {
-    if (node == NULL) return;
-    FILE *stream = GLOBALCONTEXT->config->LOG_STREAM;
+static void printASTRec(ASTNode *node, int level, FILE *stream) {
+    if (node == NULL || stream == NULL) return;
 
     // Print indentation based on depth
     for (int i = 0; i < level; i++) fprintf(stream, "  ");
@@ -34,6 +33,7 @@ static void printASTRec(ASTNode *node, int level) {
         case NODE_NUMBER:
             fprintf(stream, "<type: NUMBER, value: %f>\n", node->value);
             break;
+
         case NODE_OPERATOR:
             char id;
             switch (node->op) {
@@ -55,39 +55,40 @@ static void printASTRec(ASTNode *node, int level) {
             }
             fprintf(stream, "<type: OPERATOR, symbol: %c>\n", id);
             break;
+
         case NODE_VARIABLE:
             fprintf(stream, "<type: VARIABLE, identifier: '%s'>\n", node->identifier);
             break;
+
         case NODE_FUNC_CALL: 
             fprintf(stream, "<type: FUNC_CALL, value: '%s'>\n", node->call->identifier);
             for (int i = 0; i < level + 1; i++) fprintf(stream, "  ");
+
             fprintf(stream, "Parameters:\n");
-            for (int p = 0; p < node->call->nParams; p ++) {
-                printASTRec(node->call->parameters[p], level + 1);
-            }
+            for (int p = 0; p < node->call->nParams; p ++) printASTRec(node->call->parameters[p], level + 1, stream);
             break;
+
         case NODE_ASSIGN_FUNC:
             fprintf(stream, "<type ASSIGN_FUNC>\n");
-            if (node->func != NULL) {
-                printASTRec(node->func->definition, level + 1);
-            }
+            if (node->func != NULL) printASTRec(node->func->definition, level + 1, stream);
             break;
+
         default:
             fprintf(stream, "no %d\n", node->type);
     }
 
     // Recursively print children
-    printASTRec(node->left, level + 1);
-    printASTRec(node->right, level + 1);
+    printASTRec(node->left, level + 1, stream);
+    printASTRec(node->right, level + 1, stream);
 }
 
 
-void printAST(ASTNode *root) {
-    FILE *stream = GLOBALCONTEXT->config->LOG_STREAM;
+FILE *printAST(ASTNode *root) {
+    FILE *stream = tmpfile();
+    if (stream == NULL) return NULL;
 
-    fprintf(stream, "[\n");
-    printASTRec(root, 0);
-    fprintf(stream, "]\n");
+    printASTRec(root, 0, stream);
+    return stream;
 }
 
 
@@ -99,12 +100,12 @@ void freeAST(ASTNode *ast) {
 
     switch (ast->type) {
         case NODE_ASSIGN_FUNC:
-            Debug("Free Func Assign\n");
+            Debug(0, "Free Func Assign\n");
             if (ast->func != NULL) free(ast);
             break;
 
         case NODE_FUNC_CALL:
-            Debug("Free Func Call '%s'\n");
+            Debug(0, "Free Func Call '%s'\n");
             free(ast->call->identifier);
             free(ast->call->parameters);
             free(ast->call);
@@ -113,23 +114,23 @@ void freeAST(ASTNode *ast) {
             break;
 
         case NODE_VARIABLE:
-            Debug("Free Variable '%s'\n", ast->identifier);
+            Debug(0, "Free Variable '%s'\n", ast->identifier);
             free(ast->identifier);
             free(ast);
             break;
 
         case NODE_NUMBER:
-            Debug("Free number %f\n", ast->value);
+            Debug(0, "Free number %f\n", ast->value);
             free(ast);
             break;
 
         case NODE_OPERATOR:
-            Debug("Free operator\n");
+            Debug(0, "Free operator\n");
             free(ast);
             break;
 
         default:
-            Debug("Free Default\n");
+            Debug(0, "Free Default\n");
             free(ast);
             break;
     }
