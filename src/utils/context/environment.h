@@ -47,4 +47,7 @@ Component* searchEnvironment(Environment *env, char *identifier);
 
 void printEnvironment(Environment *env);
 
+
+void freeEnvironment(Environment *env);
+
 #endif
