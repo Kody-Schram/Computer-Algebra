@@ -28,6 +28,7 @@ static void printASTRec(ASTNode *node, int level, FILE *stream) {
     // Print indentation based on depth
     for (int i = 0; i < level; i++) fprintf(stream, "  ");
 
+    //Debug(0, "switch\n");
     // Print node info
     switch(node->type) {
         case NODE_NUMBER:
@@ -86,6 +87,8 @@ static void printASTRec(ASTNode *node, int level, FILE *stream) {
 FILE *printAST(ASTNode *root) {
     FILE *stream = tmpfile();
     if (stream == NULL) return NULL;
+
+    //Debug(0, "printing ast recursively\n");
 
     printASTRec(root, 0, stream);
     return stream;

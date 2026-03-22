@@ -127,18 +127,18 @@ static int checkInvalidBinop(Token *cur, Token *prev) {
     if (prev != NULL && next != NULL) {
         if (cur->type == TOKEN_OPERATOR) {
             if (prev->type == TOKEN_OPERATOR || next->type == TOKEN_OPERATOR) {
-                printf("Invalid operation \"%s%s%s\".\n", prev->value, cur->value, next->value);
+                printf("Invalid operation \"%s %s %s\".\n", prev->value, cur->value, next->value);
                 //printf("Two operators, \"%s%s\" are not allowed next to each other.\n", cur->value, next->value);
                 return -1;
 
             } 
             else if (prev->type != TOKEN_NUMBER && prev->type != TOKEN_IDENTIFIER && prev->type != TOKEN_RIGHT_PAREN) {
-                printf("Invalid operation \"%s%s%s\".\n", prev->value, cur->value, next->value);
+                printf("Invalid operation \"%s %s %s\".\n", prev->value, cur->value, next->value);
                 //printf("Operator must be preceeded by a number, an identifer, or a right parenthesis.\n");
                 return -1;
             }
             else if (next->type != TOKEN_NUMBER && next->type != TOKEN_IDENTIFIER && next->type != TOKEN_LEFT_PAREN && next->type != TOKEN_FUNC_CALL) {
-                printf("Invalid operation \"%s%s%s\".\n", prev->value, cur->value, next->value);
+                printf("Invalid operation \"%s %s %s\".\n", prev->value, cur->value, next->value);
                 //printf("Operator must be followed by a number, an identifier, a left parenthesis, or a function call.\n");
                 return -1;
             }
@@ -239,12 +239,11 @@ static int handleNegatives(Token **ptr, Token *prev) {
     Token *cur = *ptr;
 
     // Determines if a '-' is in place
-    if (cur->type != TOKEN_OPERATOR) return 0;
-    if (strcmp(cur->value, "-")) return 0;
+    if (cur->type != TOKEN_OPERATOR && strcmp(cur->value, "-")) return 0;
 
     // Outlines cases for following negative handling
     // (ie determines this is a negative and not a subtraction)
-    if (prev != NULL && prev->type != TOKEN_OPERATOR && prev->type != TOKEN_LEFT_PAREN) return 0;
+    if (prev != NULL && prev->type != TOKEN_OPERATOR && prev->type != TOKEN_LEFT_PAREN && prev->type != TOKEN_SEPERATOR) return 0;
     
     //printf("Creating -1 and multiplication tokens.\n");
 
@@ -265,7 +264,7 @@ static int handleNegatives(Token **ptr, Token *prev) {
     free(cur);
 
     **ptr = *negative_one;
-
+    
     return 1;
 }
 

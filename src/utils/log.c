@@ -25,6 +25,7 @@ void Debug(const int fileStream, const void *stream, ...) {
 
     if (fileStream) {
         FILE *file = (FILE *) stream;
+        rewind(file);
         char buffer[DEFAULT_BUFFER];
         while (fgets(buffer, DEFAULT_BUFFER, file)) {
             Debug(0, "%s", buffer);
@@ -47,6 +48,7 @@ void Info(const int fileStream, const void *stream, ...) {
 
     if (fileStream) {
         FILE *file = (FILE *) stream;
+        rewind(file);
         char buffer[DEFAULT_BUFFER];
         while (fgets(buffer, DEFAULT_BUFFER, file)) {
             Debug(0, 0, "%s", buffer);

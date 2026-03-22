@@ -66,8 +66,8 @@ static ASTNode *copyAndReplace(ASTNode *ast, Environment *env) {
             cur->call->identifier = strdup(call->identifier);
             cur->call->nParams = call->nParams;
 
-            cmp = searchEnvironment(GLOBALCONTEXT->env, call->identifier);
-            if (cmp == NULL || cmp->type == VARIABLE) {
+            cmp = searchEnvironment(GLOBALCONTEXT->env, cur->call->identifier);
+            if (cmp == NULL || cmp->type != FUNCTION) {
                 printf("Error getting environment component.\n");
                 return NULL;
             }
@@ -92,7 +92,7 @@ static ASTNode *copyAndReplace(ASTNode *ast, Environment *env) {
                 if (!executeRecur(&param, NULL, env)) return NULL;
 
                 freeAST(cur->call->parameters[p]);
-                *cur->call->parameters[p] = *param;
+                cur->call->parameters[p] = param;
             }
 
             if (!executeRecur(&cur, NULL, env)) return NULL;
