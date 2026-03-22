@@ -31,6 +31,7 @@ struct Environment {
     int entries;
     int size;
     Component *components;
+    Environment *parent;
 };
 
 

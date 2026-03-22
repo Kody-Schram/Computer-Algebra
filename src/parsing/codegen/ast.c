@@ -201,7 +201,7 @@ ASTNode *astFromRPN(RPNList *rpn) {
     }
 
     if (config->LOG_LEVEL >= DEBUG && nodes.items[0] != NULL) {
-        fprintf(config->LOG_STREAM, "\nPrinting AST\n");
+        fprintf(config->LOG_STREAM, "\nAST\n");
         printAST(nodes.items[0]);
     }
 

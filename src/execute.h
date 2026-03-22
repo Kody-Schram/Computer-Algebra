@@ -3,6 +3,6 @@
 
 #include "utils/types.h"
 
-int execute(ASTNode **ptr, ASTNode *parent);
+int execute(ASTNode *ast);
 
 #endif

@@ -13,6 +13,7 @@ Environment *createEnvironment() {
     env->entries = 0;
     env->size = DEFAULT_TABLE_SIZE;
     env->components = malloc(sizeof(Component) * DEFAULT_TABLE_SIZE);
+    env->parent = NULL;
 
     return env;
 }
@@ -57,7 +58,7 @@ Component* searchEnvironment(Environment *env, char *identifier) {
 
 void printEnvironment(Environment *env) {
     Config *config = GLOBALCONTEXT->config;
-
+    
     for (int i = 0; i < env->entries; i ++) {
         switch(env->components[i].type) {
             case FUNCTION:

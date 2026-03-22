@@ -115,10 +115,9 @@ static int parseFunctionCalls(Token **head) {
 
                 Debug("\nParameter Tokens\n");
                 if (config->LOG_LEVEL >= DEBUG) printTokens(paramHead);
-                Debug("Handling recursive calls\n");
+
                 // Recursively parses calls
                 if (parseFunctionCalls(&paramHead)) return 1;
-                Debug("Recursive function calls handled\n");
 
                 // Generates ast for parameter
                 RPNList *rpn = shuntingYard(paramHead);
@@ -127,8 +126,6 @@ static int parseFunctionCalls(Token **head) {
                 ASTNode *ast = astFromRPN(rpn);
                 if (ast == NULL) return 1;
 
-                Debug("\nParameter AST\n");
-                if (config->LOG_LEVEL >= DEBUG) printAST(ast);
 
                 paramASTs[nParameters] = ast;
                 nParameters ++;
@@ -286,6 +283,7 @@ static ASTNode *parseFunctionDefinition(Token *head) {
     function->definition = ast;
 
     ASTNode *assignment = dummyASTNode(NODE_ASSIGN_FUNC);
+    assignment->func = NULL;
 
     ASTNode *func = dummyASTNode(NODE_ASSIGN_FUNC);
     func->func = function;
@@ -349,8 +347,7 @@ ASTNode *parse(char *buffer) {
         freeTokens(head);
         return NULL;
     }
-
-    Debug("Freeing tokens at end of parsing\n");
+    
     freeTokens(head);
     Info("\nFinished parsing\n");
     return ast;

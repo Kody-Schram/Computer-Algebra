@@ -82,10 +82,13 @@ static int getNumber(char *c) {
  * @param env Environment
  * @return int Length of largest component found or length of contiuguous valid identifier characters
  */
-static ComponentReturn getComponentLength(char *c, Environment *env, Config *config) {
+static ComponentReturn getComponentLength(char *c) {
     ComponentReturn result = {0, NULL};
     // If not valid character type for variable name, automatically skip check
     if (!isalpha(c[0])) return result;
+    Environment *env = GLOBALCONTEXT->env;
+    Debug("printing env\n");
+    printEnvironment(env);
 
     // Gets length of valid identifer characters
     int length = 0;
@@ -151,7 +154,6 @@ static ComponentReturn getComponentLength(char *c, Environment *env, Config *con
 
 Token *tokenize(char *buffer) {
     Config *config = GLOBALCONTEXT->config;
-    Environment *env = GLOBALCONTEXT->env;
 
     Debug("\nTokenizing '%s'\n", buffer);
 
@@ -191,7 +193,7 @@ Token *tokenize(char *buffer) {
         }
         
         // Checks if builtin function and return the length if it is
-        else if ((cRet = getComponentLength(buffer + i, env, config)).len) {
+        else if ((cRet = getComponentLength(buffer + i)).len) {
             //if (cRet.cmp != NULL) printf("largest component found was %s\n", cRet.cmp->identifier);
             end += cRet.len;
 

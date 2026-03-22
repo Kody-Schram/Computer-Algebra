@@ -63,11 +63,14 @@ static void printASTRec(ASTNode *node, int level) {
             for (int i = 0; i < level + 1; i++) fprintf(stream, "  ");
             fprintf(stream, "Parameters:\n");
             for (int p = 0; p < node->call->nParams; p ++) {
-                printASTRec(node->call->parameters[p], level+1);
+                printASTRec(node->call->parameters[p], level + 1);
             }
             break;
         case NODE_ASSIGN_FUNC:
             fprintf(stream, "<type ASSIGN_FUNC>\n");
+            if (node->func != NULL) {
+                printASTRec(node->func->definition, level + 1);
+            }
             break;
         default:
             fprintf(stream, "no %d\n", node->type);
@@ -115,10 +118,19 @@ void freeAST(ASTNode *ast) {
             free(ast);
             break;
 
+        case NODE_NUMBER:
+            Debug("Free number %f\n", ast->value);
+            free(ast);
+            break;
+
+        case NODE_OPERATOR:
+            Debug("Free operator\n");
+            free(ast);
+            break;
+
         default:
             Debug("Free Default\n");
             free(ast);
             break;
     }
 }
-
