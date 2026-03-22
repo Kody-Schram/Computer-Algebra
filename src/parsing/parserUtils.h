@@ -32,12 +32,6 @@ void printTokens(Token *head);
 ASTNode *createASTNode(Token *token);
 
 
-ASTNode *dummyASTNode(NodeType type);
-
-
-void printAST(ASTNode *head);
-
-
 void printRPN(RPNList *list);
 
 /**
@@ -46,9 +40,6 @@ void printRPN(RPNList *list);
  * @param head Head of linked list
  */
 void freeTokens(Token *head);
-
-
-void freeAST(ASTNode *ast);
 
 
 #endif

@@ -78,4 +78,10 @@ struct Function {
 };
 
 
+ASTNode *dummyASTNode(NodeType type);
+void printAST(ASTNode *root);
+void freeAST(ASTNode *ast);
+
+
+
 #endif
