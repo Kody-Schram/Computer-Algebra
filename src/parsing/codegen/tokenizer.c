@@ -87,8 +87,6 @@ static ComponentReturn getComponentLength(char *c) {
     // If not valid character type for variable name, automatically skip check
     if (!isalpha(c[0])) return result;
     Environment *env = GLOBALCONTEXT->env;
-    Debug(0, "printing env\n");
-    printEnvironment(env);
 
     // Gets length of valid identifer characters
     int length = 0;

@@ -19,8 +19,6 @@
  */
 Token *createToken(TokenType type, char *value, int l);
 
-FILE *printToken(Token *head);
-
 /**
  * @brief Prints linked token list in a easy to read format
  * 

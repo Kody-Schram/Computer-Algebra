@@ -18,7 +18,6 @@ static int handleKeywords(char *buffer) {
     
     for (int i = 0; i < sizeof(GLOBALCONTEXT->config->mapping) / sizeof(KeywordMapping); i ++) {
         KeywordMapping *mapping = GLOBALCONTEXT->config->mapping;
-        Debug(0, "Comparing to '%s'\n", mapping[i].keyword);
 
         if (strncmp(buffer, mapping[i].keyword, fmin(strlen(buffer), strlen(mapping[i].keyword)))) continue;
         switch (GLOBALCONTEXT->config->mapping[i].cmd) {
@@ -43,7 +42,6 @@ static int handleKeywords(char *buffer) {
 
 
 static int process(char *buffer) {
-    Debug(0, "Processing %s\n", buffer);
     int result = handleKeywords(buffer);
     if (result == -1) return 0;
     else if (result == 1) return 1;

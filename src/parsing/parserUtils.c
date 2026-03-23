@@ -32,10 +32,7 @@ Token *createToken(TokenType type, char *value, int l) {
 }
 
 
-FILE *printToken(Token *token) {
-    FILE *stream = tmpfile();
-    if (stream == NULL) return NULL;
-
+static void printToken(Token *token, FILE *stream) {
     const char *type = NULL;
 
         switch(token->type) {
@@ -68,10 +65,13 @@ FILE *printToken(Token *token) {
         }
 
         if (token->type == TOKEN_FUNC_CALL) {
-            fprintf(stream, "    <type: %s>\n", type);
+            fprintf(stream, "<type: %s>\n", type);
+            //printf("<type: %s>\n", type);
         }
-        else fprintf(stream, "    <type: %s, value: '%s'>\n", type, token->value);
-    return stream;
+        else {
+            fprintf(stream, "<type: %s, value: '%s'>\n", type, token->value);
+            //printf(stream, "<type: %s, value: '%s'>\n", type, token->value);
+        }
 }
 
 
@@ -81,19 +81,13 @@ FILE *printTokens(Token *head) {
 
     Token *cur = head;
 
-    fprintf(stream, "[\n");
+    fprintf(stream, "\n");
     while (cur != NULL) {
-        FILE *token = printToken(cur);
-        if (token == NULL) return NULL;
-        char buffer[128];
-        while (fgets(buffer, 128, token)) {
-            fprintf(stream, "%s", buffer);
-        }
-        fclose(token);
+        printToken(cur, stream);
         cur = cur->next;
     }
 
-    fprintf(stream, "]\n");
+    fprintf(stream, "\n");
     return stream;
 }
 

@@ -337,10 +337,6 @@ void handleLocalVariables(Token **ptr, Environment *localEnv) {
                 Debug(0, "string: '%s', right: '%s', right len: %d\n", cur->value, id + max, strlen(id) - max);
                 Token *right = createToken(TOKEN_IDENTIFIER, id + max, strlen(id) - max);
 
-                //printToken(prev);
-                printToken(left);
-                printToken(right);
-
                 left->next = right;
                 right->next = cur->next;
 
@@ -354,7 +350,7 @@ void handleLocalVariables(Token **ptr, Environment *localEnv) {
                 cur = left;
 
                 Debug(0, "Intermediate token list\n");
-                printTokens(*ptr);
+                Debug(1, printTokens(*ptr));
             }
 
         }
@@ -365,7 +361,7 @@ void handleLocalVariables(Token **ptr, Environment *localEnv) {
 
     if (config->LOG_LEVEL >= DEBUG) {
         fprintf(config->LOG_STREAM, "Updated for local vars\n");
-        printTokens(*ptr);
+        Debug(1, printTokens(*ptr));
     }
 }
 
@@ -410,11 +406,8 @@ Token *lex(Token* head) {
     } 
 
     if (!handleAssignment) return NULL;
-    
-    if (config->LOG_LEVEL >= DEBUG) {
-        fprintf(config->LOG_STREAM, "Updated Tokens.\n");
-        printTokens(head);
-    }
+    Debug(0, "Updated Tokens.\n");
+    Debug(1, printTokens(head));
 
     return head;
 

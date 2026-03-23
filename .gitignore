@@ -60,6 +60,7 @@ config.yaml
 log.txt
 test
 
+*.sh
 *.ps1
 project_dump.txt
 

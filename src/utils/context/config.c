@@ -332,7 +332,7 @@ FILE *printConfig(Config *config) {
             level = "GRIFFITH!";
     }
     fprintf(stream, "Log Level: %s\n", level);
-    fprintf(stream, "Startup: \n%s\n", config->STARTUP);
+    fprintf(stream, "Startup: \n%s\n\n", config->STARTUP);
 
     for (int i = 0; i < sizeof(config->mapping) / sizeof(KeywordMapping); i ++) {
         switch (config->mapping[i].cmd) {

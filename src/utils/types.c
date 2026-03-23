@@ -26,13 +26,15 @@ static void printASTRec(ASTNode *node, int level, FILE *stream) {
     if (node == NULL || stream == NULL) return;
 
     // Print indentation based on depth
-    for (int i = 0; i < level; i++) fprintf(stream, "  ");
+    for (int i = 0; i < level; i++) {
+        fprintf(stream, "  ");
+        printf("  ");
+    }
 
-    //Debug(0, "switch\n");
-    // Print node info
     switch(node->type) {
         case NODE_NUMBER:
             fprintf(stream, "<type: NUMBER, value: %f>\n", node->value);
+            printf("<type: NUMBER, value: %f>\n", node->value);
             break;
 
         case NODE_OPERATOR:
@@ -55,23 +57,34 @@ static void printASTRec(ASTNode *node, int level, FILE *stream) {
                     break;
             }
             fprintf(stream, "<type: OPERATOR, symbol: %c>\n", id);
+            printf("<type: OPERATOR, symbol: %c>\n", id);
             break;
 
         case NODE_VARIABLE:
             fprintf(stream, "<type: VARIABLE, identifier: '%s'>\n", node->identifier);
+            printf("<type: VARIABLE, identifier: '%s'>\n", node->identifier);
             break;
 
         case NODE_FUNC_CALL: 
+            //printf("printing call\n");
             fprintf(stream, "<type: FUNC_CALL, value: '%s'>\n", node->call->identifier);
+            printf("<type: FUNC_CALL, value: '%s'>\n", node->call->identifier);
             for (int i = 0; i < level + 1; i++) fprintf(stream, "  ");
 
+            //printf("parameters\n");
             fprintf(stream, "Parameters:\n");
+            printf("Parameters:\n");
             for (int p = 0; p < node->call->nParams; p ++) printASTRec(node->call->parameters[p], level + 1, stream);
+            //printf("finished printing call\n");
             break;
 
         case NODE_ASSIGN_FUNC:
-            fprintf(stream, "<type ASSIGN_FUNC>\n");
-            if (node->func != NULL) printASTRec(node->func->definition, level + 1, stream);
+            fprintf(stream, "<type ASSIGN_FUNC '%s'>\n", (char *) node->left);
+            printf("<type ASSIGN_FUNC '%s'>\n", (char *) node->left);
+            printf("Definition:\n");
+            fprintf(stream, "Definition:\n");
+            printASTRec(node->func->definition, level + 1, stream);
+            return;
             break;
 
         default:
@@ -88,8 +101,6 @@ FILE *printAST(ASTNode *root) {
     FILE *stream = tmpfile();
     if (stream == NULL) return NULL;
 
-    //Debug(0, "printing ast recursively\n");
-
     printASTRec(root, 0, stream);
     return stream;
 }
@@ -97,14 +108,17 @@ FILE *printAST(ASTNode *root) {
 
 void freeAST(ASTNode *ast) {
     if (ast == NULL) return;
+    Debug(0, "Freeing ast\n");
 
     freeAST(ast->left);
     freeAST(ast->right);
 
     switch (ast->type) {
         case NODE_ASSIGN_FUNC:
+            printf("freeing assign func\n");
             Debug(0, "Free Func Assign\n");
-            if (ast->func != NULL) free(ast);
+            free(ast->left);
+            free(ast);
             break;
 
         case NODE_FUNC_CALL:

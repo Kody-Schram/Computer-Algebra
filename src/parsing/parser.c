@@ -78,6 +78,7 @@ static int parseFunctionCalls(Token **head) {
                 Token *paramHead = cur;
                 int parens = 0;
 
+                Debug(0, "Freeing seperator\n");
                 if (seperator != NULL) {
                     free(seperator->value);
                     free(seperator);
@@ -204,8 +205,6 @@ static ASTNode *parseFunctionDefinition(Token *head) {
     Token *cur = head;
     Token *asgn = NULL;
     while (cur != NULL) {
-        //printf("%s, type %d, comp %d,  == %d\n", cur->value, cur->type, component, (cur->type != TOKEN_IDENTIFIER && component == IDENTIFIER));
-        
         // Checks for switching to body
         if (component == PARAMETERS && cur->type == TOKEN_ASSIGNMENT) {
             Debug(0, "Moving to function body.\n");
@@ -271,28 +270,20 @@ static ASTNode *parseFunctionDefinition(Token *head) {
     ASTNode *ast = astFromRPN(rpn);
     if (ast == NULL) return NULL;
 
+    Debug(0, "Creating function\n");
     // Add to function table
     Function *function = malloc(sizeof(Function));
     if (function == NULL) return NULL;
-
-    Debug(0, "Local Environment.\n");
-    if (config->LOG_LEVEL >= DEBUG) printEnvironment(localEnv);
 
     function->env = localEnv;
     function->type = DEFINED;
     function->definition = ast;
 
+    Debug(1, printEnvironment(localEnv));
+
     ASTNode *assignment = dummyASTNode(NODE_ASSIGN_FUNC);
-    assignment->func = NULL;
-
-    ASTNode *func = dummyASTNode(NODE_ASSIGN_FUNC);
-    func->func = function;
-
-    ASTNode *identifier = dummyASTNode(NODE_VARIABLE);
-    identifier->identifier = strdup(id);
-
-    assignment->left = identifier;
-    assignment->right = func;
+    assignment->func = function;
+    assignment->left = (ASTNode *) strdup(id);
 
     Debug(0, "Freeing tokens used for function definition.\n");
     freeTokens(head);
@@ -310,13 +301,14 @@ static ASTNode *parseAssignment(Token *head) {
 
 ASTNode *parse(char *buffer) {
     Info(0, "\nParsing: '%s'\n", buffer);
+    Token *head = NULL;
+    ASTNode *ast = NULL;
     
-    Token *raw = tokenize(buffer);
-    if (raw == NULL) return NULL;
-    //if (config->LOG_LEVEL >= DEBUG) printTokens(raw, config->LOG_STREAM);
+    head = tokenize(buffer);
+    if (head == NULL) goto cleanup;
 
-    Token *head = lex(raw);
-    if (head == NULL) return NULL;
+    head = lex(head);
+    if (head == NULL) goto cleanup;
 
     if (containsAssignment(head)) {
         Debug(0, "Assignment found.\n");
@@ -327,25 +319,24 @@ ASTNode *parse(char *buffer) {
 
     if (parseFunctionCalls(&head)) {
         printf("Error parsing function call(s)\n");
-        return NULL;
+        goto cleanup;
     }
 
     Debug(0, "\nPost Function Call Tokens\n");
     Debug(1, printTokens(head));
 
     RPNList *RPN = shuntingYard(head);
-    if (RPN == NULL) {
-        freeTokens(head);
-        return NULL;
-    }
+    if (RPN == NULL) goto cleanup;
 
-    ASTNode *ast = astFromRPN(RPN);
-    if (ast == NULL) {
-        freeTokens(head);
-        return NULL;
-    }
+    ast = astFromRPN(RPN);
+    if (ast == NULL) goto cleanup;
     
     freeTokens(head);
     Info(0, "\nFinished parsing\n");
     return ast;
+
+    cleanup:
+        if (head != NULL) freeTokens(head);
+        if (ast != NULL) freeAST(ast);
+        return NULL;
 }

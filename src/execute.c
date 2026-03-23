@@ -112,13 +112,22 @@ static int executeRecur(ASTNode **ptr, ASTNode *parent, Environment *env) {
     ASTNode *ast = *ptr;
     if (ast == NULL) return 0;
 
-    // Executes bottom up
-    int left = executeRecur(&ast->left, ast, env);
-    int right = executeRecur(&ast->right, ast, env);
+    int left = 1;
+    int right = 1;
+
+    if (ast->type != NODE_ASSIGN_FUNC && ast->type != NODE_ASSIGN_VAR) {
+        printf("executing children\n");
+        // Executes bottom up
+        left = executeRecur(&ast->left, ast, env);
+        right = executeRecur(&ast->right, ast, env);
+    }
+
+    if (left == 0 || right == 0) return 0;
 
     Config *config = GLOBALCONTEXT->config;
 
     Debug(0, "Executing\n");
+    printf("exec\n");
     Debug(1, printAST(ast));
     Debug(0, "\n");
 
@@ -129,16 +138,16 @@ static int executeRecur(ASTNode **ptr, ASTNode *parent, Environment *env) {
             return 1;
 
         case NODE_ASSIGN_FUNC:
-            if (ast->func != NULL) return 1;
-            Info(0, "\nBinding function %s to global environment\n", ast->left->identifier);
-            executeRecur(&ast->right->func->definition, NULL, NULL);
+            Debug(0, "exec func assign\n");
+            Info(0, "\nBinding function %s to global environment\n", (char *) ast->left);
+            executeRecur(&ast->func->definition, NULL, NULL);
+            Debug(0, "Finish executing on definition\n");
 
-            bindComponent(GLOBALCONTEXT->env, FUNCTION, ast->left->identifier, ast->right->func);
-            if (config->LOG_LEVEL >= DEBUG) {
-                printEnvironment(ast->right->func->env);
-            }
+            bindComponent(GLOBALCONTEXT->env, FUNCTION, (char *) ast->left, ast->func);
+            Debug(1, printEnvironment(ast->func->env));
 
-            freeAST(ast);
+            free(ast->left);
+            free(ast);
             *ptr = NULL;
             return 1;
 
@@ -146,6 +155,7 @@ static int executeRecur(ASTNode **ptr, ASTNode *parent, Environment *env) {
             Info(0, "\nBinding variable to global environment\n");
             freeAST(ast);
             return 1;
+            break;
 
         case NODE_OPERATOR:
             // Simplifies constants (doesn't do for division)
@@ -177,6 +187,7 @@ static int executeRecur(ASTNode **ptr, ASTNode *parent, Environment *env) {
                         break;
                 }
 
+                printf("updating with result of op\n");
                 freeAST(ast);
                 if (parent == NULL) *ptr = new;
                 else if (parent->left == ast) {
@@ -222,9 +233,13 @@ static int executeRecur(ASTNode **ptr, ASTNode *parent, Environment *env) {
                     Debug(1, printAST(func->definition));
                     Debug(0, "Replacing variables with new definitions\n");
                     ASTNode *exec = copyAndReplace(func->definition, localEnv);
-                    if (exec == NULL) return 0;
 
-                    if (!executeRecur(&exec, NULL, localEnv)) return 0;
+                    if (exec == NULL || !executeRecur(&exec, NULL, localEnv)) {
+                        localEnv->parent = NULL;
+                        return 0;
+                    }
+
+                    localEnv->parent = NULL;
                     *ptr = exec;
                     break;
             }
@@ -237,11 +252,14 @@ static int executeRecur(ASTNode **ptr, ASTNode *parent, Environment *env) {
 
 int execute(ASTNode *ast) {
     Info(0, "\nRoot Execution\n");
-    Debug(1, printAST(ast));
+    // printf("exec\n");
+    // Debug(1, printAST(ast));
 
+    printf("recursive\n");
     if (executeRecur(&ast, NULL, NULL)) {
         Info(0, "Finished Executing\n");
         if (ast != NULL) printStream(printAST(ast));
+        printf("freeing result\n");
         freeAST(ast);
         return 1;
     }
