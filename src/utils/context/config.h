@@ -1,8 +1,10 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
-typedef struct Config Config;
 typedef enum LOG_LEVEL LOG_LEVEL;
+typedef struct KeywordMapping KeywordMapping;
+typedef struct Config Config;
+
 
 enum LOG_LEVEL {
     NONE,
@@ -11,17 +13,31 @@ enum LOG_LEVEL {
 };
 
 
+typedef enum {
+    K_QUIT,
+    K_ENV,
+    K_RELOAD
+} KeywordCMD;
+
+
+struct KeywordMapping {
+    KeywordCMD cmd;
+    char *keyword;
+};
+
+
 struct Config {
     LOG_LEVEL LOG_LEVEL;
     FILE *LOG_STREAM;
     char *STARTUP;
+    KeywordMapping mapping[3];
 };
 
 
 Config *loadConfig();
 
 
-void printConfig(Config *config);
+FILE *printConfig(Config *config);
 
 
 void freeConfig(Config *config);

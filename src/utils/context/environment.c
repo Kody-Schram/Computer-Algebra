@@ -56,8 +56,9 @@ Component* searchEnvironment(Environment *env, char *identifier) {
 }
 
 
-void printEnvironment(Environment *env) {
-    Config *config = GLOBALCONTEXT->config;
+FILE *printEnvironment(Environment *env) {
+    FILE *stream = tmpfile();
+    if (stream == NULL) return NULL;
     
     for (int i = 0; i < env->entries; i ++) {
         switch(env->components[i].type) {
@@ -65,18 +66,20 @@ void printEnvironment(Environment *env) {
                 Function *func = env->components[i].func;
 
                 if (env->components[i].func->env->entries > 0) {
-                    if (config->LOG_LEVEL >= DEBUG) fprintf(config->LOG_STREAM, "%s(", env->components[i].identifier);
+                    fprintf(stream, "%s(", env->components[i].identifier);
                     for (int j = 0; j < func->env->entries - 1; j ++) {
-                        if (config->LOG_LEVEL >= DEBUG) fprintf(config->LOG_STREAM, "%s,", func->env->components[j].identifier);
+                        fprintf(stream, "%s,", func->env->components[j].identifier);
                     }
-                    if (config->LOG_LEVEL >= DEBUG) fprintf(config->LOG_STREAM, "%s)\n", func->env->components[func->env->entries-1].identifier);
+                    fprintf(stream, "%s)\n", func->env->components[func->env->entries-1].identifier);
                     break;
                 }
             default:
-                if (config->LOG_LEVEL >= DEBUG) fprintf(config->LOG_STREAM, "%s = %f (variable)\n", env->components[i].identifier, env->components[i].value);
+                fprintf(stream, "%s = %f (variable)\n", env->components[i].identifier, env->components[i].value);
         }
         
     }
+
+    return stream;
 }
 
 

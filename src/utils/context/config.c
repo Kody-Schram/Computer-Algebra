@@ -5,6 +5,8 @@
 #include "config.h"
 #include "utils/types.h"
 
+static const int DEFAULT_MAPPING_SIZE = 5;
+
 typedef enum {
     STATE_START,
     STATE_STREAM,
@@ -16,6 +18,11 @@ typedef enum {
     STATE_LOG_LOCATION,
 
     STATE_STARTUP,
+
+    STATE_KEYWORDS,
+    STATE_K_QUIT,
+    STATE_K_ENV,
+    STATE_K_RELOAD,
 
     STATE_STOP
 } State;
@@ -52,7 +59,7 @@ static int consumeEvent(State *state, yaml_event_t *event, Config *config) {
         break;
 
     case STATE_DOCUMENT:
-            switch (event->type) {
+        switch (event->type) {
             case YAML_MAPPING_START_EVENT:
                 *state = STATE_SECTION;
                 break;
@@ -62,7 +69,7 @@ static int consumeEvent(State *state, yaml_event_t *event, Config *config) {
             default:
                 printf("Unexpected event %d in state %d.\n", event->type, *state);
                 return 0;
-            }
+        }
         break;
 
     case STATE_SECTION:
@@ -71,6 +78,7 @@ static int consumeEvent(State *state, yaml_event_t *event, Config *config) {
                 value = event->data.scalar.value;
                 if (!strcmp(value, "log")) *state = STATE_LOG;
                 else if (!strcmp(value, "startup")) *state = STATE_STARTUP;
+                else if (!strcmp(value, "keywords")) *state = STATE_KEYWORDS;
                 else {
                     printf("Unexpected scalar: %s\n", value);
                     return 0;
@@ -91,7 +99,6 @@ static int consumeEvent(State *state, yaml_event_t *event, Config *config) {
     case STATE_LOG:
         switch (event->type) {
             case YAML_MAPPING_END_EVENT:
-                printf("moving out of log section\n");
                 *state = STATE_SECTION;
                 break;
             case YAML_SCALAR_EVENT:
@@ -162,6 +169,65 @@ static int consumeEvent(State *state, yaml_event_t *event, Config *config) {
                 break;
         }
         break;
+
+    case STATE_KEYWORDS:
+        switch (event->type) {
+            case YAML_MAPPING_END_EVENT:
+                *state = STATE_SECTION;
+                break;
+
+            case YAML_SCALAR_EVENT:
+                char *value = event->data.scalar.value;
+                if (!strcmp(value, "QUIT")) *state = STATE_K_QUIT;
+                else if (!strcmp(value, "ENV")) *state = STATE_K_ENV;
+                else if (!strcmp(value, "RELOAD")) *state = STATE_K_RELOAD;
+                else {
+                    printf("Unexpected keyword: %s.\n", value);
+                    return 0;
+                }
+                break;
+        }
+        break;
+
+    case STATE_K_QUIT:
+    case STATE_K_ENV:
+    case STATE_K_RELOAD:
+        switch (event->type) {
+            case YAML_MAPPING_END_EVENT:
+                *state = STATE_KEYWORDS;
+                break;
+            
+            case YAML_SCALAR_EVENT:
+                char *value = event->data.scalar.value;
+                printf("key word %s\n", value);
+
+                KeywordCMD cmd;
+                switch (*state) {
+                    case STATE_K_QUIT:
+                        cmd = K_QUIT;
+                        break;
+                    case STATE_K_ENV:
+                        cmd = K_ENV;
+                        break;
+                    case STATE_K_RELOAD:
+                        cmd = K_RELOAD;
+                        break;
+                }
+
+                // Replaces default setting
+                for (int i = 0; i < sizeof(config->mapping) / sizeof(KeywordMapping); i ++) {
+                    if (config->mapping[i].cmd == cmd) {
+                        printf("replacing old mapping with '%s'\n", value);
+                        free(config->mapping[i].keyword);
+
+                        config->mapping[i].keyword = strdup(value);
+                        *state = STATE_KEYWORDS;
+                        return 1;
+                    }
+                }
+            break;
+        }
+        break;
     
     case STATE_STOP:
         break;
@@ -175,6 +241,10 @@ static void initConfig(Config *config) {
     config->LOG_LEVEL = 0;
     config->LOG_STREAM = stdout;
     config->STARTUP = NULL;
+
+    config->mapping[0] = (KeywordMapping) {.cmd=K_QUIT, .keyword=strdup("quit")};
+    config->mapping[1] = (KeywordMapping) {.cmd=K_ENV, .keyword=strdup("env")};
+    config->mapping[2] = (KeywordMapping) {.cmd=K_RELOAD, .keyword=strdup("reload")};
 }
 
 
@@ -239,28 +309,63 @@ Config *loadConfig() {
 }
 
 
-void printConfig(Config *config) {
-    fprintf(config->LOG_STREAM, "\nConfig\n");
+FILE *printConfig(Config *config) {
+    FILE *stream = tmpfile();
+    if (stream == NULL) return NULL;
+
+    fprintf(stream, "\nConfig\n");
     char *level;
     switch(config->LOG_LEVEL) {
         case NONE:
             level = "None";
             break;
+
         case INFO:
             level = "Info";
             break;
+
         case DEBUG:
             level = "Debug";
             break;
+
         default:
             level = "GRIFFITH!";
     }
-    fprintf(config->LOG_STREAM, "Log Level: %s\n", level);
-    fprintf(config->LOG_STREAM, "Startup: \n%s\n", config->STARTUP);
+    fprintf(stream, "Log Level: %s\n", level);
+    fprintf(stream, "Startup: \n%s\n", config->STARTUP);
+
+    for (int i = 0; i < sizeof(config->mapping) / sizeof(KeywordMapping); i ++) {
+        switch (config->mapping[i].cmd) {
+            case K_QUIT:
+                fprintf(stream, "QUIT: ");
+                break;
+
+            case K_ENV:
+                fprintf(stream, "ENV: ");
+                break;
+
+            case K_RELOAD:
+                fprintf(stream, "RELOAD: ");
+                break;
+            
+            default:
+                fprintf(stream, "Guts....");
+        }
+
+        fprintf(stream, "%s\n", config->mapping[i].keyword);
+    }
+
+    return stream;
 }
 
+
 void freeConfig(Config *config) {
-    free(config);
     fclose(config->LOG_STREAM);
-    // will need more later on
+
+    // Frees keyword identifiers
+    for (int i = 0; i < sizeof(config->mapping) / sizeof(KeywordMapping); i ++) {
+        free(config->mapping[i].keyword);
+    }
+
+    free(config);
 }

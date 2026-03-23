@@ -51,7 +51,7 @@ void Info(const int fileStream, const void *stream, ...) {
         rewind(file);
         char buffer[DEFAULT_BUFFER];
         while (fgets(buffer, DEFAULT_BUFFER, file)) {
-            Debug(0, 0, "%s", buffer);
+            Info(0, "%s", buffer);
         }
         fclose(file);
     } else {

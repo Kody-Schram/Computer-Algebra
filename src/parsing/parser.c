@@ -309,9 +309,6 @@ static ASTNode *parseAssignment(Token *head) {
 
 
 ASTNode *parse(char *buffer) {
-    Config *config = GLOBALCONTEXT->config;
-    Environment *env = GLOBALCONTEXT->env;
-
     Info(0, "\nParsing: '%s'\n", buffer);
     
     Token *raw = tokenize(buffer);
@@ -334,7 +331,7 @@ ASTNode *parse(char *buffer) {
     }
 
     Debug(0, "\nPost Function Call Tokens\n");
-    if (config->LOG_LEVEL >= DEBUG) printTokens(head);
+    Debug(1, printTokens(head));
 
     RPNList *RPN = shuntingYard(head);
     if (RPN == NULL) {

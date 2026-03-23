@@ -45,7 +45,7 @@ int bindComponent(Environment *env, ComponentType type, char *identifier, void *
 Component* searchEnvironment(Environment *env, char *identifier);
 
 
-void printEnvironment(Environment *env);
+FILE *printEnvironment(Environment *env);
 
 
 void freeEnvironment(Environment *env);

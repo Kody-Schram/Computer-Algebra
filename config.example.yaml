@@ -17,3 +17,8 @@ log:
 startup: |
   f:x->2x
   g:y->2f(y)
+
+keywords:
+  QUIT: "quit" # Input string to exit the program
+  ENV: "env" # Input string to show the environment
+  RELOAD: "reload" # Input string to reload the config
