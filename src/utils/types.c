@@ -23,21 +23,22 @@ ASTNode *dummyASTNode(NodeType type) {
 
 
 static void printASTRec(ASTNode *node, int level, FILE *stream) {
-    if (node == NULL || stream == NULL) return;
+    if (node == NULL) return;
 
     // Print indentation based on depth
     for (int i = 0; i < level; i++) {
         fprintf(stream, "  ");
-        printf("  ");
+        //printf("  ");
     }
 
     switch(node->type) {
         case NODE_NUMBER:
             fprintf(stream, "<type: NUMBER, value: %f>\n", node->value);
-            printf("<type: NUMBER, value: %f>\n", node->value);
+            //printf("<type: NUMBER, value: %f>\n", node->value);
             break;
 
         case NODE_OPERATOR:
+            //printf("operator\n");
             char id;
             switch (node->op) {
                 case OP_ADDITION:
@@ -55,45 +56,54 @@ static void printASTRec(ASTNode *node, int level, FILE *stream) {
                 case OP_EXPONTENTIATION:
                     id = '^';
                     break;
+                default:
+                    printf("How'd we get here?\n");
+                    id = '?';
             }
             fprintf(stream, "<type: OPERATOR, symbol: %c>\n", id);
-            printf("<type: OPERATOR, symbol: %c>\n", id);
+            printASTRec(node->left, level + 1, stream);
+            printASTRec(node->right, level + 1, stream);
+            //printf("<type: OPERATOR, symbol: %c>\n", id);
             break;
 
         case NODE_VARIABLE:
             fprintf(stream, "<type: VARIABLE, identifier: '%s'>\n", node->identifier);
-            printf("<type: VARIABLE, identifier: '%s'>\n", node->identifier);
+            //printf("<type: VARIABLE, identifier: '%s'>\n", node->identifier);
             break;
 
         case NODE_FUNC_CALL: 
-            //printf("printing call\n");
+            printf("printing call\n");
+            if (node->call == NULL) {
+                Debug(0, "Function call was null\n");
+                return;
+            }
+            if (node->call->identifier == NULL) {
+                Debug(0, "Call identifer was null\n");
+                return;
+            }
             fprintf(stream, "<type: FUNC_CALL, value: '%s'>\n", node->call->identifier);
-            printf("<type: FUNC_CALL, value: '%s'>\n", node->call->identifier);
+            //printf("<type: FUNC_CALL, value: '%s'>\n", node->call->identifier);
             for (int i = 0; i < level + 1; i++) fprintf(stream, "  ");
 
+            printf("printing parameters\n");
             //printf("parameters\n");
             fprintf(stream, "Parameters:\n");
-            printf("Parameters:\n");
+            // //printf("Parameters:\n");
             for (int p = 0; p < node->call->nParams; p ++) printASTRec(node->call->parameters[p], level + 1, stream);
             //printf("finished printing call\n");
             break;
 
         case NODE_ASSIGN_FUNC:
             fprintf(stream, "<type ASSIGN_FUNC '%s'>\n", (char *) node->left);
-            printf("<type ASSIGN_FUNC '%s'>\n", (char *) node->left);
-            printf("Definition:\n");
+            // printf("<type ASSIGN_FUNC '%s'>\n", (char *) node->left);
+            // printf("Definition:\n");
             fprintf(stream, "Definition:\n");
             printASTRec(node->func->definition, level + 1, stream);
-            return;
             break;
 
         default:
             fprintf(stream, "no %d\n", node->type);
     }
-
-    // Recursively print children
-    printASTRec(node->left, level + 1, stream);
-    printASTRec(node->right, level + 1, stream);
 }
 
 
@@ -115,7 +125,6 @@ void freeAST(ASTNode *ast) {
 
     switch (ast->type) {
         case NODE_ASSIGN_FUNC:
-            printf("freeing assign func\n");
             Debug(0, "Free Func Assign\n");
             free(ast->left);
             free(ast);

@@ -68,6 +68,7 @@ static int runStartup() {
 
                 char buffer[128];
                 while (fgets(buffer, 128, file)) {
+                    printf("S > %s\n", line);
                     if (!process(buffer)) return 0;
                 }
                 break;
