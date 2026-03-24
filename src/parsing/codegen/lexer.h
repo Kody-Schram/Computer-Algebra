@@ -16,6 +16,6 @@ void handleLocalVariables(Token **ptr, Environment *localEnv);
  * @param head Head of linked list
  * @return Token* 
  */
-Token *lex(Token *head);
+int lex(Token **head);
 
 #endif

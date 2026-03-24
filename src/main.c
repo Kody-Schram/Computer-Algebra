@@ -47,7 +47,10 @@ static int process(char *buffer) {
     else if (result == 1) return 1;
 
     ASTNode *head = parse(buffer);
-    if (head != NULL) execute(head);
+    Debug(0, "\nProcessing\n");
+    Debug(1, printAST(head));
+    if (head != NULL) execute(&head);
+    freeAST(head);
 }
 
 
@@ -69,7 +72,10 @@ static int runStartup() {
                 char buffer[128];
                 while (fgets(buffer, 128, file)) {
                     printf("S > %s\n", line);
-                    if (!process(buffer)) return 0;
+                    if (!process(buffer)) {
+                        fclose(file);
+                        return 0;
+                    }
                 }
                 break;
             } else {
@@ -79,7 +85,7 @@ static int runStartup() {
             line = strtok(NULL, "\n");
         }
 
-        free(GLOBALCONTEXT->config);
+        free(GLOBALCONTEXT->config->STARTUP);
         GLOBALCONTEXT->config->STARTUP = NULL;
     }
 
@@ -104,8 +110,7 @@ int main() {
     }
 
     cleanup:
-        freeConfig(GLOBALCONTEXT->config);
-        freeEnvironment(GLOBALCONTEXT->env);
+        freeContext(GLOBALCONTEXT);
 
     return 0;
 }

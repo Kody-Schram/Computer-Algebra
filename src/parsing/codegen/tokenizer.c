@@ -22,7 +22,7 @@ static const OperatorMapping DEFAULT_MAPPING[] = {
     {"->", TOKEN_ASSIGNMENT},
     {"(", TOKEN_LEFT_PAREN},
     {")", TOKEN_RIGHT_PAREN},
-    {",", TOKEN_SEPERATOR},
+    {",", TOKEN_SEPARATOR},
     {":", TOKEN_FUNC_DEF}
 };
 

@@ -30,3 +30,8 @@ int initContext() {
 
     return 1;
 }
+
+void freeContext(Context *context) {
+    freeEnvironment(context->env);
+    freeConfig(context->config);
+}

@@ -43,19 +43,18 @@ static int containsAssignment(Token *head) {
 
 
 static int parseFunctionCalls(Token **head) {
-    Config *config = GLOBALCONTEXT->config;
-
     Token *cur = *head;
     Token *funcPrev = NULL;
 
     while (cur != NULL) {
-        //if (config->LOG_LEVEL >= DEBUG) fprintf(config->LOG_STREAM, "Current: %s\n", cur->value);
-
         // Recursively parses nested function calls
         if (cur->type == TOKEN_FUNC_CALL) {
             Debug(0, "Function call: %s found\n", cur->value);
             Token *funcCall = cur;
             Token *prev = NULL;
+
+            Token *callToken = NULL;
+            FunctionCall *call = NULL;
 
             // Prepares list of parameters
             int size = DEFAULT_PARAMETERS_SIZE;
@@ -63,7 +62,7 @@ static int parseFunctionCalls(Token **head) {
             ASTNode **paramASTs = malloc(sizeof(ASTNode *) * size);
             if (paramASTs == NULL) {
                 printf("Error allocating for parameter ASTs.\n");
-                return 1;
+                goto error;
             }
 
             // Selects opening paren to be freed
@@ -72,8 +71,12 @@ static int parseFunctionCalls(Token **head) {
 
             // skips to start of parameter
             cur = cur->next->next;
-            prev = cur;
 
+            // Free opening parenthesis
+            free(opening->value);
+            free(opening);
+
+            // Loops through function call
             while (cur != NULL && cur->type != TOKEN_RIGHT_PAREN) {
                 Token *paramHead = cur;
                 int parens = 0;
@@ -84,12 +87,11 @@ static int parseFunctionCalls(Token **head) {
                     free(seperator);
                 }
 
-
-                while(!(parens == 0 && cur->type == TOKEN_SEPERATOR) && !(parens == 0 && cur->type == TOKEN_RIGHT_PAREN)) {
+                // Loops until end of parameter
+                while(!(parens == 0 && cur->type == TOKEN_SEPARATOR) && !(parens == 0 && cur->type == TOKEN_RIGHT_PAREN)) {
                     Debug(0, "Handling parameter token: %s.\n", cur->value);
                     
                     if (cur->type == TOKEN_LEFT_PAREN) parens ++;
-
                     if (cur->type == TOKEN_RIGHT_PAREN) parens --;
                     
                     prev = cur;
@@ -101,13 +103,22 @@ static int parseFunctionCalls(Token **head) {
                 seperator = cur;
                 cur = cur->next;
 
+                // Reallocates parameters list if needed
                 if (nParameters >= size - 1) {
                     size += DEFAULT_PARAMETERS_SIZE; 
                     ASTNode **temp = realloc(paramASTs, sizeof(ASTNode *) * size);
 
                     if (temp == NULL) {
                         printf("Error reallocating for more function call parameters.\n");
-                        return 1;
+
+                        freeTokens(*head);
+                        
+                        for (int i = 0; i < nParameters; i ++) {
+                            freeAST(paramASTs[i]);
+                        }
+                        free(paramASTs);
+
+                        return 0;
                     }
 
                     paramASTs = temp;
@@ -115,40 +126,71 @@ static int parseFunctionCalls(Token **head) {
                 }
 
                 Debug(0, "\nParameter Tokens\n");
-                if (config->LOG_LEVEL >= DEBUG) printTokens(paramHead);
+                Debug(1, printTokens(paramHead));
 
                 // Recursively parses calls
-                if (parseFunctionCalls(&paramHead)) return 1;
+                if (!parseFunctionCalls(&paramHead)) {
+                    freeTokens(*head);
+
+                    for (int i = 0; i < nParameters; i ++) {
+                        freeAST(paramASTs[i]);
+                    }
+                    free(paramASTs);
+                    freeTokens(cur);
+
+                    return 0;
+                }
 
                 // Generates ast for parameter
                 RPNList *rpn = shuntingYard(paramHead);
-                if (rpn == NULL) return 1;
+                if (rpn == NULL) {
+                    freeTokens(*head);
+                    for (int i = 0; i < nParameters; i ++) {
+                        freeAST(paramASTs[i]);
+                    }
+                    free(paramASTs);
+                    freeTokens(cur);
+
+                    return 0;
+                }
                 
                 ASTNode *ast = astFromRPN(rpn);
-                if (ast == NULL) return 1;
+                if (ast == NULL) {
+                    freeTokens(*head);
+                    for (int i = 0; i < nParameters; i ++) {
+                        freeAST(paramASTs[i]);
+                    }
+                    free(paramASTs);
+                    free(rpn);
+                    freeTokens(cur);
 
+                    return 0;
+                }
 
                 paramASTs[nParameters] = ast;
                 nParameters ++;
 
                 Debug(0, "Freeing parameter tokens.\n");
-
-                // Cleanup
                 freeTokens(paramHead);
             }
             
             // Creates new function call token
             Debug(0, "Creating new function call token.\n");
-            Token *callToken = malloc(sizeof(Token));
+             callToken = calloc(1, sizeof(Token));
             if (callToken == NULL) {
-                printf("Couldn't allocate memory for new function call token.\n");
-                return 1;
+                printf("Error allocating memory for new function call token.\n");
+                goto error;
             }
             callToken->type = TOKEN_FUNC_CALL;
             callToken->next = seperator->next;
 
-            FunctionCall *call = malloc(sizeof(FunctionCall));
+            call = malloc(sizeof(FunctionCall));
+            if (call == NULL) {
+                printf("Error allocating memory for function call.\n");
+                goto error;
+            }
             call->identifier = strdup(funcCall->value);
+            if (call->identifier == NULL) goto error;
             call->nParams = nParameters;
             call->parameters = paramASTs;
 
@@ -160,52 +202,75 @@ static int parseFunctionCalls(Token **head) {
             if (funcPrev != NULL) funcPrev->next = callToken;
             else *head = callToken;
 
+
             Debug(0, "Freeing old tokens.\n");
-            // Free opening parenthesis
-            free(opening->value);
-            free(opening);
 
             free(seperator->value);
             free(seperator);
-        
-            // Replaces original funciton call token
             free(funcCall->value);
             free(funcCall);
 
+
             Debug(0, "Finished with handling call to: %s.\n", call->identifier);
-            continue;
+            error:
+                freeTokens(*head);
+                
+                for (int i = 0; i < nParameters; i ++) {
+                    freeAST(paramASTs[i]);
+                }
+                free(paramASTs);
+                freeTokens(cur);
+                freeTokens(callToken);
+                free(call);
+                
+                return 0;
         }
 
-        funcPrev = cur;
-        cur = cur->next;
+        if (cur != NULL) {
+            funcPrev = cur;
+            cur = cur->next;
+        }
     }
 
     Debug(0, "Finished parsing all calls, returning.\n");
-
-    return 0;
+    return 1;
 }
 
 
 static ASTNode *parseFunctionDefinition(Token *head) {
-    Config *config = GLOBALCONTEXT->config;
-    Environment *env = GLOBALCONTEXT->env;
+    ASTNode *assignment = dummyASTNode(NODE_ASSIGN_FUNC);
+    if (assignment == NULL) goto error;
+
+    ASTNode *identifier = dummyASTNode(NODE_VARIABLE);
+    if (identifier == NULL) goto error;
+
+    assignment->func = NULL;
+    identifier->identifier = NULL;
+
+    RPNList *rpn = NULL;
+    ASTNode *ast = NULL;
+    Function *function = NULL;
 
     Debug(0, "Parsing function definition.\n");
     FunctionComponent component = IDENTIFIER;
 
-    char *id;
-
     Environment *localEnv = createEnvironment();
-    if (localEnv == NULL) return NULL;
-
-    int paramSize = DEFAULT_PARAMETERS_SIZE;
-    char **parameters = malloc(paramSize * sizeof(char*));
-    int nParams = 0;
-
+    if (localEnv == NULL) goto error;
     Token *cur = head;
     Token *asgn = NULL;
     while (cur != NULL) {
-        // Checks for switching to body
+        // Switches to PARAMETERS if ':' is found
+        if (component == IDENTIFIER && cur->type == TOKEN_FUNC_DEF) {
+            Debug(0, "Moving to function parameters.\n");
+            component = PARAMETERS;
+            cur = cur->next;
+            continue;
+        } else if (cur->type == TOKEN_FUNC_DEF) {
+            printf("Invalid token: %s within component %d.\n", cur->value, component);
+            goto error;
+        }
+
+        // Switches to BODY if '->' is found
         if (component == PARAMETERS && cur->type == TOKEN_ASSIGNMENT) {
             Debug(0, "Moving to function body.\n");
             component = BODY;
@@ -214,66 +279,65 @@ static ASTNode *parseFunctionDefinition(Token *head) {
             break;
         } else if (cur->type == TOKEN_ASSIGNMENT) {
             printf("Invalid token: %s within component %d\n", cur->value, component);
-            return NULL;
+            goto error;
         }
 
-        // Checks for switching to parameters
-        if (component == IDENTIFIER && cur->type == TOKEN_FUNC_DEF) {
-            Debug(0, "Moving to function parameters.\n");
-            component = PARAMETERS;
-            cur = cur->next;
-            continue;
-        } else if (cur->type == TOKEN_FUNC_DEF) {
+        // Error checking for parameters
+        if (component == PARAMETERS && (cur->type != TOKEN_IDENTIFIER && cur->type != TOKEN_SEPARATOR)) {
             printf("Invalid token: %s within component %d.\n", cur->value, component);
-            return NULL;
-        }
-
-        if (component == PARAMETERS && (cur->type != TOKEN_IDENTIFIER && cur->type != TOKEN_SEPERATOR)) {
-            printf("Invalid token: %s within component %d.\n", cur->value, component);
-            return NULL;
+            goto error;
         }
 
         // Assignments identifier
         if (component == IDENTIFIER) {
-            id = cur->value;
+            identifier->identifier = strdup(cur->value);
+            if (identifier->identifier == NULL) {
+                goto error;
+            }
         } else {
-            if (cur->type != TOKEN_SEPERATOR) {
+            if (cur->type != TOKEN_SEPARATOR) {
                 Debug(0, "Binding parameter '%s' to local environment.\n", cur->value);
                 ASTNode *dummy = dummyASTNode(NODE_NUMBER);
-                dummy->identifier = 0;
+                dummy->value = 0;
 
-                if (!bindComponent(localEnv, VARIABLE, cur->value, dummy)) return NULL;
+                if (!bindComponent(localEnv, VARIABLE, cur->value, dummy)) {
+                    free(dummy);
+                    goto error;
+                }
             }
         }
 
         cur = cur->next;
     }
 
-    if (containsAssignment(cur)) {
+    if (containsAssignment(asgn->next)) {
         printf("Cannot have assignment within a function definition.\n");
-        return NULL;
+        goto error;
     }
 
     // Redoes identifier tokens now that local variables for parameters are established, then redoes lexing
     handleLocalVariables(&asgn, localEnv);
-    cur = lex(asgn->next);
+    if (!lex(&asgn->next)) goto error;
 
-    if (parseFunctionCalls(&head)) {
+    if (!parseFunctionCalls(&asgn->next)) {
         printf("Error parsing function call(s)\n");
-        return NULL;
+        goto error;
     }
 
-    RPNList *rpn = shuntingYard(cur);
-    if (rpn == NULL) return NULL;
+    rpn = shuntingYard(asgn->next);
+    if (rpn == NULL) goto error;
 
     // Generate ast for body
-    ASTNode *ast = astFromRPN(rpn);
-    if (ast == NULL) return NULL;
+    ast = astFromRPN(rpn);
+    if (ast == NULL) goto error;
+
+    Debug(0, "Function body AST\n");
+    Debug(1, printAST(ast));
 
     Debug(0, "Creating function\n");
     // Add to function table
-    Function *function = malloc(sizeof(Function));
-    if (function == NULL) return NULL;
+    function = malloc(sizeof(Function));
+    if (function == NULL) goto error;
 
     function->env = localEnv;
     function->type = DEFINED;
@@ -281,14 +345,25 @@ static ASTNode *parseFunctionDefinition(Token *head) {
 
     Debug(1, printEnvironment(localEnv));
 
-    ASTNode *assignment = dummyASTNode(NODE_ASSIGN_FUNC);
     assignment->func = function;
-    assignment->left = (ASTNode *) strdup(id);
+    assignment->left = identifier;
 
     Debug(0, "Freeing tokens used for function definition.\n");
     freeTokens(head);
+    free(rpn);
 
     return assignment;
+
+    error:
+        freeTokens(head);
+        free(assignment);
+        if (identifier != NULL) free(identifier->identifier);
+        free(identifier);
+        freeEnvironment(localEnv);
+        if (rpn != NULL) free(rpn->items);
+        free(rpn);
+
+        return NULL;
 }
 
 
@@ -305,10 +380,9 @@ ASTNode *parse(char *buffer) {
     ASTNode *ast = NULL;
     
     head = tokenize(buffer);
-    if (head == NULL) goto cleanup;
+    if (head == NULL) return NULL;
 
-    head = lex(head);
-    if (head == NULL) goto cleanup;
+    if (!lex(&head)) return NULL;
 
     if (containsAssignment(head)) {
         Debug(0, "Assignment found.\n");
@@ -319,24 +393,28 @@ ASTNode *parse(char *buffer) {
 
     if (parseFunctionCalls(&head)) {
         printf("Error parsing function call(s)\n");
-        goto cleanup;
+        freeTokens(head);
+        return NULL;
     }
 
     Debug(0, "\nPost Function Call Tokens\n");
     Debug(1, printTokens(head));
 
     RPNList *RPN = shuntingYard(head);
-    if (RPN == NULL) goto cleanup;
+    if (RPN == NULL) {
+        freeTokens(head);
+        return NULL;
+    }
 
     ast = astFromRPN(RPN);
-    if (ast == NULL) goto cleanup;
-    
+    free(RPN->items);
+    free(RPN);
+
+    if (ast == NULL) {
+        free(head);
+    }
     freeTokens(head);
+
     Info(0, "\nFinished parsing\n");
     return ast;
-
-    cleanup:
-        if (head != NULL) freeTokens(head);
-        if (ast != NULL) freeAST(ast);
-        return NULL;
 }

@@ -79,9 +79,20 @@ struct Function {
 
 
 ASTNode *dummyASTNode(NodeType type);
+
+
+ASTNode *deepCopyAST(ASTNode *ast);
+
+
 FILE *printAST(ASTNode *root);
+
+
 void freeAST(ASTNode *ast);
 
 
+void deepASTFree(ASTNode *ast);
+
+
+char *astToString(ASTNode *ast);
 
 #endif

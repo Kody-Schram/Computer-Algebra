@@ -20,4 +20,7 @@ Context *createContext(Config *config, Environment *env);
 int initContext();
 
 
+void freeContext(Context *context);
+
+
 #endif

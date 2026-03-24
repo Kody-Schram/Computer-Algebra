@@ -172,6 +172,7 @@ static int checkInvalidBinop(Token *cur, Token *prev) {
  * @return int Error code
  */
 static int handleFunctionParens(Token **cur) {
+    // revisit
     if ((*cur)->type == TOKEN_FUNC_CALL) {
         Token *func = *cur;
         if (func->next != NULL) {
@@ -243,7 +244,7 @@ static int handleNegatives(Token **ptr, Token *prev) {
 
     // Outlines cases for following negative handling
     // (ie determines this is a negative and not a subtraction)
-    if (prev != NULL && prev->type != TOKEN_OPERATOR && prev->type != TOKEN_LEFT_PAREN && prev->type != TOKEN_SEPERATOR) return 0;
+    if (prev != NULL && prev->type != TOKEN_OPERATOR && prev->type != TOKEN_LEFT_PAREN && prev->type != TOKEN_SEPARATOR) return 0;
     
     //printf("Creating -1 and multiplication tokens.\n");
 
@@ -263,28 +264,8 @@ static int handleNegatives(Token **ptr, Token *prev) {
     free(cur->value);
     free(cur);
 
-    **ptr = *negative_one;
+    *ptr = negative_one;
     
-    return 1;
-}
-
-
-static int handleAssignment(Token *cur) {
-    int invalid = 0;
-
-    while (cur != NULL) {
-        if (cur->type != TOKEN_IDENTIFIER &&
-            cur->type != TOKEN_SEPERATOR &&
-            cur->type != TOKEN_FUNC_DEF) invalid = 1;
-
-        if (invalid && cur->type == TOKEN_ASSIGNMENT) {
-            printf("Invalid assignment.\n");
-            return 0;
-        }
-
-        cur = cur->next;
-    }
-
     return 1;
 }
 
@@ -365,22 +346,22 @@ void handleLocalVariables(Token **ptr, Environment *localEnv) {
     }
 }
 
-Token *lex(Token* head) {
+int lex(Token** head) {
     Config *config = GLOBALCONTEXT->config;
     Debug(0, "\nLexing Tokens\n");
 
-    Token *cur = head;
+    Token *cur = *head;
     Token *prev = NULL;
 
     int openParenthesis = 0;
 
     while (cur != NULL) {
         // printf("Current Token: <%u, %s>\n", cur->type, cur->value);
-        if (handleNegatives(&cur, prev) == -1) return NULL;
-        if (handleImplicitMul(cur, prev) == -1) return NULL;
-        if (handleExponentRewrite(&cur, prev) == -1) return NULL;
-        if (checkInvalidBinop(cur, prev) == -1) return NULL;
-        if (handleFunctionParens(&cur) == -1) return NULL;
+        if (handleNegatives(&cur, prev) == -1) return 0;
+        if (handleImplicitMul(cur, prev) == -1) return 0;
+        if (handleExponentRewrite(&cur, prev) == -1) return 0;
+        if (checkInvalidBinop(cur, prev) == -1) return 0;
+        if (handleFunctionParens(&cur) == -1) return 0;
 
         // Counts open parenthesis
         if (cur->type == TOKEN_LEFT_PAREN) {
@@ -390,7 +371,7 @@ Token *lex(Token* head) {
         if (cur->type == TOKEN_RIGHT_PAREN) {
             if (openParenthesis <= 0) {
                 printf("Mismatched parenthesis.\n");
-                return NULL;
+                return 0;
             }
 
             openParenthesis --;
@@ -402,13 +383,12 @@ Token *lex(Token* head) {
 
     if (openParenthesis > 0) {
         printf("Mismatched parenthesis.\n");
-        return NULL;
+        return 0;
     } 
 
-    if (!handleAssignment) return NULL;
     Debug(0, "Updated Tokens.\n");
-    Debug(1, printTokens(head));
+    Debug(1, printTokens(*head));
 
-    return head;
+    return 1;
 
 }

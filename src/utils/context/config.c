@@ -290,10 +290,10 @@ Config *loadConfig() {
     while (!done) {
         if (!yaml_parser_parse(&parser, &event)) {
             printf("YAML parser error %s\n", parser.problem);
-            return NULL;
+            goto cleanup;
         }
 
-        if (!consumeEvent(&parserState, &event, config)) return NULL;
+        if (!consumeEvent(&parserState, &event, config)) goto cleanup;
 
         done = (event.type == YAML_STREAM_END_EVENT);
         yaml_event_delete(&event);
@@ -306,6 +306,16 @@ Config *loadConfig() {
     }
 
     return config;
+    
+    cleanup:
+        free(config->STARTUP);
+        for (int i = 0; i < sizeof(config->mapping) / sizeof(KeywordMapping); i ++) {
+            free(config->mapping->keyword);
+        }
+        free(config);
+        yaml_parser_delete(&parser);
+
+        return NULL;
 }
 
 
@@ -367,5 +377,6 @@ void freeConfig(Config *config) {
         free(config->mapping[i].keyword);
     }
 
+    free(config->STARTUP);
     free(config);
 }

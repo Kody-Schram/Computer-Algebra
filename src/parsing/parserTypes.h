@@ -21,7 +21,7 @@ enum TokenType {
     TOKEN_RIGHT_PAREN,
     TOKEN_FUNC_CALL,
     TOKEN_FUNC_DEF,
-    TOKEN_SEPERATOR
+    TOKEN_SEPARATOR
 };
 
 struct Token {

@@ -74,7 +74,7 @@ FILE *printEnvironment(Environment *env) {
                     break;
                 }
             default:
-                fprintf(stream, "%s = %f (variable)\n", env->components[i].identifier, env->components[i].value);
+                //fprintf(stream, "%s = %f (variable)\n", env->components[i].identifier, env->components[i].value);
         }
         
     }
@@ -84,25 +84,29 @@ FILE *printEnvironment(Environment *env) {
 
 
 void freeEnvironment(Environment *env) {
-    for (int c = 0; c < env->entries; c ++) {
-        Component *cmp = &env->components[c];
-        free(cmp->identifier);
+    if (env != NULL && env->components != NULL) {
+        for (int c = 0; c < env->entries; c ++) {
+            Component *cmp = &env->components[c];
+            free(cmp->identifier);
 
-        if (env->components[c].type == FUNCTION) {
-            freeEnvironment(cmp->func->env);
-            
-            switch (cmp->func->type) {
-                case DEFINED:
-                    freeAST(cmp->func->definition);
-                    break;
-                case BUILTIN:
-                    free(cmp->func->builtin);
-                    break;
-                case TRANSFORM:
-                    free(cmp->func->transform);
-                    break;
-            }
+            if (env->components[c].type == FUNCTION) {
+                freeEnvironment(cmp->func->env);
+                
+                switch (cmp->func->type) {
+                    case DEFINED:
+                        freeAST(cmp->func->definition);
+                        break;
+                    case BUILTIN:
+                        free(cmp->func->builtin);
+                        break;
+                    case TRANSFORM:
+                        free(cmp->func->transform);
+                        break;
+                }
+            } else deepASTFree(cmp->value);
         }
-        free(cmp);
+        free(env->components);
     }
+
+    free(env);
 }

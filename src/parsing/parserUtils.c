@@ -11,7 +11,7 @@ Token *createToken(TokenType type, char *value, int l) {
     //printf("creating token '%s' %d, of type %d\n", value, l, type);
 
     // Allocates new token
-    Token *token = (Token*) malloc(sizeof(Token));
+    Token *token = (Token*) calloc(1, sizeof(Token));
     if (token == NULL) {
         printf("Error allocating space for token.");
         return NULL;
@@ -19,13 +19,7 @@ Token *createToken(TokenType type, char *value, int l) {
 
     // Populates newToken attributes
     token->type = type;
-    token->value = (char*) malloc(l+1);
-    if (token->value == NULL) {
-        printf("Error allocating space for token value.");
-        return NULL;
-    }
-    memcpy(token->value, value, l);
-    token->value[l] = '\0';
+    token->value = strndup(value, l);
     token->next = NULL;
 
     return token;
@@ -57,7 +51,7 @@ static void printToken(Token *token, FILE *stream) {
             case TOKEN_FUNC_DEF:
                 type = "FUNC_DEF";
                 break;
-            case TOKEN_SEPERATOR:
+            case TOKEN_SEPARATOR:
                 type = "SEPERATOR";
                 break;
             default:
@@ -135,7 +129,6 @@ ASTNode *createASTNode(Token *token) {
         break;
     case TOKEN_FUNC_CALL:
         node->type = NODE_FUNC_CALL;
-        node->identifier = strdup(token->value);
         node->call = token->call;
         break;
     default:
