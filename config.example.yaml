@@ -1,24 +1,55 @@
+# Enables configuring logging settings
 log:
   # Valid levels are:
   # - None/0
   # - Info/1
   # - Debug/2
+  # Default is None
   level: Debug
 
-  # Set the location for logs to appear, default is the terminal
-  location: log.txt
+  # Set the location for logs to appear
+  # Default is the terminal
+  location: "log.txt"
 
 # Enables the use of scripts to run during startup
 # Can be inline commands or define a file with the startup script
 # startup: |
 #   FILE
 #   (file path).txt
+# No default startup script is provided
 
 startup: |
   f:x->2x
   g:y->2f(y)
 
 keywords:
-  QUIT: "quit" # Input string to exit the program
-  ENV: "env" # Input string to show the environment
-  RELOAD: "reload" # Input string to reload the config
+  # Input string to exit the program
+  # Default is "quit"
+  QUIT: "quit"
+
+  # Input string to show the environment
+  # Default is "env"
+  ENV: "env"
+
+  # Input string to reload the config
+  # Default is "reload"
+  RELOAD: "reload"
+
+  # Identifier of previous output
+  # Default is "ans" 
+  OUTPUT: "ans"
+
+# Enables configuring runtime settings
+runtime:
+  # Defines how many previous outputs are saved
+  # For more outputs than 1, most recent output is under OUTPUT string defined in keywords, subsequent outputs are OUTPUT_n
+  # Default is 1
+  saveOutputs: 1
+
+  # Determines whether fractions are evaluated into floating point values
+  # Default is true
+  preserveFractions: true
+
+  # Determines whether constants are evaluated into floating point values
+  # Default is true
+  preserveConstants: true
