@@ -21,20 +21,20 @@
 - "/" Division
 - "^" or "**" Exponentiation
 - "->" Mapping
+- ":" Assignment
 
 
 This operator allows you to specify variable values and function definitions
 
 ### Declaring Variables
 Variable declaration is structured as follows:
-*(value) -> (variable name)*
+*(value): (variable name)*
 
 ### Defining New Functions
 Function declaration is structured as follows:
 
 *(function name) : (list of parameters seperated with ","s) -> (function definition)*
 
-_ex. f:x -> x+1_ 
 
 This allows the parser to differentiate an identifier and a function declaration. After declaring a function, subsequent uses of the function identifier will automatically be recognized as that function.
 
