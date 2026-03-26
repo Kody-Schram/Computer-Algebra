@@ -161,10 +161,14 @@ static void printASTRec(ASTNode *node, int level, FILE *stream) {
 
         case NODE_ASSIGN_FUNC:
             fprintf(stream, "<type ASSIGN_FUNC '%s'>\n", node->left->identifier);
-            // printf("<type ASSIGN_FUNC '%s'>\n", (char *) node->left);
-            // printf("Definition:\n");
             fprintf(stream, "Definition:\n");
             printASTRec(node->func->definition, level + 1, stream);
+            break;
+
+        case NODE_ASSIGN_VAR:
+            fprintf(stream, "<type ASSIGN_VAR '%s'>\n", node->left->identifier);
+            fprintf(stream, "Definition:\n");
+            printASTRec(node->right, level + 1, stream);
             break;
 
         default:
@@ -188,10 +192,24 @@ void freeAST(ASTNode *ast) {
     Debug(1, printAST(ast));
 
     switch (ast->type) {
+        case NODE_ASSIGN_VAR:
+            Debug(0, "Free Var Assign\n");
+            if (ast->left != NULL) free(ast->left->identifier);
+            free(ast->left);
+            freeAST(ast->right);
+            free(ast);
+            break;
+
         case NODE_ASSIGN_FUNC:
             Debug(0, "Free Func Assign\n");
+            if (ast->left != NULL) free(ast->left->identifier);
             free(ast->left);
-            break;
+            if (ast->func != NULL) {
+                freeEnvironment(ast->func->env);
+                if (ast->func->type == DEFINED) freeAST(ast->func->definition);
+            }
+            free(ast->func);
+            break; 
 
         case NODE_FUNC_CALL:
             Debug(0, "Free Func Call\n");

@@ -48,8 +48,8 @@ static void printToken(Token *token, FILE *stream) {
             case TOKEN_RIGHT_PAREN:
                 type = "RIGHT_PAREN";
                 break;
-            case TOKEN_FUNC_DEF:
-                type = "FUNC_DEF";
+            case TOKEN_MAPPING:
+                type = "MAPPING";
                 break;
             case TOKEN_SEPARATOR:
                 type = "SEPERATOR";

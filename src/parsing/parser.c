@@ -19,11 +19,13 @@ typedef enum FunctionComponent {
     BODY
 } FunctionComponent;
 
-
 static int containsFunctionDefinition(Token *head) {
     Token *cur = head;
     while (cur != NULL) {
-        if (cur->type == TOKEN_FUNC_DEF) return 1;
+        if (cur->type == TOKEN_MAPPING) {
+            Debug(0, "Assignment found.\n");
+            return 1;
+        }
         cur = cur->next;
     }
 
@@ -235,44 +237,32 @@ static ASTNode *parseFunctionDefinition(Token *head) {
     if (localEnv == NULL) goto error;
     Token *cur = head;
     Token *asgn = NULL;
-    while (cur != NULL) {
-        // Switches to PARAMETERS if ':' is found
-        if (component == IDENTIFIER && cur->type == TOKEN_FUNC_DEF) {
-            Debug(0, "Moving to function parameters.\n");
-            component = PARAMETERS;
-            cur = cur->next;
-            continue;
-        } else if (cur->type == TOKEN_FUNC_DEF) {
-            printf("Invalid token: %s within component %d.\n", cur->value, component);
-            goto error;
-        }
-
-        // Switches to BODY if '->' is found
-        if (component == PARAMETERS && cur->type == TOKEN_ASSIGNMENT) {
-            Debug(0, "Moving to function body.\n");
-            component = BODY;
-            asgn = cur;
-            cur = cur->next;
-            break;
-        } else if (cur->type == TOKEN_ASSIGNMENT) {
-            printf("Invalid token: %s within component %d\n", cur->value, component);
-            goto error;
-        }
-
-        // Error checking for parameters
-        if (component == PARAMETERS && (cur->type != TOKEN_IDENTIFIER && cur->type != TOKEN_SEPARATOR)) {
-            printf("Invalid token: %s within component %d.\n", cur->value, component);
-            goto error;
-        }
-
-        // Assignments identifier
+    while (cur != NULL && component != BODY) {
         if (component == IDENTIFIER) {
-            identifier->identifier = strdup(cur->value);
-            if (identifier->identifier == NULL) {
+            // Switches to PARAMETERS if ':' is found
+            if (cur->type == TOKEN_ASSIGNMENT) {
+                Debug(0, "Moving to function parameters.\n");
+                component = PARAMETERS;
+            } else if (cur->type != TOKEN_IDENTIFIER) {
+                printf("Invalid token: '%s' within function identifier.\n", cur->value);
                 goto error;
+            } else {
+                if (identifier->identifier != NULL) {
+                    printf("Invalid function declaration.\n");
+                }
+                identifier->identifier = strdup(cur->value);
+                if (identifier->identifier == NULL) goto error;
             }
-        } else {
-            if (cur->type != TOKEN_SEPARATOR) {
+        } else if (component == PARAMETERS) {
+            // Switches to BODY if '->' is found
+            if (cur->type == TOKEN_MAPPING) {
+                Debug(0, "Moving to function body.\n");
+                asgn = cur;
+                component = BODY;
+            } else if (cur->type != TOKEN_IDENTIFIER && cur->type != TOKEN_SEPARATOR) {
+                printf("Invalid token: '%s' within function parameters.\n", cur->value);
+                goto error;
+            } else if (cur->type == TOKEN_IDENTIFIER) {
                 Debug(0, "Binding parameter '%s' to local environment.\n", cur->value);
                 ASTNode *dummy = dummyASTNode(NODE_NUMBER);
                 dummy->value = 0;
@@ -346,9 +336,63 @@ static ASTNode *parseFunctionDefinition(Token *head) {
 
 
 static ASTNode *parseAssignment(Token *head) {
-    //ASTNode *identifier = (ASTNode*) head->value;
-    printf("%s", head->value);
-    return NULL;
+    ASTNode *assignment = dummyASTNode(NODE_ASSIGN_VAR);
+    if (assignment == NULL) return NULL;
+
+    ASTNode *identifer = dummyASTNode(NODE_VARIABLE);
+    if (identifer == NULL) goto error;
+
+    RPNList *rpn = NULL;
+    ASTNode *ast = NULL;
+
+    Token *cur = head;
+    Token *asgn = NULL;
+    while (cur != NULL && asgn == NULL) {
+        if (identifer->identifier == NULL) {
+            if (cur->type == TOKEN_IDENTIFIER) identifer->identifier = strdup(cur->value);
+            else {
+                printf("Invalid token '%s' in variable identifier.\n", cur->value);
+                goto error;
+            }
+        } else if (cur->type == TOKEN_ASSIGNMENT) {
+            asgn = cur;
+        }
+
+        cur = cur->next;
+    }
+
+    if (!parseFunctionCalls(&asgn->next)) {
+        printf("Error parsing function call(s)\n");
+        goto error;
+    }
+
+    rpn = shuntingYard(asgn->next);
+    if (rpn == NULL) goto error;
+
+    // Generate ast for body
+    ast = astFromRPN(rpn);
+    if (ast == NULL) goto error;
+
+    Debug(0, "Varaible AST.\n");
+    Debug(1, printAST(ast));
+
+    assignment->left = identifer;
+    assignment->right = ast;
+
+    freeTokens(head);
+    free(rpn->items);
+    free(rpn);
+
+    return assignment;
+
+    error:
+        free(assignment);
+        if (identifer != NULL) free(identifer->identifier);
+        free(identifer);
+        freeTokens(head);
+        if (rpn != NULL) free(rpn->items);
+        free(rpn);
+        freeAST(ast);
 }
 
 
@@ -363,7 +407,6 @@ ASTNode *parse(char *buffer) {
     if (!lex(&head)) return NULL;
 
     if (containsAssignment(head)) {
-        Debug(0, "Assignment found.\n");
         if (!containsFunctionDefinition(head)) return parseAssignment(head);
 
         return parseFunctionDefinition(head);

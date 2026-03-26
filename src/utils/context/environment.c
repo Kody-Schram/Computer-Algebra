@@ -59,7 +59,12 @@ Component* searchEnvironment(Environment *env, char *identifier) {
 
 FILE *printEnvironment(Environment *env) {
     FILE *stream = tmpfile();
-    if (stream == NULL) return NULL;
+    if (stream == NULL || env == NULL) return NULL;
+
+    if (env->entries == 0) {
+        fprintf(stream, "Environment Empty.\n");
+        return stream;
+    }
     
     for (int i = 0; i < env->entries; i ++) {
         switch(env->components[i].type) {
@@ -75,11 +80,20 @@ FILE *printEnvironment(Environment *env) {
                 }
                 
                 char *str = astToString(func->definition);
+                if (str == NULL) return stream;
                 fprintf(stream, "%s\n", str);
                 free(str);
+                
                 break;
-            default:
-                //fprintf(stream, "%s = %f (variable)\n", env->components[i].identifier, env->components[i].value);
+            case VARIABLE:
+                fprintf(stream, "%s = ", env->components[i].identifier);
+                
+                str = astToString(env->components[i].value);
+                if (str == NULL) return stream;
+                fprintf(stream, "%s\n", str);
+                free(str);
+
+                break;
         }
         
     }
@@ -90,13 +104,11 @@ FILE *printEnvironment(Environment *env) {
 
 void freeEnvironment(Environment *env) {
     if (env != NULL && env->components != NULL) {
-        Debug(0, "Freeing environment\n");
         for (int c = 0; c < env->entries; c ++) {
             Component *cmp = &env->components[c];
             free(cmp->identifier);
 
             if (env->components[c].type == FUNCTION) {
-                Debug(0, "Freeing function from environment\n");
                 freeEnvironment(cmp->func->env);
                 
                 switch (cmp->func->type) {

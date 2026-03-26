@@ -85,18 +85,24 @@ static int executeRecur(ASTNode **ptr, Environment *env) {
     Debug(0, "Executing\n");
     Debug(1, printAST(ast));
 
-    // Updates environment if an assignment is returned
     switch (ast->type) {
         case NODE_VARIABLE:
         case NODE_NUMBER:
             return 1;
 
+        // Adds new function to global environment
         case NODE_ASSIGN_FUNC:
             Info(0, "\nBinding function %s to global environment\n",ast->left->identifier);
-            executeRecur(&ast->func->definition, NULL);
+            if (!executeRecur(&ast->func->definition, NULL)) {
+                freeAST(ast);
+                return 0;
+            }
 
-            bindComponent(GLOBALCONTEXT->env, FUNCTION, ast->left->identifier, ast->func);
-            Debug(1, printEnvironment(ast->func->env));
+            if (!bindComponent(GLOBALCONTEXT->env, FUNCTION, ast->left->identifier, ast->func)) {
+                freeAST(ast);
+                return 0;
+            }
+            Debug(1, printEnvironment(GLOBALCONTEXT->env));
 
             free(ast->left->identifier);
             free(ast->left);
@@ -106,9 +112,27 @@ static int executeRecur(ASTNode **ptr, Environment *env) {
 
             return 1;
 
+        // Adds new variable to global environment
         case NODE_ASSIGN_VAR:
             Info(0, "\nBinding variable to global environment\n");
-            // implement proper freeing once this is implemented
+            if (!executeRecur(&ast->right, NULL)) {
+                freeAST(ast);
+                return 0;
+            }
+
+            if (!bindComponent(GLOBALCONTEXT->env, VARIABLE, ast->left->identifier, ast->right)) {
+                freeAST(ast);
+                return 0;
+            }
+            Debug(1, printEnvironment(GLOBALCONTEXT->env));
+            
+            free(ast->left->identifier);
+            free(ast->left);
+            free(ast);
+
+
+            *ptr = NULL;
+
             return 1;
 
         case NODE_OPERATOR:

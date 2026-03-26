@@ -19,11 +19,11 @@ static const OperatorMapping DEFAULT_MAPPING[] = {
     {"*", TOKEN_OPERATOR},
     {"/", TOKEN_OPERATOR},
     {"^", TOKEN_OPERATOR},
-    {"->", TOKEN_ASSIGNMENT},
+    {":", TOKEN_ASSIGNMENT},
     {"(", TOKEN_LEFT_PAREN},
     {")", TOKEN_RIGHT_PAREN},
     {",", TOKEN_SEPARATOR},
-    {":", TOKEN_FUNC_DEF}
+    {"->", TOKEN_MAPPING}
 };
 
 static const int N_MAPPINGS = 10;
@@ -221,18 +221,6 @@ Token *tokenize(char *buffer) {
         if (spaceI != -1) {
             if ((prevT == TOKEN_NUMBER || prevT == TOKEN_IDENTIFIER) && (type == TOKEN_IDENTIFIER || type == TOKEN_NUMBER || type == TOKEN_FUNC_CALL)) {
                 printf("Spacing lead to ambiguous intent.\n");
-
-                // Prints input and pointer to problematic char
-                printf("%s\n", buffer);
-                char *pointer = malloc((i) * sizeof(char));
-                if (pointer == NULL) {
-                    return NULL;
-                }
-
-                // Formatting error printout
-                memset(pointer, ' ', i-1);
-                pointer[i-1] = '^';
-                printf("%s\n", pointer);
 
                 return NULL;
             }
