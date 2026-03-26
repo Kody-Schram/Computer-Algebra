@@ -86,8 +86,11 @@ static int executeRecur(ASTNode **ptr, Environment *env) {
     Debug(1, printAST(ast));
 
     switch (ast->type) {
-        case NODE_VARIABLE:
         case NODE_NUMBER:
+            return 1;
+
+        case NODE_VARIABLE:
+            if (!replace(ptr, NULL)) return 0;
             return 1;
 
         // Adds new function to global environment

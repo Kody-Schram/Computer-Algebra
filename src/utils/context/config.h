@@ -16,8 +16,7 @@ enum LOG_LEVEL {
 typedef enum {
     K_QUIT,
     K_ENV,
-    K_RELOAD,
-    K_NONE
+    K_RELOAD
 } KeywordCMD;
 
 
@@ -30,8 +29,13 @@ struct KeywordMapping {
 struct Config {
     LOG_LEVEL LOG_LEVEL;
     FILE *LOG_STREAM;
+
     char *STARTUP;
-    KeywordMapping mapping[4];
+
+    KeywordMapping MAPPING[3];
+
+    int OUTPUTS;
+    char *OUTPUT_ID;
 };
 
 

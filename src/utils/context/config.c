@@ -204,7 +204,7 @@ static int consumeEvent(State *state, yaml_event_t *event, Config *config) {
                 char *value = event->data.scalar.value;
                 printf("key word %s\n", value);
 
-                KeywordCMD cmd = K_NONE;
+                KeywordCMD cmd;
                 switch (*state) {
                     case STATE_K_QUIT:
                         cmd = K_QUIT;
@@ -215,15 +215,19 @@ static int consumeEvent(State *state, yaml_event_t *event, Config *config) {
                     case STATE_K_RELOAD:
                         cmd = K_RELOAD;
                         break;
+                    case STATE_K_ANS:
+                        config->OUTPUT_ID = strdup(value);
+                        *state = STATE_KEYWORDS;
+                        return 1;
                 }
 
                 // Replaces default setting
-                for (int i = 0; i < sizeof(config->mapping) / sizeof(KeywordMapping); i ++) {
-                    if (config->mapping[i].cmd == cmd) {
+                for (int i = 0; i < sizeof(config->MAPPING) / sizeof(KeywordMapping); i ++) {
+                    if (config->MAPPING[i].cmd == cmd) {
                         printf("replacing old mapping with '%s'\n", value);
-                        free(config->mapping[i].keyword);
+                        free(config->MAPPING[i].keyword);
 
-                        config->mapping[i].keyword = strdup(value);
+                        config->MAPPING[i].keyword = strdup(value);
                         *state = STATE_KEYWORDS;
                         return 1;
                     }
@@ -245,10 +249,12 @@ static void initConfig(Config *config) {
     config->LOG_STREAM = stdout;
     config->STARTUP = NULL;
 
-    config->mapping[0] = (KeywordMapping) {.cmd=K_QUIT, .keyword=strdup("quit")};
-    config->mapping[1] = (KeywordMapping) {.cmd=K_ENV, .keyword=strdup("env")};
-    config->mapping[2] = (KeywordMapping) {.cmd=K_RELOAD, .keyword=strdup("reload")};
-    config->mapping[3] = (KeywordMapping) {.cmd=K_NONE, .keyword=strdup("ans")};
+    config->MAPPING[0] = (KeywordMapping) {.cmd=K_QUIT, .keyword=strdup("quit")};
+    config->MAPPING[1] = (KeywordMapping) {.cmd=K_ENV, .keyword=strdup("env")};
+    config->MAPPING[2] = (KeywordMapping) {.cmd=K_RELOAD, .keyword=strdup("reload")};
+
+    config->OUTPUTS = 1;
+    config->OUTPUT_ID = strdup("ans");
 }
 
 
@@ -316,8 +322,8 @@ Config *loadConfig() {
     
     cleanup:
         free(config->STARTUP);
-        for (int i = 0; i < sizeof(config->mapping) / sizeof(KeywordMapping); i ++) {
-            free(config->mapping->keyword);
+        for (int i = 0; i < sizeof(config->MAPPING) / sizeof(KeywordMapping); i ++) {
+            free(config->MAPPING->keyword);
         }
         free(config);
         yaml_parser_delete(&parser);
@@ -352,8 +358,8 @@ FILE *printConfig(Config *config) {
     fprintf(stream, "Log Level: %s\n", level);
     fprintf(stream, "Startup: \n%s\n\n", config->STARTUP);
 
-    for (int i = 0; i < sizeof(config->mapping) / sizeof(KeywordMapping); i ++) {
-        switch (config->mapping[i].cmd) {
+    for (int i = 0; i < sizeof(config->MAPPING) / sizeof(KeywordMapping); i ++) {
+        switch (config->MAPPING[i].cmd) {
             case K_QUIT:
                 fprintf(stream, "QUIT: ");
                 break;
@@ -370,8 +376,11 @@ FILE *printConfig(Config *config) {
                 fprintf(stream, "Guts....");
         }
 
-        fprintf(stream, "%s\n", config->mapping[i].keyword);
+        fprintf(stream, "'%s'\n", config->MAPPING[i].keyword);
     }
+
+    fprintf(stream, "Outputs: %d\n", config->OUTPUTS);
+    fprintf(stream, "Output: '%s'\n", config->OUTPUT_ID);
 
     return stream;
 }
@@ -381,8 +390,8 @@ void freeConfig(Config *config) {
     fclose(config->LOG_STREAM);
 
     // Frees keyword identifiers
-    for (int i = 0; i < sizeof(config->mapping) / sizeof(KeywordMapping); i ++) {
-        free(config->mapping[i].keyword);
+    for (int i = 0; i < sizeof(config->MAPPING) / sizeof(KeywordMapping); i ++) {
+        free(config->MAPPING[i].keyword);
     }
 
     free(config->STARTUP);

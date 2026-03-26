@@ -15,12 +15,11 @@
 
 
 static int handleKeywords(char *buffer) {
-    for (int i = 0; i < sizeof(GLOBALCONTEXT->config->mapping) / sizeof(KeywordMapping); i ++) {
-        KeywordMapping *mapping = GLOBALCONTEXT->config->mapping;
+    for (int i = 0; i < sizeof(GLOBALCONTEXT->config->MAPPING) / sizeof(KeywordMapping); i ++) {
 
-        if (strncmp(buffer, mapping[i].keyword, fmin(strlen(buffer), strlen(mapping[i].keyword)))) continue;
+        if (strncmp(buffer, GLOBALCONTEXT->config->MAPPING[i].keyword, fmin(strlen(buffer), strlen(GLOBALCONTEXT->config->MAPPING[i].keyword)))) continue;
         Debug(0, "Found keyword '%s'\n", buffer);
-        switch (GLOBALCONTEXT->config->mapping[i].cmd) {
+        switch (GLOBALCONTEXT->config->MAPPING[i].cmd) {
             case K_QUIT:
                 return -1;
             case K_ENV:
@@ -99,6 +98,11 @@ static int runStartup() {
     }
 
     return 1;
+}
+
+
+static int initOutputVariables() {
+    
 }
 
 
