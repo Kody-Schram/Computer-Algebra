@@ -46,15 +46,76 @@ static int process(char *buffer) {
     else if (result == 1) return 1;
 
     ASTNode *head = parse(buffer);
-    if (head != NULL) {
-        execute(&head);
+    if (head != NULL) execute(&head);
 
-        char *str = astToString(head);
-        if (str != NULL) printf("%s\n", str);
-        free(str);
+    if (head == NULL) return 1;
 
-        freeAST(head);
-    }
+    char *str = astToString(head);
+    if (str != NULL) printf("%s\n", str);
+    free(str);
+
+    if (GLOBALCONTEXT->config->OUTPUTS > 0) {
+        Debug(0, "Updating output variable(s).\n");
+        if (GLOBALCONTEXT->config->OUTPUTS == 1) {
+            Component *cmp = searchEnvironment(GLOBALCONTEXT->env, GLOBALCONTEXT->config->OUTPUT_ID);
+            if (cmp == NULL) return 0;
+
+            Debug(0, "Replacing\n");
+            freeAST(cmp->value);
+            cmp->value = head;
+            return 1;
+        } else {
+            int size = strlen(GLOBALCONTEXT->config->OUTPUT_ID) + 12;
+            char *str = malloc(size);
+            if (str == NULL) return 0;
+            snprintf(str, size, "%s_%d", GLOBALCONTEXT->config->OUTPUT_ID, GLOBALCONTEXT->config->OUTPUTS - 1);
+
+            Component *last = searchEnvironment(GLOBALCONTEXT->env, str);
+            if (last == NULL) {
+                free(str);
+                return 0;
+            }
+            free(str);
+            freeAST(last->value);
+
+            for (int i = GLOBALCONTEXT->config->OUTPUTS - 2; i >= 0; i --) {
+                size = strlen(GLOBALCONTEXT->config->OUTPUT_ID) + 12;
+                str = malloc(size);
+                if (str == NULL) return 0;
+                snprintf(str, size, "%s_%d", GLOBALCONTEXT->config->OUTPUT_ID, i);
+
+                Component *cmp = searchEnvironment(GLOBALCONTEXT->env, str);
+                if (cmp == NULL) {
+                    free(str);
+                    return 0;
+                }
+                free(str);
+
+                Debug(0, "Replacing\n");
+                last->value = cmp->value;
+                last = cmp;
+            }
+
+            size = strlen(GLOBALCONTEXT->config->OUTPUT_ID) + 12;
+            str = malloc(size);
+            if (str == NULL) return 0;
+            snprintf(str, size, "%s_0", GLOBALCONTEXT->config->OUTPUT_ID);
+
+            Component *first = searchEnvironment(GLOBALCONTEXT->env, str);
+            if (first == NULL) {
+                free(str);
+                return 0;
+            }
+            free(str);
+
+            first->value = head;
+
+            return 1;
+        }
+
+        return 1;
+    } else freeAST(head);
+
     return 1;
 }
 
@@ -86,9 +147,7 @@ static int runStartup() {
                 break;
             } else {
                 printf("S > %s\n", line);
-                if (!process(line)) {
-                    return 0;
-                }
+                if (!process(line)) return 0;
             }
             line = strtok(NULL, "\n");
         }

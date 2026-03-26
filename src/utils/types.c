@@ -188,7 +188,7 @@ FILE *printAST(ASTNode *root) {
 
 void freeAST(ASTNode *ast) {
     if (ast == NULL) return;
-    Debug(0, "\nRunning deep free of ast\n");
+    Debug(0, "\nFreeing AST\n");
     Debug(1, printAST(ast));
 
     switch (ast->type) {
