@@ -48,24 +48,6 @@ static int replace(ASTNode **ptr, Environment *env) {
                 curEnv = curEnv->parent;
             }
 
-            // Debug(0, "Checking global env.\n");
-            // cmp = searchEnvironment(GLOBALCONTEXT->env, ast->identifier);
-            // if (cmp !=  NULL && cmp->type == VARIABLE) {
-            //     Debug(0, "Replacing '%s' with recursive definition\n", ast->identifier);
-            //     free(ast->identifier);
-            //     free(ast);
-
-            //     ASTNode *temp = deepCopyAST(cmp->value);
-            //     if (temp == NULL) return 0;
-            //     if (!replace(&temp, env)) {
-            //         freeAST(temp);
-            //         return 0;
-            //     }
-            //     *ptr = temp;
-            //     Debug(1, printAST(*ptr));
-            //     return 1;
-            // }
-
             return 1;
 
         case NODE_OPERATOR:
@@ -199,18 +181,24 @@ static int executeRecur(ASTNode **ptr, Environment *env) {
                 return 0;
             }
 
-            Debug(0, "Updating local environment.\n");
-            // Updates values for parameters for this call
-            Environment *localEnv = func->env;
+            Debug(0, "Creating temp local env.\n");
+
+            Environment *localEnv = createEnvironment();
+            if (localEnv == NULL) return 0;
             if (env != NULL) localEnv->parent = env;
+
             int params = call->nParams;
             for (int p = 0; p < params; p ++) {
-                freeAST(localEnv->components[p].value);
-                if (!replace(&call->parameters[p], env)) {
-                    localEnv->parent = NULL;
+                ASTNode *copy = deepCopyAST(call->parameters[p]);
+                if (!bindComponent(localEnv, VARIABLE, func->env->components[p].identifier, copy)) {
+                    freeEnvironment(localEnv);
                     return 0;
                 }
-                localEnv->components[p].value = deepCopyAST(call->parameters[p]);
+                // Updates parameters with outer variables
+                if (!replace(&localEnv->components[p].value, env)) {
+                    freeEnvironment(localEnv);
+                    return 0;
+                }
             }
 
             switch (func->type) {
@@ -231,6 +219,7 @@ static int executeRecur(ASTNode **ptr, Environment *env) {
 
                     localEnv->parent = NULL;
                     freeAST(ast);
+                    freeEnvironment(localEnv);
                     *ptr = exec;
                     return 1;
             }
