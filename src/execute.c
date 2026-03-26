@@ -10,13 +10,13 @@
 
 static const int DEFAULT_ENV_STACK = 3;
 
-static void replace(ASTNode **ptr, Environment *env);
+static int replace(ASTNode **ptr, Environment *env);
 static int executeRecur(ASTNode **ptr, Environment *env);
 
 
-static void replace(ASTNode **ptr, Environment *env) {
+static int replace(ASTNode **ptr, Environment *env) {
     ASTNode *ast = *ptr;
-    if (ast == NULL) return;
+    if (ast == NULL) return 1;
 
     switch (ast->type) {
         case NODE_VARIABLE:
@@ -30,14 +30,20 @@ static void replace(ASTNode **ptr, Environment *env) {
 
                 if (cmp !=  NULL && cmp->type == VARIABLE) {
                     Debug(0, "Replacing '%s' with recursive definition\n", ast->identifier);
+                    free(ast->identifier);
                     free(ast);
 
                     ASTNode *temp = deepCopyAST(cmp->value);
-                    replace(&temp, env);
-                    *ptr = temp;
+                    if (temp == NULL) return 0;
+                    if (!replace(&temp, env)) {
+                        freeAST(temp);
+                        return 0;
+                    }
 
-                    Debug(1, printAST(ast));
-                    break;
+                    *ptr = temp;
+                    Debug(1, printAST(*ptr));
+
+                    return 1;
                 }
                 curEnv = curEnv->parent;
             }
@@ -46,28 +52,35 @@ static void replace(ASTNode **ptr, Environment *env) {
             cmp = searchEnvironment(GLOBALCONTEXT->env, ast->identifier);
             if (cmp !=  NULL && cmp->type == VARIABLE) {
                 Debug(0, "Replacing '%s' with recursive definition\n", ast->identifier);
+                free(ast->identifier);
                 free(ast);
 
                 ASTNode *temp = deepCopyAST(cmp->value);
-                replace(&temp, env);
+                if (temp == NULL) return 0;
+                if (!replace(&temp, env)) {
+                    freeAST(temp);
+                    return 0;
+                }
                 *ptr = temp;
-
                 Debug(1, printAST(*ptr));
+                return 1;
             }
-            break;
+
+            return 1;
 
         case NODE_OPERATOR:
-            replace(&ast->left, env);
-            replace(&ast->right, env);
-            break;
+            if (!replace(&ast->left, env)) return 0;
+            if (!replace(&ast->right, env)) return 0;
+            return 1;
     }
+
+    return 1;
 }
 
 
 static int executeRecur(ASTNode **ptr, Environment *env) {
     ASTNode *ast = *ptr;
     if (ast == NULL) return 0;
-    printf("ast null? %d\n", ast == NULL);
 
     Debug(0, "Executing\n");
     Debug(1, printAST(ast));
@@ -76,11 +89,10 @@ static int executeRecur(ASTNode **ptr, Environment *env) {
     switch (ast->type) {
         case NODE_VARIABLE:
         case NODE_NUMBER:
-            break;
+            return 1;
 
         case NODE_ASSIGN_FUNC:
             Info(0, "\nBinding function %s to global environment\n",ast->left->identifier);
-            Debug(0, "defintion is null? %d\n", ast->func->definition == NULL);
             executeRecur(&ast->func->definition, NULL);
 
             bindComponent(GLOBALCONTEXT->env, FUNCTION, ast->left->identifier, ast->func);
@@ -89,16 +101,17 @@ static int executeRecur(ASTNode **ptr, Environment *env) {
             free(ast->left->identifier);
             free(ast->left);
             free(ast);
+
             *ptr = NULL;
-            break;
+
+            return 1;
 
         case NODE_ASSIGN_VAR:
             Info(0, "\nBinding variable to global environment\n");
-            freeAST(ast);
-            break;
+            // implement proper freeing once this is implemented
+            return 1;
 
         case NODE_OPERATOR:
-            printf("operator\n");
             Debug(0, "Executing operator children\n");
             int left = executeRecur(&ast->left, env);
             int right = executeRecur(&ast->right, env);
@@ -137,7 +150,7 @@ static int executeRecur(ASTNode **ptr, Environment *env) {
 
 
             }
-            break;
+            return 1;
 
         case NODE_FUNC_CALL:
             FunctionCall *call = ast->call;
@@ -166,7 +179,7 @@ static int executeRecur(ASTNode **ptr, Environment *env) {
             int params = call->nParams;
             for (int p = 0; p < params; p ++) {
                 freeAST(localEnv->components[p].value);
-                localEnv->components[p].value = call->parameters[p];
+                localEnv->components[p].value = deepCopyAST(call->parameters[p]);
             }
 
             switch (func->type) {
@@ -176,7 +189,8 @@ static int executeRecur(ASTNode **ptr, Environment *env) {
                     Debug(0, "Replacing variables with new definitions\n");
 
                     ASTNode *exec = deepCopyAST(func->definition);
-                    replace(&exec, localEnv);
+                    if (exec == NULL) return 0;
+                    if (!replace(&exec, localEnv)) return 0;
 
                     Debug(0, "Executing function body\n");
                     if (exec == NULL || !executeRecur(&exec, localEnv)) {
@@ -185,11 +199,12 @@ static int executeRecur(ASTNode **ptr, Environment *env) {
                     }
 
                     localEnv->parent = NULL;
+                    freeAST(ast);
                     *ptr = exec;
-                    break;
+                    return 1;
             }
             
-            break;
+            return 1;
     }
 
     return 1;
@@ -200,8 +215,5 @@ int execute(ASTNode **ast) {
     if (!executeRecur(ast, NULL)) return 0;
 
     Info(0, "Finished Executing\n");
-    char *str = astToString(*ast);
-    if (*ast != NULL) printf("%s\n", str);
-    free(str);
     return 1;
 }

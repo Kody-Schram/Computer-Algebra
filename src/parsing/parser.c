@@ -76,6 +76,8 @@ static int parseFunctionCalls(Token **head) {
             free(opening->value);
             free(opening);
 
+            funcCall->next = NULL;
+
             // Loops through function call
             while (cur != NULL && cur->type != TOKEN_RIGHT_PAREN) {
                 Token *paramHead = cur;
@@ -108,18 +110,7 @@ static int parseFunctionCalls(Token **head) {
                     size += DEFAULT_PARAMETERS_SIZE; 
                     ASTNode **temp = realloc(paramASTs, sizeof(ASTNode *) * size);
 
-                    if (temp == NULL) {
-                        printf("Error reallocating for more function call parameters.\n");
-
-                        freeTokens(*head);
-                        
-                        for (int i = 0; i < nParameters; i ++) {
-                            freeAST(paramASTs[i]);
-                        }
-                        free(paramASTs);
-
-                        return 0;
-                    }
+                    if (temp == NULL) goto parameter_error;
 
                     paramASTs = temp;
 
@@ -129,49 +120,30 @@ static int parseFunctionCalls(Token **head) {
                 Debug(1, printTokens(paramHead));
 
                 // Recursively parses calls
-                if (!parseFunctionCalls(&paramHead)) {
-                    freeTokens(*head);
-
-                    for (int i = 0; i < nParameters; i ++) {
-                        freeAST(paramASTs[i]);
-                    }
-                    free(paramASTs);
-                    freeTokens(cur);
-
-                    return 0;
-                }
+                if (!parseFunctionCalls(&paramHead)) goto parameter_error;
 
                 // Generates ast for parameter
                 RPNList *rpn = shuntingYard(paramHead);
-                if (rpn == NULL) {
-                    freeTokens(*head);
-                    for (int i = 0; i < nParameters; i ++) {
-                        freeAST(paramASTs[i]);
-                    }
-                    free(paramASTs);
-                    freeTokens(cur);
-
-                    return 0;
-                }
+                if (rpn == NULL) goto parameter_error;
                 
                 ASTNode *ast = astFromRPN(rpn);
-                if (ast == NULL) {
-                    freeTokens(*head);
-                    for (int i = 0; i < nParameters; i ++) {
-                        freeAST(paramASTs[i]);
-                    }
-                    free(paramASTs);
-                    free(rpn);
-                    freeTokens(cur);
-
-                    return 0;
-                }
+                free(rpn->items);
+                free(rpn);
+                if (ast == NULL) goto parameter_error;
 
                 paramASTs[nParameters] = ast;
                 nParameters ++;
 
                 Debug(0, "Freeing parameter tokens.\n");
                 freeTokens(paramHead);
+
+                continue;
+
+                parameter_error:
+                    if (rpn != NULL) free(rpn->items);
+                    free(rpn);
+                    
+                    goto error;
             }
             
             // Creates new function call token
@@ -212,6 +184,8 @@ static int parseFunctionCalls(Token **head) {
 
 
             Debug(0, "Finished with handling call to: %s.\n", call->identifier);
+            continue; 
+
             error:
                 freeTokens(*head);
                 
@@ -221,10 +195,13 @@ static int parseFunctionCalls(Token **head) {
                 free(paramASTs);
                 freeTokens(cur);
                 freeTokens(callToken);
+                if (call != NULL) free(call->identifier);
                 free(call);
                 
                 return 0;
         }
+
+        Debug(0, "Finished parsing a function call.\n");
 
         if (cur != NULL) {
             funcPrev = cur;
@@ -350,6 +327,7 @@ static ASTNode *parseFunctionDefinition(Token *head) {
 
     Debug(0, "Freeing tokens used for function definition.\n");
     freeTokens(head);
+    free(rpn->items);
     free(rpn);
 
     return assignment;
@@ -391,7 +369,7 @@ ASTNode *parse(char *buffer) {
         return parseFunctionDefinition(head);
     }
 
-    if (parseFunctionCalls(&head)) {
+    if (!parseFunctionCalls(&head)) {
         printf("Error parsing function call(s)\n");
         freeTokens(head);
         return NULL;

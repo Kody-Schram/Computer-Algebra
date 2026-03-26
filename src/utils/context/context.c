@@ -24,7 +24,11 @@ int initContext() {
     Config *config = loadConfig();
     Environment *env = createEnvironment();
 
-    if (config == NULL || env == NULL) return 0;
+    if (config == NULL || env == NULL) {
+        freeConfig(config);
+        freeEnvironment(env);
+        return 0;
+    }
     GLOBALCONTEXT = createContext(config, env);
     if (GLOBALCONTEXT == NULL) return 0;
 
@@ -32,6 +36,9 @@ int initContext() {
 }
 
 void freeContext(Context *context) {
-    freeEnvironment(context->env);
-    freeConfig(context->config);
+    if (context != NULL) {
+        freeEnvironment(context->env);
+        freeConfig(context->config);
+    }
+    free(context);
 }

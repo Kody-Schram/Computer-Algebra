@@ -23,6 +23,7 @@ typedef enum {
     STATE_K_QUIT,
     STATE_K_ENV,
     STATE_K_RELOAD,
+    STATE_K_ANS,
 
     STATE_STOP
 } State;
@@ -181,6 +182,7 @@ static int consumeEvent(State *state, yaml_event_t *event, Config *config) {
                 if (!strcmp(value, "QUIT")) *state = STATE_K_QUIT;
                 else if (!strcmp(value, "ENV")) *state = STATE_K_ENV;
                 else if (!strcmp(value, "RELOAD")) *state = STATE_K_RELOAD;
+                else if (!strcmp(value, "ANS")) *state = STATE_K_ANS;
                 else {
                     printf("Unexpected keyword: %s.\n", value);
                     return 0;
@@ -192,6 +194,7 @@ static int consumeEvent(State *state, yaml_event_t *event, Config *config) {
     case STATE_K_QUIT:
     case STATE_K_ENV:
     case STATE_K_RELOAD:
+    case STATE_K_ANS:
         switch (event->type) {
             case YAML_MAPPING_END_EVENT:
                 *state = STATE_KEYWORDS;
@@ -201,7 +204,7 @@ static int consumeEvent(State *state, yaml_event_t *event, Config *config) {
                 char *value = event->data.scalar.value;
                 printf("key word %s\n", value);
 
-                KeywordCMD cmd;
+                KeywordCMD cmd = K_NONE;
                 switch (*state) {
                     case STATE_K_QUIT:
                         cmd = K_QUIT;
@@ -245,6 +248,7 @@ static void initConfig(Config *config) {
     config->mapping[0] = (KeywordMapping) {.cmd=K_QUIT, .keyword=strdup("quit")};
     config->mapping[1] = (KeywordMapping) {.cmd=K_ENV, .keyword=strdup("env")};
     config->mapping[2] = (KeywordMapping) {.cmd=K_RELOAD, .keyword=strdup("reload")};
+    config->mapping[3] = (KeywordMapping) {.cmd=K_NONE, .keyword=strdup("ans")};
 }
 
 
@@ -268,7 +272,9 @@ Config *loadConfig() {
     FILE *cfile = fopen(paths[path], "rb");
     while (cfile == NULL) {
         path ++;
-        if (path < npaths) cfile = fopen(paths[path], "rb");
+        if (path < npaths) {
+            cfile = fopen(paths[path], "rb");
+        }
         else break;
     }
 
@@ -305,6 +311,7 @@ Config *loadConfig() {
         setvbuf(config->LOG_STREAM, NULL, _IONBF, 0); 
     }
 
+    fclose(cfile);
     return config;
     
     cleanup:
@@ -314,6 +321,7 @@ Config *loadConfig() {
         }
         free(config);
         yaml_parser_delete(&parser);
+        fclose(cfile);
 
         return NULL;
 }

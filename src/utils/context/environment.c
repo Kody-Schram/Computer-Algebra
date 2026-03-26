@@ -46,6 +46,7 @@ int bindComponent(Environment *env, ComponentType type, char *identifier, void *
 
 
 Component* searchEnvironment(Environment *env, char *identifier) {
+    if (identifier == NULL) return NULL;
     for (int i = 0; i < env->entries; i ++) {
         if (!strcmp(env->components[i].identifier, identifier)) {
             return &env->components[i];
@@ -70,9 +71,13 @@ FILE *printEnvironment(Environment *env) {
                     for (int j = 0; j < func->env->entries - 1; j ++) {
                         fprintf(stream, "%s,", func->env->components[j].identifier);
                     }
-                    fprintf(stream, "%s)\n", func->env->components[func->env->entries-1].identifier);
-                    break;
+                    fprintf(stream, "%s) = ", func->env->components[func->env->entries-1].identifier);
                 }
+                
+                char *str = astToString(func->definition);
+                fprintf(stream, "%s\n", str);
+                free(str);
+                break;
             default:
                 //fprintf(stream, "%s = %f (variable)\n", env->components[i].identifier, env->components[i].value);
         }
@@ -85,11 +90,13 @@ FILE *printEnvironment(Environment *env) {
 
 void freeEnvironment(Environment *env) {
     if (env != NULL && env->components != NULL) {
+        Debug(0, "Freeing environment\n");
         for (int c = 0; c < env->entries; c ++) {
             Component *cmp = &env->components[c];
             free(cmp->identifier);
 
             if (env->components[c].type == FUNCTION) {
+                Debug(0, "Freeing function from environment\n");
                 freeEnvironment(cmp->func->env);
                 
                 switch (cmp->func->type) {
@@ -103,7 +110,8 @@ void freeEnvironment(Environment *env) {
                         free(cmp->func->transform);
                         break;
                 }
-            } else deepASTFree(cmp->value);
+                free(cmp->func);
+            } else freeAST(cmp->value);
         }
         free(env->components);
     }

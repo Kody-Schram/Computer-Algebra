@@ -33,8 +33,7 @@ static ASTNode *deepCopyASTRecur(ASTNode *ast) {
             new->identifier = strdup(ast->identifier);
             if (new->identifier == NULL) {
                 printf("Error copying identifier.\n");
-                free(new);
-                return NULL;
+                goto error;
             }
             break;
 
@@ -47,24 +46,19 @@ static ASTNode *deepCopyASTRecur(ASTNode *ast) {
             new->left = deepCopyASTRecur(ast->left);
             new->right = deepCopyASTRecur(ast->right);
             
-            if (new->left == NULL || new->right == NULL) {
-                free(new);
-                return NULL;
-            }
+            if (new->left == NULL || new->right == NULL) goto error;
             break;
 
         case NODE_FUNC_CALL:
             FunctionCall *call = malloc(sizeof(FunctionCall));
             if (call == NULL) {
                 printf("Error allocating memory for function call.\n");
-                free(new);
-                return NULL;
+                goto error;
             }
             call->identifier = strdup(ast->call->identifier);
             if (call->identifier == NULL) {
                 printf("Error copying call identifier.\n");
-                free(new);
-                return NULL;
+                goto error;
             }
             call->nParams = ast->call->nParams;
             
@@ -73,8 +67,7 @@ static ASTNode *deepCopyASTRecur(ASTNode *ast) {
                 free(call->identifier);
                 free(call);
                 
-                free(new);
-                return NULL;
+                goto error;
             }
 
             for (int i = 0; i < call->nParams; i ++) {
@@ -84,8 +77,7 @@ static ASTNode *deepCopyASTRecur(ASTNode *ast) {
                     free(call->parameters);
                     free(call);
 
-                    free(new);
-                    return NULL;
+                    goto error;
                 }
             }
 
@@ -95,6 +87,10 @@ static ASTNode *deepCopyASTRecur(ASTNode *ast) {
     }
 
     return new;
+
+    error:
+        free(new);
+        return NULL;
 }
 
 
@@ -148,7 +144,6 @@ static void printASTRec(ASTNode *node, int level, FILE *stream) {
             break;
 
         case NODE_FUNC_CALL: 
-            printf("printing call\n");
             if (node->call == NULL) {
                 Debug(0, "Function call was null\n");
                 return;
@@ -157,11 +152,9 @@ static void printASTRec(ASTNode *node, int level, FILE *stream) {
                 Debug(0, "Call identifer was null\n");
                 return;
             }
-            printf("actual node\n");
             fprintf(stream, "<type: FUNC_CALL, value: '%s'>\n", node->call->identifier);
             for (int i = 0; i < level + 1; i++) fprintf(stream, "  ");
 
-            printf("parameters\n");
             fprintf(stream, "Parameters:\n");
             for (int p = 0; p < node->call->nParams; p ++) printASTRec(node->call->parameters[p], level + 1, stream);
             break;
@@ -190,61 +183,49 @@ FILE *printAST(ASTNode *root) {
 
 
 void freeAST(ASTNode *ast) {
-    Debug(0, "Freeing ast\n");
-
-    if (ast != NULL) {
-        switch (ast->type) {
-            case NODE_ASSIGN_FUNC:
-                Debug(0, "Free Func Assign\n");
-                free(ast->left);
-                break;
-
-            case NODE_FUNC_CALL:
-                Debug(0, "Free Func Call '%s'\n");
-                free(ast->call->identifier);
-                free(ast->call->parameters);
-                free(ast->call);
-                break;
-
-            case NODE_VARIABLE:
-                Debug(0, "Free Variable '%s'\n", ast->identifier);
-                free(ast->identifier);
-                break;
-
-            case NODE_NUMBER:
-                Debug(0, "Free number %f\n", ast->value);
-                break;
-
-            case NODE_OPERATOR:
-                Debug(0, "Free operator\n");
-                freeAST(ast->left);
-                freeAST(ast->right);
-                break;
-
-            default:
-                Debug(0, "Free Default\n");
-                break;
-        }
-    }
-    
-    free(ast);
-}
-
-
-void deepASTFree(ASTNode *ast) {
     if (ast == NULL) return;
+    Debug(0, "\nRunning deep free of ast\n");
+    Debug(1, printAST(ast));
 
-    if (ast->type == NODE_FUNC_CALL) {
-        if (ast->call != NULL) {
-            free(ast->call->identifier);
-            for (int i = 0; i < ast->call->nParams; i ++) {
-                deepASTFree(ast->call->parameters[i]);
+    switch (ast->type) {
+        case NODE_ASSIGN_FUNC:
+            Debug(0, "Free Func Assign\n");
+            free(ast->left);
+            break;
+
+        case NODE_FUNC_CALL:
+            Debug(0, "Free Func Call\n");
+            if (ast->call != NULL) {
+                free(ast->call->identifier);
+                for (int i = 0; i < ast->call->nParams; i ++) {
+                    freeAST(ast->call->parameters[i]);
+                }
+                free(ast->call->parameters);
             }
-        }
-        free(ast->call);
+            free(ast->call);
+            break;
+
+        case NODE_VARIABLE:
+            Debug(0, "Free Variable '%s'\n", ast->identifier);
+            free(ast->identifier);
+            break;
+
+        case NODE_NUMBER:
+            Debug(0, "Free number %f\n", ast->value);
+            break;
+
+        case NODE_OPERATOR:
+            Debug(0, "Free operator\n");
+            freeAST(ast->left);
+            freeAST(ast->right);
+            break;
+
+        default:
+            Debug(0, "Free Default\n");
+            break;
     }
 
-    freeAST(ast);
+    free(ast);
 }
 
 
@@ -253,8 +234,14 @@ static void astToStringRecur(ASTNode *ast, FILE *stream) {
 
     switch (ast->type) {
         case NODE_OPERATOR:
-            fprintf(stream, "(");
-            astToStringRecur(ast->left, stream);
+            if (ast->left != NULL && ast->left->type == NODE_OPERATOR) {
+                fprintf(stream, "(");
+                astToStringRecur(ast->left, stream);
+                fprintf(stream, ")");
+            } else {
+                astToStringRecur(ast->left, stream);
+            }
+
             switch (ast->op) {
                 case OP_ADDITION:
                     fprintf(stream, " + ");
@@ -274,8 +261,14 @@ static void astToStringRecur(ASTNode *ast, FILE *stream) {
                 default:
                     printf("How'd we get here?\n");
             }
-            astToStringRecur(ast->right, stream);
-            fprintf(stream, ")");
+
+            if (ast->right != NULL && ast->right->type == NODE_OPERATOR) {
+                fprintf(stream, "(");
+                astToStringRecur(ast->right, stream);
+                fprintf(stream, ")");
+            } else {
+                astToStringRecur(ast->right, stream);
+            }
             break;
         case NODE_NUMBER:
             fprintf(stream, "%f", ast->value);

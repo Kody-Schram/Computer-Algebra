@@ -93,8 +93,12 @@ RPNList *shuntingYard(Token *head) {
     Stack operators = {
         size / 2,
         0,
-        malloc(size /2 * sizeof(Token *))
+        malloc(size / 2 * sizeof(Token *))
     };
+
+    RPNList *list = NULL;
+
+    if (output.items == NULL || operators.items == NULL) goto error;
 
     while (cur != NULL) {
         // Add numbers, identifiers, and function calls to output stack
@@ -108,11 +112,7 @@ RPNList *shuntingYard(Token *head) {
             operators.entries ++;
 
             if (operators.entries == operators.size) {
-                if (reallocStack(&operators)) {
-                    free(output.items);
-                    free(operators.items);
-                    return NULL;
-                }
+                if (reallocStack(&operators)) goto error;
             }
 
         } else if (cur->type == TOKEN_OPERATOR) {
@@ -136,11 +136,7 @@ RPNList *shuntingYard(Token *head) {
             operators.entries ++;
 
             if (operators.entries == operators.size) {
-                if (reallocStack(&operators)) {
-                    free(output.items);
-                    free(operators.items);
-                    return NULL;
-                }
+                if (reallocStack(&operators)) goto error;
             }
 
         } else if (cur->type == TOKEN_RIGHT_PAREN) {
@@ -168,13 +164,8 @@ RPNList *shuntingYard(Token *head) {
     
     free(operators.items);
 
-    RPNList *list = malloc(sizeof(RPNList));
-    if (list == NULL) {
-        printf("Error allocating for RPN List.\n");
-        free(output.items);
-        free(operators.items);
-        return NULL;
-    }
+    list = malloc(sizeof(RPNList));
+    if (list == NULL) goto error;
 
     list->length = output.entries;
     list->items = (Token**) output.items;
@@ -182,6 +173,13 @@ RPNList *shuntingYard(Token *head) {
     Debug(1, printRPN(list));
 
     return list;
+
+    error:
+        free(output.items);
+        free(operators.items);
+        free(list);
+
+        return NULL;
 }
 
 

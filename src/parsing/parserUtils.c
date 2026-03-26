@@ -87,7 +87,7 @@ FILE *printTokens(Token *head) {
 
 
 ASTNode *createASTNode(Token *token) {
-    ASTNode *node = malloc(sizeof(ASTNode));
+    ASTNode *node = calloc(1, sizeof(ASTNode));
     if (node == NULL) {
         printf("Error allocating for new node.\n");
         return NULL;
@@ -130,13 +130,12 @@ ASTNode *createASTNode(Token *token) {
     case TOKEN_FUNC_CALL:
         node->type = NODE_FUNC_CALL;
         node->call = token->call;
+        token->call = NULL;
         break;
     default:
         return NULL;
     }
 
-    node->left = NULL;
-    node->right = NULL;
     return node;
 }
 
@@ -163,7 +162,7 @@ void freeTokens(Token *head) {
     Token* current = head;
     while (current != NULL) {
         Token *next = current->next;
-        free(current->value);
+        if (current->type != TOKEN_FUNC_CALL) free(current->value);
         free(current);
         current = next;
     }

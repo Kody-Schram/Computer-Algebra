@@ -15,11 +15,11 @@
 
 
 static int handleKeywords(char *buffer) {
-    
     for (int i = 0; i < sizeof(GLOBALCONTEXT->config->mapping) / sizeof(KeywordMapping); i ++) {
         KeywordMapping *mapping = GLOBALCONTEXT->config->mapping;
 
         if (strncmp(buffer, mapping[i].keyword, fmin(strlen(buffer), strlen(mapping[i].keyword)))) continue;
+        Debug(0, "Found keyword '%s'\n", buffer);
         switch (GLOBALCONTEXT->config->mapping[i].cmd) {
             case K_QUIT:
                 return -1;
@@ -34,7 +34,6 @@ static int handleKeywords(char *buffer) {
                 printf("Reloaded config.\n");
                 return 1;
         }
-        return 0;
     }
 
     return 0;
@@ -42,15 +41,22 @@ static int handleKeywords(char *buffer) {
 
 
 static int process(char *buffer) {
+    Debug(0, "\nProcessing '%s'\n", buffer);
     int result = handleKeywords(buffer);
     if (result == -1) return 0;
     else if (result == 1) return 1;
 
     ASTNode *head = parse(buffer);
-    Debug(0, "\nProcessing\n");
-    Debug(1, printAST(head));
-    if (head != NULL) execute(&head);
-    freeAST(head);
+    if (head != NULL) {
+        execute(&head);
+
+        char *str = astToString(head);
+        if (str != NULL) printf("%s\n", str);
+        free(str);
+
+        freeAST(head);
+    }
+    return 1;
 }
 
 
@@ -77,10 +83,13 @@ static int runStartup() {
                         return 0;
                     }
                 }
+                fclose(file);
                 break;
             } else {
                 printf("S > %s\n", line);
-                if (!process(line)) return 0;
+                if (!process(line)) {
+                    return 0;
+                }
             }
             line = strtok(NULL, "\n");
         }
@@ -94,11 +103,17 @@ static int runStartup() {
 
 
 int main() {
-    if (!initContext()) return 0;
+    if (!initContext())  {
+        freeContext(GLOBALCONTEXT);
+        return 1;
+    }
     Debug(0, "Context created.\n");
     Info(1, printConfig(GLOBALCONTEXT->config));
 
-    if (!runStartup()) goto cleanup;
+    if (!runStartup()) {
+        freeContext(GLOBALCONTEXT);
+        return 0;
+    }
 
     int line = 1;
     // System loop
@@ -106,11 +121,14 @@ int main() {
         char *input = terminalEntry(line);
         line ++;
 
-        if (!process(input)) goto cleanup;
-    }
+        if (!process(input)) {
+            free(input);
+            freeContext(GLOBALCONTEXT);
+            return 0;
+        }
 
-    cleanup:
-        freeContext(GLOBALCONTEXT);
+        free(input);
+    }
 
     return 0;
 }
