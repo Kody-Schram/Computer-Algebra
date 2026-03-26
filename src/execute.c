@@ -33,14 +33,14 @@ static int replace(ASTNode **ptr, Environment *env) {
                     free(ast->identifier);
                     free(ast);
 
-                    ASTNode *temp = deepCopyAST(cmp->value);
-                    if (temp == NULL) return 0;
-                    if (!replace(&temp, env)) {
-                        freeAST(temp);
-                        return 0;
-                    }
+                    // ASTNode *temp = deepCopyAST(cmp->value);
+                    // if (temp == NULL) return 0;
+                    // if (!replace(&temp, env)) {
+                    //     freeAST(temp);
+                    //     return 0;
+                    // }
 
-                    *ptr = temp;
+                    *ptr = deepCopyAST(cmp->value);
                     Debug(1, printAST(*ptr));
 
                     return 1;
@@ -212,7 +212,7 @@ static int executeRecur(ASTNode **ptr, Environment *env) {
                     if (!replace(&exec, localEnv)) return 0;
 
                     Debug(0, "Executing function body\n");
-                    if (exec == NULL || !executeRecur(&exec, localEnv)) {
+                    if (exec == NULL || !executeRecur(&exec, localEnv->parent)) {
                         localEnv->parent = NULL;
                         return 0;
                     }
