@@ -1,10 +1,11 @@
 #ifndef LEXER_H
 #define LEXER_H
 
-#include "../parserTypes.h"
+#include "utils/types.h"
+#include "parsing/parserTypes.h"
 
 
-void handleLocalVariables(Token **ptr, Environment *env, int nParams, char **parameters);
+void handleLocalVariables(Token **ptr, Environment *localEnv);
 
 /**
  * @brief Refines tokens list for AST generation
@@ -15,6 +16,6 @@ void handleLocalVariables(Token **ptr, Environment *env, int nParams, char **par
  * @param head Head of linked list
  * @return Token* 
  */
-Token *lex(Token *head);
+int lex(Token **head);
 
 #endif

@@ -55,9 +55,12 @@ dkms.conf
 .vscode
 
 # Builds
-main
+build/
+config.yaml
+log.txt
 test
 
+*.sh
 *.ps1
 project_dump.txt
 

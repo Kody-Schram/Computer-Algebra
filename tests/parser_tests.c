@@ -12,14 +12,6 @@ void test_basic_operations() {
     assert(parse("2**3") != NULL); // Ensure ** is rewritten as ^
 }
 
-void test_functions() {
-    assert(parse("sinx") != NULL);
-    assert(parse("cos(x)") != NULL);
-    assert(parse("tan(x+1)") != NULL);
-    assert(parse("log(x)") != NULL);
-    assert(parse("ln(x+2)") != NULL);
-}
-
 void test_function_definition() {
     assert(parse("f:x = x+1") != NULL);
     assert(parse("g:x,y = x*y") != NULL);

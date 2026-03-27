@@ -5,6 +5,9 @@
 #include <math.h>
 
 #include "lexer.h"
+#include "utils/context/context.h"
+#include "utils/log.h"
+#include "parsing/parserUtils.h"
 
 /**
  * @brief Adds * where it is implied through standard math notation
@@ -124,18 +127,18 @@ static int checkInvalidBinop(Token *cur, Token *prev) {
     if (prev != NULL && next != NULL) {
         if (cur->type == TOKEN_OPERATOR) {
             if (prev->type == TOKEN_OPERATOR || next->type == TOKEN_OPERATOR) {
-                printf("Invalid operation \"%s%s%s\".\n", prev->value, cur->value, next->value);
+                printf("Invalid operation \"%s %s %s\".\n", prev->value, cur->value, next->value);
                 //printf("Two operators, \"%s%s\" are not allowed next to each other.\n", cur->value, next->value);
                 return -1;
 
             } 
             else if (prev->type != TOKEN_NUMBER && prev->type != TOKEN_IDENTIFIER && prev->type != TOKEN_RIGHT_PAREN) {
-                printf("Invalid operation \"%s%s%s\".\n", prev->value, cur->value, next->value);
+                printf("Invalid operation \"%s %s %s\".\n", prev->value, cur->value, next->value);
                 //printf("Operator must be preceeded by a number, an identifer, or a right parenthesis.\n");
                 return -1;
             }
             else if (next->type != TOKEN_NUMBER && next->type != TOKEN_IDENTIFIER && next->type != TOKEN_LEFT_PAREN && next->type != TOKEN_FUNC_CALL) {
-                printf("Invalid operation \"%s%s%s\".\n", prev->value, cur->value, next->value);
+                printf("Invalid operation \"%s %s %s\".\n", prev->value, cur->value, next->value);
                 //printf("Operator must be followed by a number, an identifier, a left parenthesis, or a function call.\n");
                 return -1;
             }
@@ -169,6 +172,7 @@ static int checkInvalidBinop(Token *cur, Token *prev) {
  * @return int Error code
  */
 static int handleFunctionParens(Token **cur) {
+    // revisit
     if ((*cur)->type == TOKEN_FUNC_CALL) {
         Token *func = *cur;
         if (func->next != NULL) {
@@ -236,12 +240,11 @@ static int handleNegatives(Token **ptr, Token *prev) {
     Token *cur = *ptr;
 
     // Determines if a '-' is in place
-    if (cur->type != TOKEN_OPERATOR) return 0;
-    if (strcmp(cur->value, "-")) return 0;
+    if (cur->type != TOKEN_OPERATOR && strcmp(cur->value, "-")) return 0;
 
     // Outlines cases for following negative handling
     // (ie determines this is a negative and not a subtraction)
-    if (prev != NULL && prev->type != TOKEN_OPERATOR && prev->type != TOKEN_LEFT_PAREN) return 0;
+    if (prev != NULL && prev->type != TOKEN_OPERATOR && prev->type != TOKEN_LEFT_PAREN && prev->type != TOKEN_SEPARATOR) return 0;
     
     //printf("Creating -1 and multiplication tokens.\n");
 
@@ -261,58 +264,49 @@ static int handleNegatives(Token **ptr, Token *prev) {
     free(cur->value);
     free(cur);
 
-    **ptr = *negative_one;
-
+    *ptr = negative_one;
+    
     return 1;
 }
 
 
-static int handleAssignment(Token *cur) {
-    int invalid = 0;
+void handleLocalVariables(Token **ptr, Environment *localEnv) {
+    Config *config = GLOBALCONTEXT->config;
+    Environment *env = GLOBALCONTEXT->env;
 
-    while (cur != NULL) {
-        if (cur->type != TOKEN_IDENTIFIER &&
-            cur->type != TOKEN_SEPERATOR &&
-            cur->type != TOKEN_FUNC_DEF) invalid = 1;
-
-        if (invalid && cur->type == TOKEN_ASSIGNMENT) {
-            printf("Invalid assignment.\n");
-            return 0;
-        }
-
-        cur = cur->next;
-    }
-
-    return 1;
-}
-
-
-void handleLocalVariables(Token **ptr, Environment *env, int nParams, char **parameters) {
-    printf("Handling local variables\n");
+    Debug(0, "\nRechecking identifiers against local variables.\n");
     Token *cur = *ptr;
     Token *prev = NULL;
     
     while (cur != NULL) {
         if (cur->type == TOKEN_IDENTIFIER) {
+            Debug(0, "Rechecking identifier %s\n", cur->value);
             int max = 0;
+            Component *cmp;
             char *id = cur->value;
+
             for (int i = 0; id[i] != '\0'; i ++) {
-                //printf("%c\n", id[i]);
                 // Adds the end of string char to only select a part of the buffer
                 char temp = id[i + 1];
                 id[i + 1] = '\0';
-                Component *cmp = searchEnvironment(env, id);
+                Component *local = searchEnvironment(localEnv, id);
+                Component *global = searchEnvironment(env, id);
                 id[i + 1] = temp;
-                
-                // Any subsequent iteration will always yeild a larger char size if found, so no check required
-                if (cmp != NULL) {
-                    max = strlen(cmp->identifier);
+
+                // If local var is found take it 
+                if (local != NULL) {
+                    Debug(0, "Local identifier %s found\n", local->identifier);
+                    max = strlen(local->identifier);
+                    cmp = local;
                     continue;
                 }
-
-                for (int p = 0; p < nParams; p ++) {
-                    int m = fmin(strlen(id), strlen(parameters[p]));
-                    if (!strncmp(id, parameters[p], m) && m > max) max = m;
+                
+                // Any subsequent iteration will always yeild a larger char size if found, so no check required
+                if (global != NULL) {
+                    Debug(0, "Global identifier %s found\n", global->identifier);
+                    max = strlen(global->identifier);
+                    cmp = global;
+                    continue;
                 }
 
             }
@@ -320,18 +314,24 @@ void handleLocalVariables(Token **ptr, Environment *env, int nParams, char **par
             // If smaller identifer than the current one is found, partition it into two new identifier tokens
             if (max != strlen(cur->value) && max != 0) {
                 // create new tokens to split
-                Token *left = createToken(TOKEN_IDENTIFIER, id, max);
+                Token *left = createToken(TOKEN_IDENTIFIER, cmp->identifier, max);
+                Debug(0, "string: '%s', right: '%s', right len: %d\n", cur->value, id + max, strlen(id) - max);
                 Token *right = createToken(TOKEN_IDENTIFIER, id + max, strlen(id) - max);
 
                 left->next = right;
                 right->next = cur->next;
 
                 if (prev != NULL) prev->next = left;
+                else *ptr = left;
 
                 free(cur->value);
                 free(cur);
 
+                prev = right;
                 cur = left;
+
+                Debug(0, "Intermediate token list\n");
+                Debug(1, printTokens(*ptr));
             }
 
         }
@@ -339,21 +339,29 @@ void handleLocalVariables(Token **ptr, Environment *env, int nParams, char **par
         prev = cur;
         cur = cur->next;
     }
+
+    if (config->LOG_LEVEL >= DEBUG) {
+        fprintf(config->LOG_STREAM, "Updated for local vars\n");
+        Debug(1, printTokens(*ptr));
+    }
 }
 
-Token *lex(Token* head) {
-    Token *cur = head;
+int lex(Token** head) {
+    Config *config = GLOBALCONTEXT->config;
+    Debug(0, "\nLexing Tokens\n");
+
+    Token *cur = *head;
     Token *prev = NULL;
 
     int openParenthesis = 0;
 
     while (cur != NULL) {
         // printf("Current Token: <%u, %s>\n", cur->type, cur->value);
-        if (handleNegatives(&cur, prev) == -1) return NULL;
-        if (handleImplicitMul(cur, prev) == -1) return NULL;
-        if (handleExponentRewrite(&cur, prev) == -1) return NULL;
-        if (checkInvalidBinop(cur, prev) == -1) return NULL;
-        if (handleFunctionParens(&cur) == -1) return NULL;
+        if (handleNegatives(&cur, prev) == -1) return 0;
+        if (handleImplicitMul(cur, prev) == -1) return 0;
+        if (handleExponentRewrite(&cur, prev) == -1) return 0;
+        if (checkInvalidBinop(cur, prev) == -1) return 0;
+        if (handleFunctionParens(&cur) == -1) return 0;
 
         // Counts open parenthesis
         if (cur->type == TOKEN_LEFT_PAREN) {
@@ -363,7 +371,7 @@ Token *lex(Token* head) {
         if (cur->type == TOKEN_RIGHT_PAREN) {
             if (openParenthesis <= 0) {
                 printf("Mismatched parenthesis.\n");
-                return NULL;
+                return 0;
             }
 
             openParenthesis --;
@@ -375,11 +383,12 @@ Token *lex(Token* head) {
 
     if (openParenthesis > 0) {
         printf("Mismatched parenthesis.\n");
-        return NULL;
+        return 0;
     } 
 
-    if (!handleAssignment) return NULL;
+    Debug(0, "Updated Tokens.\n");
+    Debug(1, printTokens(*head));
 
-    return head;
+    return 1;
 
 }

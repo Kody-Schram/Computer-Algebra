@@ -3,11 +3,20 @@
 #include <string.h>
 
 #include "ast.h"
+#include "utils/context/context.h"
+#include "utils/log.h"
+#include "parsing/parserUtils.h"
 
 static int DEFAULT_NODE_STACK_SIZE = 10;
 
+/**
+ * @brief Gets the precedent of operator
+ * 
+ * @param operator 
+ * @return int Precedent of operator
+ */
 static int getPrecedent(char *operator) {
-    int precedent;
+    int precedent = 0;
 
     // set precedent for '->'
     switch(operator[0]) {
@@ -27,6 +36,13 @@ static int getPrecedent(char *operator) {
     return precedent;
 }
 
+
+/**
+ * @brief Gets the length of linked list
+ * 
+ * @param head Start of Token linked list
+ * @return int Length of linked list
+ */
 static int getLinkedListLength(Token *head) {
     Token *cur = head;
 
@@ -39,7 +55,15 @@ static int getLinkedListLength(Token *head) {
     return i;
 }
 
-
+/**
+ * @brief Reallocates a stack
+ * 
+ * @retval 0: Successfully reallocated
+ * @retval 1: Error reallocating
+ * 
+ * @param stack 
+ * @return int Result
+ */
 static int reallocStack(Stack *stack) {
     stack->size *= 2;
     void **temp = realloc(stack->items, stack->size * sizeof(void*));
@@ -52,7 +76,11 @@ static int reallocStack(Stack *stack) {
     return 0;
 }
 
+
 RPNList *shuntingYard(Token *head) {
+    Config *config = GLOBALCONTEXT->config;
+
+    Debug(0, "\nCreating RPN List.\n");
     Token *cur = head;
 
     int size = getLinkedListLength(head);
@@ -65,8 +93,12 @@ RPNList *shuntingYard(Token *head) {
     Stack operators = {
         size / 2,
         0,
-        malloc(size /2 * sizeof(Token *))
+        malloc(size / 2 * sizeof(Token *))
     };
+
+    RPNList *list = NULL;
+
+    if (output.items == NULL || operators.items == NULL) goto error;
 
     while (cur != NULL) {
         // Add numbers, identifiers, and function calls to output stack
@@ -80,11 +112,15 @@ RPNList *shuntingYard(Token *head) {
             operators.entries ++;
 
             if (operators.entries == operators.size) {
-                if (reallocStack(&operators)) return NULL;
+                if (reallocStack(&operators)) goto error;
             }
 
         } else if (cur->type == TOKEN_OPERATOR) {
             if (operators.entries > 0) {
+                /*
+                Handle right associativity with ^
+                */
+
                 // Pops all operators on stack with greater or equal precedent
                 while ((operators.entries > 0) 
                         && (((Token *) operators.items[operators.entries - 1])->value[0] != '(') 
@@ -100,7 +136,7 @@ RPNList *shuntingYard(Token *head) {
             operators.entries ++;
 
             if (operators.entries == operators.size) {
-                if (reallocStack(&operators)) return NULL;
+                if (reallocStack(&operators)) goto error;
             }
 
         } else if (cur->type == TOKEN_RIGHT_PAREN) {
@@ -128,48 +164,48 @@ RPNList *shuntingYard(Token *head) {
     
     free(operators.items);
 
-    RPNList *list = malloc(sizeof(RPNList));
-    if (list == NULL) {
-        printf("Error allocating for RPN List.\n");
-    }
+    list = malloc(sizeof(RPNList));
+    if (list == NULL) goto error;
 
     list->length = output.entries;
     list->items = (Token**) output.items;
 
+    Debug(1, printRPN(list));
+
     return list;
+
+    error:
+        free(output.items);
+        free(operators.items);
+        free(list);
+
+        return NULL;
 }
 
-void printRPN(RPNList list) {
-    printf("RPN: ");
-
-    for (int i = 0; i < list.length; i ++) {
-        if (list.items[i]->type != TOKEN_FUNC_CALL) printf("%s ", list.items[i]->value);
-        else printf("%s ", list.items[i]->call->identifier);
-    }
-
-    printf("\n");
-}
 
 ASTNode *astFromRPN(RPNList *rpn) {
+    Debug(0, "\nGenerating AST.\n");
+
     Stack nodes = {
         DEFAULT_NODE_STACK_SIZE,
         0,
         malloc(DEFAULT_NODE_STACK_SIZE * sizeof(ASTNode *))
     };
+    if (nodes.items == NULL) return NULL;
+    ASTNode *ast = NULL;
 
     for (int i = 0; i < rpn->length; i ++) {
-        //printf("creating new node. %s\n", rpn->items[i]->value);
         ASTNode *node = createASTNode(rpn->items[i]);
-        if (node == NULL) return NULL;
+        if (node == NULL) goto cleanup;
 
         if (node->type == NODE_OPERATOR) {
-            //printf("adding children\n");
 
+            if (nodes.entries < 2) {
+                printf("Unexpected error in AST generation.\n");
+                goto cleanup;
+            }
             node->right = nodes.items[nodes.entries - 1];
             node->left = nodes.items[nodes.entries - 2];
-
-            // printf("left %s", node->left->identifier);
-            // printf("right %s", node->right->value);
 
             nodes.entries -= 2;
         }
@@ -177,10 +213,22 @@ ASTNode *astFromRPN(RPNList *rpn) {
         nodes.items[nodes.entries] = node;
         nodes.entries ++;
         if (nodes.entries >= nodes.size) {
-            if (reallocStack(&nodes)) return NULL;
+            if (reallocStack(&nodes)) goto cleanup;
         }
     }
 
-    //printf("length %d\n", nodes.entries);
-    return nodes.items[0];
+    ast = nodes.items[0];
+    free(nodes.items);
+
+    if (ast != NULL) {
+        Debug(0,"\nAST\n");
+        Debug(1, printAST(ast));
+    }
+
+    return ast;
+
+    cleanup:
+        freeAST(ast);
+        free(nodes.items);
+        return NULL;
 }

@@ -1,21 +1,9 @@
 #ifndef PARSER_H
 #define PARSER_H
 
+#include "utils/types.h"
 #include "parserTypes.h"
 
-/**
- * @brief Frees the memory of old tokens
- * 
- * @param head Head of linked list
- */
-void freeTokens(Token *head);
-
-/**
- * @brief Prints linked token list in a easy to read format
- * 
- * @param head Head of linked list
- */
-void printTokens(Token *head);
 
 int parseFunction(Token *head);
 
@@ -28,6 +16,6 @@ int parseFunction(Token *head);
  * @param buffer Mathematical string
  * @return Token* 
  */
-ASTNode *parse(char *buffer, Environment *env, int debugging);
+ASTNode *parse(char *buffer);
 
 #endif
