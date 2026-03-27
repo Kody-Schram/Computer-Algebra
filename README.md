@@ -1,16 +1,16 @@
 # COMPUTER ALGEBRA
----
 
-*A system which reads mathematical expressions and equations and performs operations on them. These operations include calculus operations and algebraic manipulation.*
+*A system which parses and executes mathematical expressions and equations.*
+
+
 
 ## Configuration
----
 
 Configuration through YAML files is supported. [Example config](config.example.yaml) provides documentation on the different configurations.
 
 
+
 ## Compiler
----
 
 *Steps*
 1. Tokenization (Splits input into parts)
@@ -20,8 +20,8 @@ Configuration through YAML files is supported. [Example config](config.example.y
 5. Executing
 
 
+
 ## Syntax
----
 
 ### Operators
 
@@ -49,8 +49,8 @@ This allows the parser to differentiate an identifier and a function declaration
 *All functions and variables declared by the user get added to the global environment of the system and can then be used again on subsequent lines*
 
 
+
 ## Plugins
----
 
 ### Core
 - Algebra
