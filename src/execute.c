@@ -18,9 +18,10 @@ static int replace(ASTNode **ptr, Environment *env) {
     ASTNode *ast = *ptr;
     if (ast == NULL || env == NULL) return 1;
 
-    Debug(0, "Running replace on: \n");
+    Debug(0, "\nRunning replace on: \n");
     Debug(1, printAST(ast));
     Debug(1, printEnvironment(env));
+    Debug(0, "\n");
 
     switch (ast->type) {
         case NODE_VARIABLE:
@@ -52,8 +53,11 @@ static int replace(ASTNode **ptr, Environment *env) {
             if (!replace(&ast->right, env)) return 0;
             return 1;
 
-        // case NODE_FUNC_CALL:
-        //     for (int i = 0; i < ast->call)
+        case NODE_FUNC_CALL:
+            for (int i = 0; i < ast->call->nParams; i ++) {
+                if (!replace(&ast->call->parameters[i], env)) return 0;
+            }
+            return 1;
     }
 
     return 1;
