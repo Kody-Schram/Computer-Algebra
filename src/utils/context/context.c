@@ -29,8 +29,18 @@ int initContext() {
         freeEnvironment(env);
         return 0;
     }
+    
     GLOBALCONTEXT = createContext(config, env);
-    if (GLOBALCONTEXT == NULL) return 0;
+    if (GLOBALCONTEXT == NULL) {
+        freeConfig(config);
+        freeEnvironment(env);
+        return 0;
+    }
+
+    if (!initOutputVariables(env)) {
+        freeContext(GLOBALCONTEXT);
+        return 0;
+    }
 
     return 1;
 }

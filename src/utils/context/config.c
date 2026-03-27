@@ -298,6 +298,7 @@ static int consumeEvent(State *state, yaml_event_t *event, Config *config) {
                 int outputs = atoi(value);
                 config->OUTPUTS = outputs;
                 *state = STATE_RUNTIME;
+                return 1;
 
                 break;
         }

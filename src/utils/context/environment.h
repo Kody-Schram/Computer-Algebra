@@ -50,4 +50,7 @@ FILE *printEnvironment(Environment *env);
 
 void freeEnvironment(Environment *env);
 
+
+int initOutputVariables(Environment *env);
+
 #endif

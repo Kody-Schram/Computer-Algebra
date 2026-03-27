@@ -2,9 +2,8 @@ cmake_minimum_required(VERSION 3.10)
 
 project(algebra C)
 
-if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+if(CMAKE_BUILD_TYPE STREQUAL "debug")
     add_compile_options(-g -O0)
-    message(STATUS "Debug build enabled: adding -g -O0")
 endif()
 
 find_package(PkgConfig REQUIRED)

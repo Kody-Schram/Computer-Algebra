@@ -33,7 +33,7 @@ static int handleKeywords(char *buffer) {
                 freeConfig(GLOBALCONTEXT->config);
                 GLOBALCONTEXT->config = loadConfig();
                 if (GLOBALCONTEXT->config == NULL) return -1;
-                
+
                 Info(1, printConfig(GLOBALCONTEXT->config));
                 return 1;
         }
@@ -164,46 +164,6 @@ static int runStartup() {
 }
 
 
-static int initOutputVariables() {
-    int outputs = GLOBALCONTEXT->config->OUTPUTS;
-    if (outputs > 0) {
-        if (outputs == 1) {
-            ASTNode *temp = dummyASTNode(NODE_NUMBER);
-            if (temp == NULL) return 0;
-            temp->value = 0;
-
-            if (!bindComponent(GLOBALCONTEXT->env, VARIABLE, GLOBALCONTEXT->config->OUTPUT_ID, temp)) {
-                free(temp);
-                return 0;
-            }
-            return 1;
-        }
-
-        for (int i = 0; i < outputs; i ++) {
-            int size = strlen(GLOBALCONTEXT->config->OUTPUT_ID) + 12;
-
-            char *str = malloc(size);
-            if (str == NULL) return 0;
-            snprintf(str, size, "%s_%d", GLOBALCONTEXT->config->OUTPUT_ID, i);
-
-            ASTNode *temp = dummyASTNode(NODE_NUMBER);
-            if (temp == NULL) return 0;
-            temp->value = 0;
-
-            if (!bindComponent(GLOBALCONTEXT->env, VARIABLE, str, temp)) {
-                free(temp);
-                free(str);
-                return 0;
-            }
-
-            free(str);
-        }
-    }
-
-    return 1;
-}
-
-
 int main() {
     if (!initContext())  {
         freeContext(GLOBALCONTEXT);
@@ -211,11 +171,6 @@ int main() {
     }
     Debug(0, "Context created.\n");
     Info(1, printConfig(GLOBALCONTEXT->config));
-
-    if (!initOutputVariables()) {
-        freeContext(GLOBALCONTEXT);
-        return 1;
-    }
 
     if (!runStartup()) {
         freeContext(GLOBALCONTEXT);

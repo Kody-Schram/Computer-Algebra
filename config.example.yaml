@@ -44,6 +44,7 @@ runtime:
   # Defines how many previous outputs are saved
   # For one output, the most recent output is stored under the variable OUTPUT as defined in keywords
   # For more outputs than 1, most recent output is stored under variable OUTPUT_0, and subsequent outputs are OUTPUT_(n-1)
+  # Updating this value requires a restart to the system, hot reloading the config will cause an error
   # Default is 1
   saveOutputs: 1
 
