@@ -18,6 +18,10 @@ static int replace(ASTNode **ptr, Environment *env) {
     ASTNode *ast = *ptr;
     if (ast == NULL || env == NULL) return 1;
 
+    Debug(0, "Running replace on: \n");
+    Debug(1, printAST(ast));
+    Debug(1, printEnvironment(env));
+
     switch (ast->type) {
         case NODE_VARIABLE:
             Component *cmp = NULL;
@@ -33,13 +37,6 @@ static int replace(ASTNode **ptr, Environment *env) {
                     free(ast->identifier);
                     free(ast);
 
-                    // ASTNode *temp = deepCopyAST(cmp->value);
-                    // if (temp == NULL) return 0;
-                    // if (!replace(&temp, env)) {
-                    //     freeAST(temp);
-                    //     return 0;
-                    // }
-
                     *ptr = deepCopyAST(cmp->value);
                     Debug(1, printAST(*ptr));
 
@@ -54,6 +51,9 @@ static int replace(ASTNode **ptr, Environment *env) {
             if (!replace(&ast->left, env)) return 0;
             if (!replace(&ast->right, env)) return 0;
             return 1;
+
+        // case NODE_FUNC_CALL:
+        //     for (int i = 0; i < ast->call)
     }
 
     return 1;
@@ -79,15 +79,13 @@ static int executeRecur(ASTNode **ptr, Environment *env) {
         case NODE_ASSIGN_FUNC:
             Info(0, "\nBinding function %s to global environment\n",ast->left->identifier);
             if (!executeRecur(&ast->func->definition, NULL)) {
-                freeAST(ast);
                 return 0;
             }
 
-            if (!bindComponent(GLOBALCONTEXT->env, FUNCTION, ast->left->identifier, ast->func)) {
-                freeAST(ast);
+            if (!bindComponent(env, FUNCTION, ast->left->identifier, ast->func)) {
                 return 0;
             }
-            Debug(1, printEnvironment(GLOBALCONTEXT->env));
+            Debug(1, printEnvironment(env));
 
             free(ast->left->identifier);
             free(ast->left);
@@ -105,11 +103,11 @@ static int executeRecur(ASTNode **ptr, Environment *env) {
                 return 0;
             }
 
-            if (!bindComponent(GLOBALCONTEXT->env, VARIABLE, ast->left->identifier, ast->right)) {
+            if (!bindComponent(env, VARIABLE, ast->left->identifier, ast->right)) {
                 freeAST(ast);
                 return 0;
             }
-            Debug(1, printEnvironment(GLOBALCONTEXT->env));
+            Debug(1, printEnvironment(env));
             
             free(ast->left->identifier);
             free(ast->left);
@@ -178,8 +176,24 @@ static int executeRecur(ASTNode **ptr, Environment *env) {
 
             if (call->nParams != func->env->entries) {
                 printf("Expected %d parameters for '%s', %d parameters were passed.\n", func->env->entries, call->identifier, call->nParams);
+                // freeAST(ast);
+                // *ptr = NULL;
                 return 0;
             }
+
+            // Goes up call stack, if global environment is found, then this is evaluating rather than like binding a new variable/function
+            int evaluating = 0;
+            Environment *tempEnv = env;
+            while (tempEnv != NULL) {
+                if (tempEnv == GLOBALCONTEXT->env) { 
+                    evaluating = 1;
+                    Debug(0, "Global env found, evaluating.\n");
+                    break;
+                }
+                tempEnv = tempEnv->parent;
+            }
+
+            if (!evaluating && GLOBALCONTEXT->config->LAZY_CALLS) return 1;
 
             Debug(0, "Creating temp local env.\n");
 
@@ -189,11 +203,13 @@ static int executeRecur(ASTNode **ptr, Environment *env) {
 
             int params = call->nParams;
             for (int p = 0; p < params; p ++) {
+                // Updates local environment variable definitions with copies of passed in parameters
                 ASTNode *copy = deepCopyAST(call->parameters[p]);
                 if (!bindComponent(localEnv, VARIABLE, func->env->components[p].identifier, copy)) {
                     freeEnvironment(localEnv);
                     return 0;
                 }
+
                 // Updates parameters with outer variables
                 if (!replace(&localEnv->components[p].value, env)) {
                     freeEnvironment(localEnv);

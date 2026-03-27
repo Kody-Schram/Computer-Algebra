@@ -50,7 +50,12 @@ static int process(char *buffer) {
     else if (result == 1) return 1;
 
     ASTNode *head = parse(buffer);
-    if (head != NULL) execute(&head);
+    if (head != NULL) {
+        if (!execute(&head)) {
+            freeAST(head);
+            return 1;
+        }
+    }
 
     if (head == NULL) return 1;
 

@@ -294,6 +294,14 @@ static void astToStringRecur(ASTNode *ast, FILE *stream) {
         case NODE_VARIABLE:
             fprintf(stream, "%s", ast->identifier);
             break;
+        case NODE_FUNC_CALL:
+            fprintf(stream, "%s(", ast->call->identifier);
+            for (int i = 0; i < ast->call->nParams - 1; i ++) {
+                astToStringRecur(ast->call->parameters[i], stream);
+                fprintf(stream, ", ");
+            }
+            astToStringRecur(ast->call->parameters[ast->call->nParams - 1], stream);
+            fprintf(stream, ")");
     }
 }
 

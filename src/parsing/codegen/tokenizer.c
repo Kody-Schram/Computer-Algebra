@@ -91,14 +91,11 @@ static ComponentReturn getComponentLength(char *c) {
     // Gets length of valid identifer characters
     int length = 0;
     while (isalnum(c[length]) || c[length] == '_') length ++;
-    Debug(0, "\nLength of identifer valid characters is %d.\n", length);
 
     // Check left
-    Debug(0, "Checking left identifiers.\n");
     for (int i = 0; i < length; i ++) {
         char temp = c[length - i];
         c[length - i] = '\0';
-        Debug(0, "Checking '%s'\n", c);
         Component *cmp = searchEnvironment(env, c);
         c[length - i] = temp;
 
@@ -112,11 +109,9 @@ static ComponentReturn getComponentLength(char *c) {
     if (result.len == length) return result;
     
     // Check right
-    Debug(0, "Checking right identifiers.\n");
     for (int i = 1; i < length; i ++) {
         char temp = c[length];
         c[length] = '\0';
-        Debug(0, "Checking '%s'\n", c + i);
         Component *cmp = searchEnvironment(env, c + i);
         c[length] = temp;
 
@@ -128,12 +123,10 @@ static ComponentReturn getComponentLength(char *c) {
 
     if (result.len == length) return result;
 
-    Debug(0, "Checking middle identifiers.\n");
     for (int i = 1; i < length; i ++) {
         for (int end = i + 1; end < length; end ++) {
             char temp = c[end];
             c[end] = '\0';
-            Debug(0, "Checking '%s'\n", c + i);
             Component *cmp = searchEnvironment(env, c + i);
             c[end] = temp;
 
