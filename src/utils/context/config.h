@@ -36,6 +36,8 @@ struct Config {
 
     int OUTPUTS;
     char *OUTPUT_ID;
+
+    int PRESERVE_FRACS;
 };
 
 

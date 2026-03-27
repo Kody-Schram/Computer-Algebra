@@ -42,7 +42,8 @@ keywords:
 # Enables configuring runtime settings
 runtime:
   # Defines how many previous outputs are saved
-  # For more outputs than 1, most recent output is under OUTPUT string defined in keywords, subsequent outputs are OUTPUT_n
+  # For one output, the most recent output is stored under the variable OUTPUT as defined in keywords
+  # For more outputs than 1, most recent output is stored under variable OUTPUT_0, and subsequent outputs are OUTPUT_(n-1)
   # Default is 1
   saveOutputs: 1
 

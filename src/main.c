@@ -28,9 +28,13 @@ static int handleKeywords(char *buffer) {
                 printf("\n");
                 return 1;
             case K_RELOAD:
+                printf("Reloading config.\n");
+
                 freeConfig(GLOBALCONTEXT->config);
                 GLOBALCONTEXT->config = loadConfig();
-                printf("Reloaded config.\n");
+                if (GLOBALCONTEXT->config == NULL) return -1;
+                
+                Info(1, printConfig(GLOBALCONTEXT->config));
                 return 1;
         }
     }

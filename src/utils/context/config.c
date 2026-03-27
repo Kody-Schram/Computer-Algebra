@@ -25,8 +25,37 @@ typedef enum {
     STATE_K_RELOAD,
     STATE_K_ANS,
 
+    STATE_RUNTIME,
+    STATE_OUTPUTS,
+    STATE_PRESERVE_FRACS,
+
     STATE_STOP
 } State;
+
+
+// Maps strings to correct boolean value
+static int get_boolean(const char *string) {
+    char *true[] = {"y", "Y", "yes", "Yes", "YES", "true", "True", "TRUE", "on", "On", "ON", NULL};
+    char *false[] = {"n", "N", "no", "No", "NO", "false", "False", "FALSE", "off", "Off", "OFF", NULL};
+    char **p;
+
+    // Checks valid values for true
+    for (p = true; *p; p++) {
+        if (strcmp(string, *p) == 0) {
+            return 1;
+        }
+    }
+
+    // Checks valid values for false
+    for (p = false; *p; p++) {
+        if (strcmp(string, *p) == 0) {
+            return 0;
+        }
+    }
+
+    printf("Invalid input '%s' for boolean value.\n", string);
+    return -1;
+}
 
 
 static int consumeEvent(State *state, yaml_event_t *event, Config *config) {
@@ -80,6 +109,7 @@ static int consumeEvent(State *state, yaml_event_t *event, Config *config) {
                 if (!strcmp(value, "log")) *state = STATE_LOG;
                 else if (!strcmp(value, "startup")) *state = STATE_STARTUP;
                 else if (!strcmp(value, "keywords")) *state = STATE_KEYWORDS;
+                else if (!strcmp(value, "runtime")) *state = STATE_RUNTIME;
                 else {
                     printf("Unexpected scalar: %s\n", value);
                     return 0;
@@ -179,6 +209,7 @@ static int consumeEvent(State *state, yaml_event_t *event, Config *config) {
 
             case YAML_SCALAR_EVENT:
                 char *value = event->data.scalar.value;
+
                 if (!strcmp(value, "QUIT")) *state = STATE_K_QUIT;
                 else if (!strcmp(value, "ENV")) *state = STATE_K_ENV;
                 else if (!strcmp(value, "RELOAD")) *state = STATE_K_RELOAD;
@@ -235,6 +266,60 @@ static int consumeEvent(State *state, yaml_event_t *event, Config *config) {
             break;
         }
         break;
+
+    case STATE_RUNTIME:
+        switch (event->type) {
+            case YAML_MAPPING_END_EVENT:
+                *state = STATE_SECTION;
+                break;
+
+            case YAML_SCALAR_EVENT:
+                char *value = event->data.scalar.value;
+
+                if (!strcmp(value, "saveOutputs")) *state = STATE_OUTPUTS;
+                else if (!strcmp(value, "preserveFractions")) *state = STATE_PRESERVE_FRACS;
+                else {
+                    printf("Unexpected keyword: %s.\n", value);
+                    return 0;
+                }
+
+                break;
+        }
+        break;
+
+    case STATE_OUTPUTS:
+        switch (event->type) {
+            case YAML_MAPPING_END_EVENT:
+                *state = STATE_RUNTIME;
+                break;
+
+            case YAML_SCALAR_EVENT:
+                char *value = event->data.scalar.value;
+                int outputs = atoi(value);
+                config->OUTPUTS = outputs;
+                *state = STATE_RUNTIME;
+
+                break;
+        }
+        break;
+
+    case STATE_PRESERVE_FRACS:
+        switch (event->type) {
+            case YAML_MAPPING_END_EVENT:
+                *state = STATE_RUNTIME;
+                break;
+
+            case YAML_SCALAR_EVENT:
+                char *value = event->data.scalar.value;
+                int b = get_boolean(value);
+
+                if (b == -1) return 0;
+                config->PRESERVE_FRACS = b;
+                *state = STATE_RUNTIME;
+
+                break;
+        }
+        break;
     
     case STATE_STOP:
         break;
@@ -255,6 +340,8 @@ static void initConfig(Config *config) {
 
     config->OUTPUTS = 1;
     config->OUTPUT_ID = strdup("ans");
+
+    config->PRESERVE_FRACS = 1;
 }
 
 
@@ -381,6 +468,8 @@ FILE *printConfig(Config *config) {
 
     fprintf(stream, "Outputs: %d\n", config->OUTPUTS);
     fprintf(stream, "Output: '%s'\n", config->OUTPUT_ID);
+
+    fprintf(stream, "Preserve Fractions: %d\n", config->PRESERVE_FRACS);
 
     return stream;
 }
