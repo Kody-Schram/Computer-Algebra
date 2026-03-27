@@ -38,6 +38,7 @@ struct Config {
     char *OUTPUT_ID;
 
     int PRESERVE_FRACS;
+    int LAZY_CALLS;
 };
 
 

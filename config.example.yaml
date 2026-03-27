@@ -44,7 +44,7 @@ runtime:
   # Defines how many previous outputs are saved
   # For one output, the most recent output is stored under the variable OUTPUT as defined in keywords
   # For more outputs than 1, most recent output is stored under variable OUTPUT_0, and subsequent outputs are OUTPUT_(n-1)
-  # Updating this value requires a restart to the system, hot reloading the config will cause an error
+  # (REQUIRES FULL RESTART)
   # Default is 1
   saveOutputs: 1
 
@@ -55,3 +55,15 @@ runtime:
   # Determines whether constants are evaluated into floating point values
   # Default is true
   preserveConstants: true
+
+  # Determines whether function calls are "lazy". These lazy calls will be evaluated when executing
+  # For example, having a function call within a function definition will preserve the call until a call to that new function is made
+  # Otherwise, the call will be replaced with the definition of the other function
+  # ```
+  # f:x->2x
+  # g:y,z->yf(z)
+  # ```
+  # Lazy: g(y,z) = y * f(z)
+  # Not lazy: g(y,z) = y * (2 * z)
+  # Default is true
+  lazyFunctionCalls: true
