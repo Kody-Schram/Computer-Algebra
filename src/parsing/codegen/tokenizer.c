@@ -83,6 +83,7 @@ static int getNumber(char *c) {
  * @return int Length of largest component found or length of contiuguous valid identifier characters
  */
 static ComponentReturn getComponentLength(char *c) {
+    Debug(0, "Checking component.\n");
     ComponentReturn result = {0, NULL};
     // If not valid character type for variable name, automatically skip check
     if (!isalpha(c[0])) return result;
@@ -237,6 +238,8 @@ Token *tokenize(char *buffer) {
         i = end;
 
     }
+
+    Debug(1, printTokens(head));
     
     return head;
 }

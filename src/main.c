@@ -167,8 +167,14 @@ static int runStartup() {
 }
 
 
-int main() {
-    if (!initContext())  {
+int main(int argc, char *argv[]) {
+    char *cpath = NULL;
+    if (argc > 1) {
+        cpath = argv[1];
+        printf("Loading config from '%s'\n", cpath);
+    }
+
+    if (!initContext(cpath))  {
         freeContext(GLOBALCONTEXT);
         return 1;
     }

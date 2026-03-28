@@ -372,7 +372,7 @@ static void initConfig(Config *config) {
 }
 
 
-Config *loadConfig() {
+Config *loadConfig(char *cpath) {
     Config *config = malloc(sizeof(Config));
     if (config == NULL) {
         fprintf(stdout, "Error allocating for config.\n");
@@ -381,26 +381,35 @@ Config *loadConfig() {
 
     initConfig(config);
 
-    char *paths[] = {
-        "config.yaml",
-        "../config.yaml",
-        "~/.config/" PROJECT_NAME "/config.yaml"
-    };
-    int npaths = sizeof(paths) / sizeof(char *);
-    int path = 0;
+    FILE *cfile = NULL;
+    if (cpath == NULL) {
+        char *paths[] = {
+            "config.yaml",
+            "../config.yaml",
+            "~/.config/" PROJECT_NAME "/config.yaml"
+        };
+        int npaths = sizeof(paths) / sizeof(char *);
+        int path = 0;
 
-    FILE *cfile = fopen(paths[path], "rb");
-    while (cfile == NULL) {
-        path ++;
-        if (path < npaths) {
-            cfile = fopen(paths[path], "rb");
+        cfile = fopen(paths[path], "rb");
+        while (cfile == NULL) {
+            path ++;
+            if (path < npaths) {
+                cfile = fopen(paths[path], "rb");
+            }
+            else break;
         }
-        else break;
-    }
 
-    if (cfile == NULL) {
-        printf("Error loading config.\n");
-        return NULL;
+        if (cfile == NULL) {
+            printf("Error loading config.\n");
+            return NULL;
+        }
+    } else {
+        cfile = fopen(cpath, "rb");
+        if (cfile == NULL) {
+            printf("Error loading config.\n");
+            return NULL;
+        }
     }
 
     yaml_parser_t parser;

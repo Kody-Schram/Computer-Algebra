@@ -70,7 +70,6 @@ FILE *printEnvironment(Environment *env) {
         switch(env->components[i].type) {
             case FUNCTION:
                 Function *func = env->components[i].func;
-
                 if (env->components[i].func->env->entries > 0) {
                     fprintf(stream, "%s(", env->components[i].identifier);
                     for (int j = 0; j < func->env->entries - 1; j ++) {
