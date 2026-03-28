@@ -14,7 +14,7 @@ static int replace(ASTNode **ptr, Environment *env);
 static int executeRecur(ASTNode **ptr, Environment *env);
 
 
-static int gcd(int a, int b)
+static long long gcd(long long a, long long b)
 {
     int temp;
     while (b != 0)
@@ -28,8 +28,8 @@ static int gcd(int a, int b)
 }
 
 
-static int powi(int a, int e) {
-    int r = 1;
+static long long powi(long long a, long long e) {
+    long long r = 1;
 
     while (e > 0) {
         if (e % 2 == 1) r *= a;
@@ -184,8 +184,8 @@ static int executeRecur(ASTNode **ptr, Environment *env) {
                             new->integer = left->integer - right->integer;
                         } else {
                             new = dummyASTNode(NODE_DOUBLE);
-                            double l = (left->type == NODE_INTEGER) ? (double) left->integer : left->value;
-                            double r = (right->type == NODE_INTEGER) ? (double) right->integer : right->value;
+                            long double l = (left->type == NODE_INTEGER) ? (long double) left->integer : left->value;
+                            long double r = (right->type == NODE_INTEGER) ? (long double) right->integer : right->value;
 
                             new->value = r - l;
                         }

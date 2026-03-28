@@ -102,7 +102,7 @@ ASTNode *createASTNode(Token *token) {
     case TOKEN_NUMBER:
         node->type = NODE_DOUBLE;
         char *end;
-        double value = strtod(token->value, &end);
+        long double value = strtod(token->value, &end);
         
         if (value == (int) value) {
             node->type = NODE_INTEGER;

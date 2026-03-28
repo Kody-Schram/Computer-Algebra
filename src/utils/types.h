@@ -48,8 +48,8 @@ struct ASTNode {
     union {
         OperationType op;
         char *identifier;
-        double value;
-        int integer;
+        long double value;
+        long long integer;
         Function *func;
         FunctionCall *call;
     };

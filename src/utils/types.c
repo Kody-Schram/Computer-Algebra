@@ -113,9 +113,11 @@ static void printASTRec(ASTNode *node, int level, FILE *stream) {
 
     switch(node->type) {
         case NODE_INTEGER:
-            fprintf(stream, "<type: INTEGER, value: %d>\n", node->integer);
+            fprintf(stream, "<type: INTEGER, value: %lld>\n", node->integer);
+            break;
+
         case NODE_DOUBLE:
-            fprintf(stream, "<type: DOUBLE, value: %f>\n", node->value);
+            fprintf(stream, "<type: DOUBLE, value: %Lf>\n", node->value);
             break;
 
         case NODE_OPERATOR:
@@ -235,11 +237,11 @@ void freeAST(ASTNode *ast) {
             break;
 
         case NODE_DOUBLE:
-            Debug(0, "Free double %f\n", ast->value);
+            Debug(0, "Free double %Lf\n", ast->value);
             break;
 
         case NODE_INTEGER:
-            Debug(0, "Free integer %d\n", ast->integer);
+            Debug(0, "Free integer %lld\n", ast->integer);
             break;
 
         case NODE_OPERATOR:
@@ -300,11 +302,11 @@ static void astToStringRecur(ASTNode *ast, FILE *stream) {
             break;
 
         case NODE_DOUBLE:
-            fprintf(stream, "%f", ast->value);
+            fprintf(stream, "%Lf", ast->value);
             break;
 
         case NODE_INTEGER:
-            fprintf(stream, "%d", ast->integer);
+            fprintf(stream, "%lld", ast->integer);
             break;
 
         case NODE_VARIABLE:
