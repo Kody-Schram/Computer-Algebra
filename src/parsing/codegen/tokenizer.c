@@ -237,8 +237,6 @@ Token *tokenize(char *buffer) {
         i = end;
 
     }
-
-    Debug(1, printTokens(head));
-
+    
     return head;
 }

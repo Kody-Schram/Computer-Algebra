@@ -10,21 +10,46 @@
 
 static const int DEFAULT_ENV_STACK = 3;
 
-static int replace(ASTNode **ptr, Environment *env);
-static int executeRecur(ASTNode **ptr, Environment *env);
+
+static long long gcd(long long a, long long b)
+{
+    long long temp;
+    while (b != 0)
+    {
+        temp = a % b;
+
+        a = b;
+        b = temp;
+    }
+    return a;
+}
 
 
-static int replace(ASTNode **ptr, Environment *env) {
+static long long powi(long long a, long long e) {
+    long long r = 1;
+
+    while (e > 0) {
+        if (e % 2 == 1) r *= a;
+        a *= a;
+        e /= 2;
+    }
+
+    return r;
+}
+
+
+static int executeRecur(ASTNode **ptr, Environment *env) {
     ASTNode *ast = *ptr;
-    if (ast == NULL || env == NULL) return 1;
+    if (ast == NULL) return 0;
 
-    Debug(0, "\nRunning replace on: \n");
     Debug(1, printAST(ast));
-    Debug(1, printEnvironment(env));
-    Debug(0, "\n");
 
     switch (ast->type) {
-        case NODE_VARIABLE:
+        case NODE_INTEGER:
+        case NODE_DOUBLE:
+            return 1;
+
+        case NODE_VARIABLE: {
             Component *cmp = NULL;
             Environment *curEnv = env;
 
@@ -34,12 +59,12 @@ static int replace(ASTNode **ptr, Environment *env) {
                 cmp = searchEnvironment(curEnv, ast->identifier);
 
                 if (cmp !=  NULL && cmp->type == VARIABLE) {
-                    Debug(0, "Replacing '%s' with recursive definition\n", ast->identifier);
+                    Debug(1, printEnvironment(curEnv));
                     free(ast->identifier);
                     free(ast);
 
                     *ptr = deepCopyAST(cmp->value);
-                    Debug(1, printAST(*ptr));
+                    if (!executeRecur(ptr, env)) return 0;
 
                     return 1;
                 }
@@ -47,41 +72,11 @@ static int replace(ASTNode **ptr, Environment *env) {
             }
 
             return 1;
-
-        case NODE_OPERATOR:
-            if (!replace(&ast->left, env)) return 0;
-            if (!replace(&ast->right, env)) return 0;
-            return 1;
-
-        case NODE_FUNC_CALL:
-            for (int i = 0; i < ast->call->nParams; i ++) {
-                if (!replace(&ast->call->parameters[i], env)) return 0;
-            }
-            return 1;
-    }
-
-    return 1;
-}
-
-
-static int executeRecur(ASTNode **ptr, Environment *env) {
-    ASTNode *ast = *ptr;
-    if (ast == NULL) return 0;
-
-    Debug(0, "Executing\n");
-    Debug(1, printAST(ast));
-
-    switch (ast->type) {
-        case NODE_NUMBER:
-            return 1;
-
-        case NODE_VARIABLE:
-            if (!replace(ptr, env)) return 0;
-            return 1;
+        }
 
         // Adds new function to global environment
         case NODE_ASSIGN_FUNC:
-            Info(0, "\nBinding function %s to global environment\n",ast->left->identifier);
+            Debug(0, "\nBinding function %s to global environment\n",ast->left->identifier);
             if (!executeRecur(&ast->func->definition, NULL)) {
                 return 0;
             }
@@ -101,7 +96,7 @@ static int executeRecur(ASTNode **ptr, Environment *env) {
 
         // Adds new variable to global environment
         case NODE_ASSIGN_VAR:
-            Info(0, "\nBinding variable to global environment\n");
+            Debug(0, "\nBinding variable to global environment\n");
             if (!executeRecur(&ast->right, NULL)) {
                 freeAST(ast);
                 return 0;
@@ -123,42 +118,138 @@ static int executeRecur(ASTNode **ptr, Environment *env) {
             return 1;
 
         case NODE_OPERATOR:
-            Debug(0, "Executing operator children\n");
-            int left = executeRecur(&ast->left, env);
-            int right = executeRecur(&ast->right, env);
+            if (!executeRecur(&ast->left, env) || !executeRecur(&ast->right, env)) return 0;
 
-            if (left == 0 || right == 0) return 0;
-
-            // Simplifies constants (doesn't do for division)
-            if (ast->left->type == NODE_NUMBER && ast->right->type == NODE_NUMBER) {
-                ASTNode *new = dummyASTNode(NODE_NUMBER);
-                if (new == NULL) return 0;
-                // Add associativity support for * and +
-
+            // Evaluates if both children aren't a variable
+            ASTNode *left = ast->left;
+            ASTNode *right = ast->right;
+            if (left->type != NODE_VARIABLE && right->type != NODE_VARIABLE) {
                 switch (ast->op) {
-                    case OP_ADDITION:
-                        new->value = ast->left->value + ast->right->value;
-                        break;
+                    case OP_ADDITION: {
+                        ASTNode *new = NULL;
+                        if (left->type == NODE_INTEGER && right->type == NODE_INTEGER) {
+                            new = dummyASTNode(NODE_INTEGER);
+                            if (new == NULL) return 0;
+                            new->integer = left->integer + right->integer;
+                        } else {
+                            new = dummyASTNode(NODE_DOUBLE);
+                            if (new == NULL) return 0;
+                            double l = (left->type == NODE_INTEGER) ? (double) left->integer : left->value;
+                            double r = (right->type == NODE_INTEGER) ? (double) right->integer : right->value;
 
-                    case OP_SUBTRACTION:
-                        new->value = ast->left->value - ast->right->value;
-                        break;
+                            new->value = r + l;
+                        }
 
-                    case OP_MULTIPLICATION:
-                        new->value = ast->left->value * ast->right->value;
-                        break;
+                        freeAST(ast);
+                        *ptr = new;
+                        return 1;
+                    }
 
-                    case OP_EXPONTENTIATION:
-                        new->value = powf(ast->left->value, ast->right->value);
-                        break;
-                    case OP_DIVISION:
-                        // check config for is fractions are preserved
-                        break;
+                    case OP_SUBTRACTION: {
+                        ASTNode *new = NULL;
+                        if (left->type == NODE_INTEGER && right->type == NODE_INTEGER) {
+                            new = dummyASTNode(NODE_INTEGER);
+                            if (new == NULL) return 0;
+                            new->integer = left->integer - right->integer;
+                        } else {
+                            new = dummyASTNode(NODE_DOUBLE);
+                            if (new == NULL) return 0;
+                            long double l = (left->type == NODE_INTEGER) ? (long double) left->integer : left->value;
+                            long double r = (right->type == NODE_INTEGER) ? (long double) right->integer : right->value;
+
+                            new->value = r - l;
+                        }
+
+                        freeAST(ast);
+                        *ptr = new;
+                        return 1;
+                    }
+
+                    case OP_MULTIPLICATION: {
+                        ASTNode *new = NULL;
+                        if (left->type == NODE_INTEGER && right->type == NODE_INTEGER) {
+                            new = dummyASTNode(NODE_INTEGER);
+                            if (new == NULL) return 0;
+                            new->integer = left->integer * right->integer;
+                        } else {
+                            new = dummyASTNode(NODE_DOUBLE);
+                            if (new == NULL) return 0;
+                            double l = (left->type == NODE_INTEGER) ? (double) left->integer : left->value;
+                            double r = (right->type == NODE_INTEGER) ? (double) right->integer : right->value;
+
+                            new->value = r * l;
+                        }
+
+                        freeAST(ast);
+                        *ptr = new;
+                        return 1;
+                    }
+
+                    case OP_EXPONTENTIATION: {
+                        ASTNode *new = NULL;
+                        if (left->type == NODE_INTEGER && right->type == NODE_INTEGER) {
+                            new = dummyASTNode(NODE_INTEGER);
+                            if (new == NULL) return 0;
+                            new->integer = powi(left->integer, right->integer);
+                        } else {
+                            new = dummyASTNode(NODE_DOUBLE);
+                            if (new == NULL) return 0;
+                            double l = (left->type == NODE_INTEGER) ? (double) left->integer : left->value;
+                            double r = (right->type == NODE_INTEGER) ? (double) right->integer : right->value;
+
+                            new->value = powf(l, r);
+                        }
+
+                        freeAST(ast);
+                        *ptr = new;
+                        return 1;
+                    }
+
+                    case OP_DIVISION: {
+                        if (left->type == NODE_INTEGER && right->type == NODE_INTEGER) {
+                            if (right->integer == 0) {
+                                printf("Division by 0.\n");
+                                return 0;
+                            }
+
+                            // Evaluate fraction
+                            if (!GLOBALCONTEXT->config->PRESERVE_FRACS) {
+                                ASTNode *new = dummyASTNode(NODE_DOUBLE);
+                                if (new == NULL) return 0;
+                                new->value = ((long double) ast->left->value) / ((long double) ast->right->value);
+
+                                freeAST(ast);
+                                *ptr = new;
+                                return 1;
+                            }
+
+                            // Simplify fraction
+                            int g = gcd(left->integer, right->integer);
+                            if (g != 1) {
+                                left->integer = left->integer / g;
+                                right->integer = right->integer / g;
+                            }
+                            return 1;
+                        } else {
+                            if (right->value == 0) {
+                                printf("Division by 0.\n");
+                                return 0;
+                            }
+
+                            ASTNode *new = dummyASTNode(NODE_DOUBLE);
+                            if (new == NULL) return 0;
+
+                            double l = (left->type == NODE_INTEGER) ? (double) left->integer : left->value;
+                            double r = (right->type == NODE_INTEGER) ? (double) right->integer : right->value;
+
+                            new->value = l / r;
+                            freeAST(ast);
+                            *ptr = new;
+
+                            return 1;
+                        }
+                    }
                 }
-
-                freeAST(ast);
-                *ptr = new;
-
 
             }
             return 1;
@@ -180,8 +271,6 @@ static int executeRecur(ASTNode **ptr, Environment *env) {
 
             if (call->nParams != func->env->entries) {
                 printf("Expected %d parameters for '%s', %d parameters were passed.\n", func->env->entries, call->identifier, call->nParams);
-                // freeAST(ast);
-                // *ptr = NULL;
                 return 0;
             }
 
@@ -191,15 +280,12 @@ static int executeRecur(ASTNode **ptr, Environment *env) {
             while (tempEnv != NULL) {
                 if (tempEnv == GLOBALCONTEXT->env) { 
                     evaluating = 1;
-                    Debug(0, "Global env found, evaluating.\n");
                     break;
                 }
                 tempEnv = tempEnv->parent;
             }
 
             if (!evaluating && GLOBALCONTEXT->config->LAZY_CALLS) return 1;
-
-            Debug(0, "Creating temp local env.\n");
 
             Environment *localEnv = createEnvironment();
             if (localEnv == NULL) return 0;
@@ -208,14 +294,18 @@ static int executeRecur(ASTNode **ptr, Environment *env) {
             int params = call->nParams;
             for (int p = 0; p < params; p ++) {
                 // Updates local environment variable definitions with copies of passed in parameters
-                ASTNode *copy = deepCopyAST(call->parameters[p]);
-                if (!bindComponent(localEnv, VARIABLE, func->env->components[p].identifier, copy)) {
+                if (!executeRecur(&call->parameters[p], localEnv) ) {
+                    freeEnvironment(localEnv);
+                    return 0;
+                }
+
+                if (!bindComponent(localEnv, VARIABLE, func->env->components[p].identifier, call->parameters[p])) {
                     freeEnvironment(localEnv);
                     return 0;
                 }
 
                 // Updates parameters with outer variables
-                if (!replace(&localEnv->components[p].value, env)) {
+                if (!executeRecur(&localEnv->components[p].value, env)) {
                     freeEnvironment(localEnv);
                     return 0;
                 }
@@ -223,23 +313,21 @@ static int executeRecur(ASTNode **ptr, Environment *env) {
 
             switch (func->type) {
                 case DEFINED:
-                    Debug(0, "Executing function call on defined function.\n");
-                    Debug(1, printAST(func->definition));
-                    Debug(0, "Replacing variables with new definitions\n");
-
+                    Debug(0, "Executing defined function\n");
+                    Debug(1, printEnvironment(localEnv));
                     ASTNode *exec = deepCopyAST(func->definition);
                     if (exec == NULL) return 0;
-                    if (!replace(&exec, localEnv)) return 0;
-
-                    Debug(0, "Executing function body\n");
-                    if (exec == NULL || !executeRecur(&exec, localEnv->parent)) {
-                        localEnv->parent = NULL;
+                    if (!executeRecur(&exec, localEnv)) {
+                        freeEnvironment(localEnv);
                         return 0;
                     }
 
                     localEnv->parent = NULL;
+                    call->nParams = 0;
                     freeAST(ast);
                     freeEnvironment(localEnv);
+
+                    Debug(1, printAST(exec));
                     *ptr = exec;
                     return 1;
             }
@@ -251,9 +339,9 @@ static int executeRecur(ASTNode **ptr, Environment *env) {
 }
 
 int execute(ASTNode **ast) {
-    Info(0, "\nRoot Execution\n");
+    Info(0, "\nExecuting\n");
+    Info(1, printAST(*ast));
     if (!executeRecur(ast, GLOBALCONTEXT->env)) return 0;
 
-    Info(0, "Finished Executing\n");
     return 1;
 }

@@ -85,6 +85,7 @@ FILE *printEnvironment(Environment *env) {
                 free(str);
                 
                 break;
+                
             case VARIABLE:
                 fprintf(stream, "%s = ", env->components[i].identifier);
                 
@@ -136,7 +137,7 @@ int initOutputVariables(Environment *env) {
     int outputs = GLOBALCONTEXT->config->OUTPUTS;
     if (outputs > 0) {
         if (outputs == 1) {
-            ASTNode *temp = dummyASTNode(NODE_NUMBER);
+            ASTNode *temp = dummyASTNode(NODE_DOUBLE);
             if (temp == NULL) return 0;
             temp->value = 0;
 
@@ -154,7 +155,7 @@ int initOutputVariables(Environment *env) {
             if (str == NULL) return 0;
             snprintf(str, size, "%s_%d", GLOBALCONTEXT->config->OUTPUT_ID, i);
 
-            ASTNode *temp = dummyASTNode(NODE_NUMBER);
+            ASTNode *temp = dummyASTNode(NODE_DOUBLE);
             if (temp == NULL) return 0;
             temp->value = 0;
 

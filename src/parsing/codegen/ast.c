@@ -170,8 +170,6 @@ RPNList *shuntingYard(Token *head) {
     list->length = output.entries;
     list->items = (Token**) output.items;
 
-    Debug(1, printRPN(list));
-
     return list;
 
     error:
@@ -219,11 +217,6 @@ ASTNode *astFromRPN(RPNList *rpn) {
 
     ast = nodes.items[0];
     free(nodes.items);
-
-    if (ast != NULL) {
-        Debug(0,"\nAST\n");
-        Debug(1, printAST(ast));
-    }
 
     return ast;
 

@@ -60,7 +60,7 @@ static int process(char *buffer) {
     if (head == NULL) return 1;
 
     char *str = astToString(head);
-    if (str != NULL) printf("%s\n", str);
+    if (str != NULL) printf("%s\n\n", str);
     free(str);
 
     if (GLOBALCONTEXT->config->OUTPUTS > 0) {
@@ -69,7 +69,6 @@ static int process(char *buffer) {
             Component *cmp = searchEnvironment(GLOBALCONTEXT->env, GLOBALCONTEXT->config->OUTPUT_ID);
             if (cmp == NULL) return 0;
 
-            Debug(0, "Replacing\n");
             freeAST(cmp->value);
             cmp->value = head;
             return 1;
@@ -100,7 +99,6 @@ static int process(char *buffer) {
                 }
                 free(str);
 
-                Debug(0, "Replacing\n");
                 last->value = cmp->value;
                 last = cmp;
             }
