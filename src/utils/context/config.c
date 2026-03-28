@@ -26,6 +26,7 @@ typedef enum {
     STATE_K_ANS,
 
     STATE_RUNTIME,
+    STATE_STRICT,
     STATE_OUTPUTS,
     STATE_PRESERVE_FRACS,
     STATE_LAZY_CALLS,
@@ -283,6 +284,7 @@ static int consumeEvent(State *state, yaml_event_t *event, Config *config) {
                 if (!strcmp(value, "saveOutputs")) *state = STATE_OUTPUTS;
                 else if (!strcmp(value, "preserveFractions")) *state = STATE_PRESERVE_FRACS;
                 else if (!strcmp(value, "lazyFunctionCalls")) *state = STATE_LAZY_CALLS;
+                else if (!strcmp(value, "strict")) *state = STATE_STRICT;
                 else {
                     printf("Unexpected keyword: %s.\n", value);
                     return 0;
@@ -346,6 +348,25 @@ static int consumeEvent(State *state, yaml_event_t *event, Config *config) {
                 break;
         }
         break;
+
+    case STATE_STRICT:
+        switch (event->type) {
+            case YAML_MAPPING_END_EVENT:
+                *state = STATE_RUNTIME;
+                break;
+
+            case YAML_SCALAR_EVENT:
+                char *value = event->data.scalar.value;
+                int b = get_boolean(value);
+
+                if (b == -1) return 0;
+                config->STRICT = b;
+                *state = STATE_RUNTIME;
+
+                return 1;
+                break;
+        }
+        break;
     
     case STATE_STOP:
         break;
@@ -367,6 +388,7 @@ static void initConfig(Config *config) {
     config->OUTPUTS = 1;
     config->OUTPUT_ID = strdup("ans");
 
+    config->STRICT = 0;
     config->PRESERVE_FRACS = 1;
     config->LAZY_CALLS = 1;
 }
@@ -507,6 +529,7 @@ FILE *printConfig(Config *config) {
     fprintf(stream, "Outputs: %d\n", config->OUTPUTS);
     fprintf(stream, "Output: '%s'\n", config->OUTPUT_ID);
 
+    fprintf(stream, "Strict: %d\n", config->STRICT);
     fprintf(stream, "Preserve Fractions: %d\n", config->PRESERVE_FRACS);
     fprintf(stream, "Lazy Function Calls: %d\n", config->LAZY_CALLS);
 
