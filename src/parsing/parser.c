@@ -264,7 +264,7 @@ static ASTNode *parseFunctionDefinition(Token *head) {
                 goto error;
             } else if (cur->type == TOKEN_IDENTIFIER) {
                 Debug(0, "Binding parameter '%s' to local environment.\n", cur->value);
-                ASTNode *dummy = dummyASTNode(NODE_NUMBER);
+                ASTNode *dummy = dummyASTNode(NODE_DOUBLE);
                 dummy->value = 0;
 
                 if (!bindComponent(localEnv, VARIABLE, cur->value, dummy)) {

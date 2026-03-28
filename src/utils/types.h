@@ -13,6 +13,8 @@ typedef struct Environment Environment;
 // Forward declaring types
 typedef enum NodeType NodeType;
 typedef enum OperationType OperationType;
+typedef enum NumberType NumberType;
+typedef struct Number Number;
 typedef struct ASTNode ASTNode;
 
 typedef struct FunctionCall FunctionCall;
@@ -22,13 +24,15 @@ typedef struct Function Function;
 
 // ASTNode related definitions
 enum NodeType {
-    NODE_NUMBER,
+    NODE_INTEGER,
+    NODE_DOUBLE,
     NODE_OPERATOR,
     NODE_VARIABLE,
     NODE_FUNC_CALL,
     NODE_ASSIGN_VAR,
     NODE_ASSIGN_FUNC
 };
+
 
 enum OperationType {
     OP_ADDITION,
@@ -38,12 +42,14 @@ enum OperationType {
     OP_EXPONTENTIATION
 };
 
+
 struct ASTNode {
     NodeType type;
     union {
         OperationType op;
         char *identifier;
         double value;
+        int integer;
         Function *func;
         FunctionCall *call;
     };
@@ -60,11 +66,13 @@ struct FunctionCall {
     int nParams;
 };
 
+
 enum FunctionType {
     BUILTIN,
     DEFINED,
     TRANSFORM
 };
+
 
 struct Function {
     Environment *env;
@@ -76,6 +84,7 @@ struct Function {
         ASTNode *(*transform) (ASTNode **args, int nArgs);
     };
 };
+
 
 
 ASTNode *dummyASTNode(NodeType type);
