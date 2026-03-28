@@ -85,6 +85,7 @@ FILE *printEnvironment(Environment *env) {
                 free(str);
                 
                 break;
+                
             case VARIABLE:
                 fprintf(stream, "%s = ", env->components[i].identifier);
                 
