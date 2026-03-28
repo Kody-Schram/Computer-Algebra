@@ -402,12 +402,14 @@ Config *loadConfig(char *cpath) {
 
         if (cfile == NULL) {
             printf("Error loading config.\n");
+            freeConfig(config);
             return NULL;
         }
     } else {
         cfile = fopen(cpath, "rb");
         if (cfile == NULL) {
             printf("Error loading config.\n");
+            freeConfig(config);
             return NULL;
         }
     }
@@ -513,6 +515,7 @@ FILE *printConfig(Config *config) {
 
 
 void freeConfig(Config *config) {
+    if (config == NULL) return;
     fclose(config->LOG_STREAM);
 
     // Frees keyword identifiers
