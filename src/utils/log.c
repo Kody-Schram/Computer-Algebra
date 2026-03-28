@@ -17,8 +17,12 @@ void printStream(FILE *stream) {
     fclose(stream);
 }
 
+#ifndef RELEASE
 void Debug(const int fileStream, const void *stream, ...) {
-    if (GLOBALCONTEXT->config->LOG_LEVEL < DEBUG) return;
+    if (GLOBALCONTEXT->config->LOG_LEVEL < DEBUG) {
+        if (fileStream) fclose((FILE *) stream);
+        return;
+    }
 
     if (fileStream) {
         FILE *file = (FILE *) stream;
@@ -38,10 +42,14 @@ void Debug(const int fileStream, const void *stream, ...) {
         va_end(args);
     }
 }
+#endif
 
 
 void Info(const int fileStream, const void *stream, ...) {
-    if (GLOBALCONTEXT->config->LOG_LEVEL < INFO) return;
+    if (GLOBALCONTEXT->config->LOG_LEVEL < INFO) {
+        if (fileStream) fclose((FILE *) stream);
+        return;
+    }
 
     if (fileStream) {
         FILE *file = (FILE *) stream;

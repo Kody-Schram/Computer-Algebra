@@ -3,11 +3,17 @@
 
 #include "utils/context/context.h"
 
+#ifdef RELEASE
 
-void printStream(FILE *stream);
+#define Debug(fileStream, stream, ...) ((void) 0)
 
+#else
 
 void Debug(const int fileStream, const void *stream, ...);
+
+#endif
+
+void printStream(FILE *stream);
 
 
 void Info(const int fileStream, const void *stream, ...);

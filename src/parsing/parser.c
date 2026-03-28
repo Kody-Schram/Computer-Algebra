@@ -363,9 +363,6 @@ static ASTNode *parseAssignment(Token *head) {
     ast = astFromRPN(rpn);
     if (ast == NULL) goto error;
 
-    Debug(0, "Varaible AST.\n");
-    Debug(1, printAST(ast));
-
     assignment->left = identifer;
     assignment->right = ast;
 
@@ -415,13 +412,11 @@ ASTNode *parse(char *buffer) {
     }
 
     ast = astFromRPN(RPN);
-    Debug(1, printAST(ast));
 
     free(RPN->items);
     free(RPN);
 
     freeTokens(head);
 
-    Info(0, "\nFinished parsing\n");
     return ast;
 }

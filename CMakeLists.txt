@@ -2,8 +2,16 @@ cmake_minimum_required(VERSION 3.10)
 
 project(algebra C)
 
-if(CMAKE_BUILD_TYPE STREQUAL "debug")
+if(NOT CMAKE_BUILD_TYPE) 
+    set(CMAKE_BUILD_TYPE RELEASE)
+endif()
+
+if(CMAKE_BUILD_TYPE STREQUAL "DEBUG")
     add_compile_options(-g -O0)
+endif()
+
+if(CMAKE_BUILD_TYPE STREQUAL "RELEASE")
+    add_definitions(-DRELEASE)
 endif()
 
 find_package(PkgConfig REQUIRED)

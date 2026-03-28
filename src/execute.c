@@ -74,7 +74,7 @@ static int executeRecur(ASTNode **ptr, Environment *env) {
 
         // Adds new function to global environment
         case NODE_ASSIGN_FUNC:
-            Info(0, "\nBinding function %s to global environment\n",ast->left->identifier);
+            Debug(0, "\nBinding function %s to global environment\n",ast->left->identifier);
             if (!executeRecur(&ast->func->definition, NULL)) {
                 return 0;
             }
@@ -94,7 +94,7 @@ static int executeRecur(ASTNode **ptr, Environment *env) {
 
         // Adds new variable to global environment
         case NODE_ASSIGN_VAR:
-            Info(0, "\nBinding variable to global environment\n");
+            Debug(0, "\nBinding variable to global environment\n");
             if (!executeRecur(&ast->right, NULL)) {
                 freeAST(ast);
                 return 0;
@@ -300,9 +300,9 @@ static int executeRecur(ASTNode **ptr, Environment *env) {
 }
 
 int execute(ASTNode **ast) {
-    Info(0, "\nRoot Execution\n");
+    Info(0, "\nExecuting\n");
+    Info(1, printAST(*ast));
     if (!executeRecur(ast, GLOBALCONTEXT->env)) return 0;
 
-    Info(0, "Finished Executing\n");
     return 1;
 }
