@@ -5,7 +5,9 @@
     #define PROJECT_NAME "project"
 #endif
 
+#include <stdio.h>
 #include "utils/context/environment.h"
+
 typedef enum ComponentType ComponentType;
 typedef struct Component Component;
 typedef struct Environment Environment;
