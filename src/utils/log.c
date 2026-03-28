@@ -20,9 +20,6 @@ void printStream(FILE *stream) {
 void Debug(const int fileStream, const void *stream, ...) {
     if (GLOBALCONTEXT->config->LOG_LEVEL < DEBUG) return;
 
-    va_list args;
-    va_start(args, stream);
-
     if (fileStream) {
         FILE *file = (FILE *) stream;
         rewind(file);
@@ -32,19 +29,19 @@ void Debug(const int fileStream, const void *stream, ...) {
         }
         fclose(file);
     } else  {
+        va_list args;
+        va_start(args, stream);
+
         vfprintf(GLOBALCONTEXT->config->LOG_STREAM, (char *) stream, args);
         fflush(GLOBALCONTEXT->config->LOG_STREAM);
+        
+        va_end(args);
     }
-
-    va_end(args);
 }
 
 
 void Info(const int fileStream, const void *stream, ...) {
     if (GLOBALCONTEXT->config->LOG_LEVEL < INFO) return;
-
-    va_list args;
-    va_start(args, stream);
 
     if (fileStream) {
         FILE *file = (FILE *) stream;
@@ -55,9 +52,12 @@ void Info(const int fileStream, const void *stream, ...) {
         }
         fclose(file);
     } else {
+        va_list args;
+        va_start(args, stream);
+
         vfprintf(GLOBALCONTEXT->config->LOG_STREAM, (char *) stream, args);
         fflush(GLOBALCONTEXT->config->LOG_STREAM);
-    }
 
-    va_end(args);
+        va_end(args);
+    }
 }

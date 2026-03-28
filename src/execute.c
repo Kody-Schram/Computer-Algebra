@@ -57,13 +57,12 @@ static int executeRecur(ASTNode **ptr, Environment *env) {
                 cmp = searchEnvironment(curEnv, ast->identifier);
 
                 if (cmp !=  NULL && cmp->type == VARIABLE) {
-                    Debug(0, "Replacing '%s' with recursive definition\n", ast->identifier);
+                    Debug(1, printEnvironment(curEnv));
                     free(ast->identifier);
                     free(ast);
 
                     *ptr = deepCopyAST(cmp->value);
                     if (!executeRecur(ptr, env)) return 0;
-                    Debug(1, printAST(*ptr));
 
                     return 1;
                 }
@@ -117,7 +116,6 @@ static int executeRecur(ASTNode **ptr, Environment *env) {
             return 1;
 
         case NODE_OPERATOR:
-            Debug(0, "Executing operator children\n");
             if (!executeRecur(&ast->left, env) || !executeRecur(&ast->right, env)) return 0;
 
             // Evaluates if both children aren't a variable
@@ -240,8 +238,6 @@ static int executeRecur(ASTNode **ptr, Environment *env) {
 
             if (call->nParams != func->env->entries) {
                 printf("Expected %d parameters for '%s', %d parameters were passed.\n", func->env->entries, call->identifier, call->nParams);
-                // freeAST(ast);
-                // *ptr = NULL;
                 return 0;
             }
 
@@ -251,15 +247,12 @@ static int executeRecur(ASTNode **ptr, Environment *env) {
             while (tempEnv != NULL) {
                 if (tempEnv == GLOBALCONTEXT->env) { 
                     evaluating = 1;
-                    Debug(0, "Global env found, evaluating.\n");
                     break;
                 }
                 tempEnv = tempEnv->parent;
             }
 
             if (!evaluating && GLOBALCONTEXT->config->LAZY_CALLS) return 1;
-
-            Debug(0, "Creating temp local env.\n");
 
             Environment *localEnv = createEnvironment();
             if (localEnv == NULL) return 0;
@@ -287,10 +280,7 @@ static int executeRecur(ASTNode **ptr, Environment *env) {
 
             switch (func->type) {
                 case DEFINED:
-                    Debug(0, "Executing function call on defined function.\n");
-                    Debug(1, printAST(func->definition));
-                    Debug(0, "Replacing variables with new definitions\n");
-
+                    Debug(0, "Executing defined function\n");
                     ASTNode *exec = deepCopyAST(func->definition);
                     if (exec == NULL) return 0;
                     if (!executeRecur(&exec, localEnv)) return 0;

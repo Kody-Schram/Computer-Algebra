@@ -280,7 +280,6 @@ void handleLocalVariables(Token **ptr, Environment *localEnv) {
     
     while (cur != NULL) {
         if (cur->type == TOKEN_IDENTIFIER) {
-            Debug(0, "Rechecking identifier %s\n", cur->value);
             int max = 0;
             Component *cmp;
             char *id = cur->value;
@@ -295,7 +294,6 @@ void handleLocalVariables(Token **ptr, Environment *localEnv) {
 
                 // If local var is found take it 
                 if (local != NULL) {
-                    Debug(0, "Local identifier %s found\n", local->identifier);
                     max = strlen(local->identifier);
                     cmp = local;
                     continue;
@@ -303,7 +301,6 @@ void handleLocalVariables(Token **ptr, Environment *localEnv) {
                 
                 // Any subsequent iteration will always yeild a larger char size if found, so no check required
                 if (global != NULL) {
-                    Debug(0, "Global identifier %s found\n", global->identifier);
                     max = strlen(global->identifier);
                     cmp = global;
                     continue;
@@ -315,7 +312,6 @@ void handleLocalVariables(Token **ptr, Environment *localEnv) {
             if (max != strlen(cur->value) && max != 0) {
                 // create new tokens to split
                 Token *left = createToken(TOKEN_IDENTIFIER, cmp->identifier, max);
-                Debug(0, "string: '%s', right: '%s', right len: %d\n", cur->value, id + max, strlen(id) - max);
                 Token *right = createToken(TOKEN_IDENTIFIER, id + max, strlen(id) - max);
 
                 left->next = right;
@@ -329,20 +325,12 @@ void handleLocalVariables(Token **ptr, Environment *localEnv) {
 
                 prev = right;
                 cur = left;
-
-                Debug(0, "Intermediate token list\n");
-                Debug(1, printTokens(*ptr));
             }
 
         }
 
         prev = cur;
         cur = cur->next;
-    }
-
-    if (config->LOG_LEVEL >= DEBUG) {
-        fprintf(config->LOG_STREAM, "Updated for local vars\n");
-        Debug(1, printTokens(*ptr));
     }
 }
 
@@ -385,9 +373,6 @@ int lex(Token** head) {
         printf("Mismatched parenthesis.\n");
         return 0;
     } 
-
-    Debug(0, "Updated Tokens.\n");
-    Debug(1, printTokens(*head));
 
     return 1;
 
