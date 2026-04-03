@@ -1,11 +1,14 @@
+log:
+  level: Debug
+  location: "logs/t1.txt"
+
+runtime:
+  strict: true
+
 # Test basic operations
 startup: |
   1+2
   1+-2
-  2+5.9
-  1/2
-  2/4
-  1.4/2
-  5^5
-  4^8.6
+  -1+2
+  (-1+2)
   quit

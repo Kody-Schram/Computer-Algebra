@@ -59,6 +59,7 @@ build/
 config.yaml
 log.txt
 test
+tests/logs/*
 
 *.ps1
 project_dump.txt

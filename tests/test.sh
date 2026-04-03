@@ -7,5 +7,7 @@ for config in *.yaml; do
 
     if [ $CODE -ne 0 ]; then
         break
+    else
+        echo "Passed test"
     fi
 done
