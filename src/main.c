@@ -50,11 +50,11 @@ static int process(char *buffer) {
     else if (result == 1) return 1;
 
     ASTNode *head = parse(buffer);
-    if (head == NULL && GLOBALCONTEXT->config->STRICT) exit(1);
+    if (head == NULL && GLOBALCONTEXT->config->STRICT) return 0;
     if (head != NULL) {
         if (!execute(&head)) {
             freeAST(head);
-            if (GLOBALCONTEXT->config->STRICT) exit(1);
+            if (GLOBALCONTEXT->config->STRICT) return 0;
             return 1;
         }
     }

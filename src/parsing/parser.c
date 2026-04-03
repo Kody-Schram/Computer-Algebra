@@ -389,7 +389,10 @@ ASTNode *parse(char *buffer) {
     head = tokenize(buffer);
     if (head == NULL) return NULL;
 
-    if (!lex(&head)) return NULL;
+    if (!lex(&head)) {
+        freeTokens(head);
+        return NULL;
+    }
 
     if (containsAssignment(head)) {
         if (!containsFunctionDefinition(head)) return parseAssignment(head);
@@ -413,7 +416,6 @@ ASTNode *parse(char *buffer) {
 
     free(RPN->items);
     free(RPN);
-
     freeTokens(head);
 
     return ast;

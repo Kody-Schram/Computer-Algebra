@@ -89,27 +89,26 @@ static int handleImplicitMul(Token *cur, Token *prev) {
  * @return int 
  */
 static int handleExponentRewrite(Token **cur, Token *prev) {
-    if ((*cur)->value[0] == '*' && (*cur)->next != NULL) {
-        if ((*cur)->next->value[0] == '*') {
-            Token *exponent = createToken(TOKEN_OPERATOR, "^", 1);
-            if (exponent == NULL) {
-                printf("Error allocating for '**' to '^' conversion token.");
-                return -1;
-            }
+    if ((*cur)->value[0] != '*' || !((*cur)->next == NULL && (*cur)->next->value[0] != '*')) return 0;
+    Debug(0, "Rewriting exponent\n");
 
-            prev->next = exponent;
-            exponent->next = (*cur)->next->next;
-
-            free((*cur)->next->value);
-            free((*cur)->next);
-
-            *cur = exponent;
-
-            return 1;
-        }
+    Token *exponent = createToken(TOKEN_OPERATOR, "^", 1);
+    if (exponent == NULL) {
+        printf("Error allocating for '**' to '^' conversion token.");
+        return -1;
     }
 
-    return 0;
+    exponent->next = (*cur)->next->next;
+
+    free((*cur)->next->value);
+    free((*cur)->next);
+    free((*cur)->value);
+    free(*cur);
+
+    if (prev != NULL) prev->next = exponent;
+    else *cur = exponent;
+
+    return 1;
 }
 
 /**
@@ -123,13 +122,16 @@ static int handleExponentRewrite(Token **cur, Token *prev) {
  * @return int Error code
  */
 static int checkInvalidBinop(Token *cur, Token *prev) {
-    if (cur->type != TOKEN_OPERATOR) return 1;
+    if (cur->type != TOKEN_OPERATOR) return 0;
     if (cur->next == NULL) {
         printf("Operator must be followed by another token.\n");
-        return 0;
+        return -1;
     }
 
-    if (cur->next)
+    if (prev == NULL) {
+        printf("Operator must be preceeded by another token.\n");
+        return -1;
+    }
 
     // if (cur->next->type == TOKEN_OPERATOR && !strcmp(cur->next->value, "-")) return 1;
 
@@ -354,8 +356,8 @@ int lex(Token** head) {
     while (*ptr != NULL) {
         if (handleNegatives(*ptr, prev) == -1) return 0;
         if (handleImplicitMul(*ptr, prev) == -1) return 0;
-        if (!checkInvalidBinop(*ptr, prev)) return 0;
         if (handleExponentRewrite(ptr, prev) == -1) return 0;
+        if (checkInvalidBinop(*ptr, prev) == -1) return 0;
         if (handleFunctionParens(ptr) == -1) return 0;
 
         // Counts open parenthesis
