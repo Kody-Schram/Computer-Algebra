@@ -114,7 +114,8 @@ static int handleExponentRewrite(Token **cur, Token *prev) {
 /**
  * @brief Checks to ensure binary operators valid
  * 
- * @retval 0: Error, binary operator is invalid
+ * @retval -1: Invalid binary operation
+ * @retval 0: No binary operation
  * @retval 1: Binary operator is valid
  * 
  * @param cur Current node in the list
@@ -130,6 +131,14 @@ static int checkInvalidBinop(Token *cur, Token *prev) {
 
     if (prev == NULL) {
         printf("Operator must be preceeded by another token.\n");
+        return -1;
+    }
+
+    // If next op is -, will recheck later, may be a negative number instead of a minus
+    if (cur->next->type == TOKEN_OPERATOR && cur->next->value[0] == '-') return 1;
+
+    if (cur->next->type != TOKEN_IDENTIFIER && cur->next->type != TOKEN_NUMBER && cur->next->type != TOKEN_FUNC_CALL) {
+        printf("Invalid operation '%s %s %s'\n", prev->value, cur->value, cur->next->value);
         return -1;
     }
 
@@ -254,7 +263,7 @@ static int handleNegatives(Token *cur, Token *prev) {
 
     // Outlines cases for following negative handling
     // (ie determines this is a negative and not a subtraction)
-    if (cur->next == NULL || !(cur->next->type == TOKEN_IDENTIFIER || cur->next->type == TOKEN_NUMBER || cur->next->type == TOKEN_FUNC_CALL)) return 0;
+    if (cur->next == NULL || (cur->next->type != TOKEN_IDENTIFIER && cur->next->type != TOKEN_NUMBER && cur->next->type != TOKEN_FUNC_CALL)) return 0;
     if (prev != NULL && prev->type != TOKEN_OPERATOR && prev->type != TOKEN_LEFT_PAREN && prev->type != TOKEN_SEPARATOR) return 0;
 
     Debug(0, "Creating -1 and multiplication tokens.\n");
