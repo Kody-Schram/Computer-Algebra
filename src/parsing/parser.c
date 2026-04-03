@@ -196,8 +196,6 @@ static int parseFunctionCalls(Token **head) {
                 return 0;
         }
 
-        Debug(0, "Finished parsing a function call.\n");
-
         if (cur != NULL) {
             funcPrev = cur;
             cur = cur->next;

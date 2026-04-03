@@ -215,7 +215,6 @@ Token *tokenize(char *buffer) {
         if (spaceI != -1) {
             if ((prevT == TOKEN_NUMBER || prevT == TOKEN_IDENTIFIER) && (type == TOKEN_IDENTIFIER || type == TOKEN_NUMBER || type == TOKEN_FUNC_CALL)) {
                 printf("Spacing lead to ambiguous intent.\n");
-
                 return NULL;
             }
         }
@@ -223,7 +222,6 @@ Token *tokenize(char *buffer) {
         spaceI = -1;
         prevT = type;
 
-        //if (type == -1) printf("Error getting token type\n");
         Token *newToken = createToken(type, buffer + i, end - i);
         if (newToken == NULL) return NULL;
 

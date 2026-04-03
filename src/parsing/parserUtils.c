@@ -8,8 +8,6 @@
 
 
 Token *createToken(TokenType type, char *value, int l) {
-    //printf("creating token '%s' %d, of type %d\n", value, l, type);
-
     // Allocates new token
     Token *token = (Token*) calloc(1, sizeof(Token));
     if (token == NULL) {

@@ -246,31 +246,31 @@ static int handleFunctionParens(Token **cur) {
  * @param prev Pointer to the previous Token
  * @return int Error code
  */
-static int handleNegatives(Token **ptr, Token *prev) {
-    Token *cur = *ptr;
-
+static int handleNegatives(Token *cur, Token *prev) {
     // Determines if a '-' is in place
     if (cur->type != TOKEN_OPERATOR && strcmp(cur->value, "-")) return 0;
 
     // Outlines cases for following negative handling
     // (ie determines this is a negative and not a subtraction)
+    if (cur->next == NULL || !(cur->next->type == TOKEN_IDENTIFIER || cur->next->type == TOKEN_NUMBER || cur->next->type == TOKEN_FUNC_CALL)) return 0;
     if (prev != NULL && prev->type != TOKEN_OPERATOR && prev->type != TOKEN_LEFT_PAREN && prev->type != TOKEN_SEPARATOR) return 0;
-    
+
     Debug(0, "Creating -1 and multiplication tokens.\n");
+    Token *mult = createToken(TOKEN_OPERATOR, "*", 1);
+    if (mult == NULL) {
+        printf("Error handling negative.\n");
+        return -1;
+    }
 
     cur->type = TOKEN_NUMBER;
     free(cur->value);
     cur->value = strdup("-1");
-    Token *mult = createToken(TOKEN_OPERATOR, "*", 1);
 
-    if (mult == NULL) {
-        printf("Error handling negatives.\n");
-        return -1;
-    }
+    Token *number = cur->next;
 
     // Modifies Token list to include new Tokens
-    mult->next = cur->next;
     cur->next = mult;
+    mult->next = number;
     
     return 1;
 }
@@ -298,6 +298,7 @@ void handleLocalVariables(Token **ptr, Environment *localEnv) {
                 Component *global = searchEnvironment(env, id);
                 id[i + 1] = temp;
 
+                // Any subsequent iterations will always yeild a larger char size if found, so no check required
                 // If local var is found take it 
                 if (local != NULL) {
                     max = strlen(local->identifier);
@@ -305,7 +306,7 @@ void handleLocalVariables(Token **ptr, Environment *localEnv) {
                     continue;
                 }
                 
-                // Any subsequent iteration will always yeild a larger char size if found, so no check required
+                // If global var is found take it
                 if (global != NULL) {
                     max = strlen(global->identifier);
                     cmp = global;
@@ -340,29 +341,29 @@ void handleLocalVariables(Token **ptr, Environment *localEnv) {
     }
 }
 
+
 int lex(Token** head) {
     Config *config = GLOBALCONTEXT->config;
     Debug(0, "\nLexing Tokens\n");
 
-    Token *cur = *head;
+    Token **ptr = head;
     Token *prev = NULL;
 
     int openParenthesis = 0;
 
-    while (cur != NULL) {
-        // printf("Current Token: <%u, %s>\n", cur->type, cur->value);
-        if (handleNegatives(&cur, prev) == -1) return 0;
-        if (handleImplicitMul(cur, prev) == -1) return 0;
-        if (handleExponentRewrite(&cur, prev) == -1) return 0;
-        if (!checkInvalidBinop(cur, prev)) return 0;
-        if (handleFunctionParens(&cur) == -1) return 0;
+    while (*ptr != NULL) {
+        if (handleNegatives(*ptr, prev) == -1) return 0;
+        if (handleImplicitMul(*ptr, prev) == -1) return 0;
+        if (!checkInvalidBinop(*ptr, prev)) return 0;
+        if (handleExponentRewrite(ptr, prev) == -1) return 0;
+        if (handleFunctionParens(ptr) == -1) return 0;
 
         // Counts open parenthesis
-        if (cur->type == TOKEN_LEFT_PAREN) {
+        if ((*ptr)->type == TOKEN_LEFT_PAREN) {
             openParenthesis ++;
         }
 
-        if (cur->type == TOKEN_RIGHT_PAREN) {
+        if ((*ptr)->type == TOKEN_RIGHT_PAREN) {
             if (openParenthesis <= 0) {
                 printf("Mismatched parenthesis.\n");
                 return 0;
@@ -371,8 +372,8 @@ int lex(Token** head) {
             openParenthesis --;
         }
 
-        prev = cur;
-        cur = cur->next;
+        prev = *ptr;
+        ptr = &((*ptr)->next);
     }
 
     if (openParenthesis > 0) {
