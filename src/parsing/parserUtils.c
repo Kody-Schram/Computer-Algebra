@@ -170,6 +170,7 @@ void freeTokens(Token *head) {
     Token* current = head;
     while (current != NULL) {
         Token *next = current->next;
+        Debug(0, "Freeing '%s'\n", current->value);
         if (current->type != TOKEN_FUNC_CALL) free(current->value);
         free(current);
         current = next;

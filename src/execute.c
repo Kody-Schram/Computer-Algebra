@@ -42,8 +42,6 @@ static int executeRecur(ASTNode **ptr, Environment *env) {
     ASTNode *ast = *ptr;
     if (ast == NULL) return 0;
 
-    Debug(1, printAST(ast));
-
     switch (ast->type) {
         case NODE_INTEGER:
         case NODE_DOUBLE:

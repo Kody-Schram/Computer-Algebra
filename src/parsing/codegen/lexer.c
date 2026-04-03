@@ -115,50 +115,60 @@ static int handleExponentRewrite(Token **cur, Token *prev) {
 /**
  * @brief Checks to ensure binary operators valid
  * 
- * @retval -1: Error, binary operator is invalid
- * @retval 0: All binary operators are valid
+ * @retval 0: Error, binary operator is invalid
+ * @retval 1: Binary operator is valid
  * 
  * @param cur Current node in the list
  * @param prev Previous node in the list
  * @return int Error code
  */
 static int checkInvalidBinop(Token *cur, Token *prev) {
-    Token *next = cur->next;
-    if (prev != NULL && next != NULL) {
-        if (cur->type == TOKEN_OPERATOR) {
-            if (prev->type == TOKEN_OPERATOR || next->type == TOKEN_OPERATOR) {
-                printf("Invalid operation \"%s %s %s\".\n", prev->value, cur->value, next->value);
-                //printf("Two operators, \"%s%s\" are not allowed next to each other.\n", cur->value, next->value);
-                return -1;
-
-            } 
-            else if (prev->type != TOKEN_NUMBER && prev->type != TOKEN_IDENTIFIER && prev->type != TOKEN_RIGHT_PAREN) {
-                printf("Invalid operation \"%s %s %s\".\n", prev->value, cur->value, next->value);
-                //printf("Operator must be preceeded by a number, an identifer, or a right parenthesis.\n");
-                return -1;
-            }
-            else if (next->type != TOKEN_NUMBER && next->type != TOKEN_IDENTIFIER && next->type != TOKEN_LEFT_PAREN && next->type != TOKEN_FUNC_CALL) {
-                printf("Invalid operation \"%s %s %s\".\n", prev->value, cur->value, next->value);
-                //printf("Operator must be followed by a number, an identifier, a left parenthesis, or a function call.\n");
-                return -1;
-            }
-        }
-    }
-    else if (cur->type == TOKEN_OPERATOR) {
-        if (prev == NULL && next != NULL) {
-            printf("Invalid operation \"%s%s\".\n", cur->value, next->value);
-        } 
-        else if (next == NULL && prev != NULL) {
-            printf("Invalid operation \"%s%s\".\n", prev->value, cur->value);
-        }
-        else {
-            printf("Invalid operation \"%s\"\n", cur->value);
-        }
-
-        return -1;
+    if (cur->type != TOKEN_OPERATOR) return 1;
+    if (cur->next == NULL) {
+        printf("Operator must be followed by another token.\n");
+        return 0;
     }
 
-    return 0;
+    if (cur->next)
+
+    // if (cur->next->type == TOKEN_OPERATOR && !strcmp(cur->next->value, "-")) return 1;
+
+    // if (prev != NULL && next != NULL) {
+    //     if (cur->type == TOKEN_OPERATOR && !strcmp(cur->value, "-") && cur->next->type != TOKEN_OPERATOR) return 1;
+    //     if (cur->type == TOKEN_OPERATOR) {
+    //         if (prev->type == TOKEN_OPERATOR || !(next->type == TOKEN_OPERATOR && strcmp(next->value, "-"))) {
+    //             printf("Invalid operation \"%s %s %s\".\n", prev->value, cur->value, next->value);
+    //             //printf("Two operators, \"%s%s\" are not allowed next to each other.\n", cur->value, next->value);
+    //             return 0;
+
+    //         } 
+    //         else if (prev->type != TOKEN_NUMBER && prev->type != TOKEN_IDENTIFIER && prev->type != TOKEN_RIGHT_PAREN) {
+    //             printf("Invalid operation \"%s %s %s\".\n", prev->value, cur->value, next->value);
+    //             //printf("Operator must be preceeded by a number, an identifer, or a right parenthesis.\n");
+    //             return 0;
+    //         }
+    //         else if (next->type != TOKEN_NUMBER && next->type != TOKEN_IDENTIFIER && next->type != TOKEN_LEFT_PAREN && next->type != TOKEN_FUNC_CALL) {
+    //             printf("Invalid operation \"%s %s %s\".\n", prev->value, cur->value, next->value);
+    //             //printf("Operator must be followed by a number, an identifier, a left parenthesis, or a function call.\n");
+    //             return 0;
+    //         }
+    //     }
+    // }
+    // else if (cur->type == TOKEN_OPERATOR) {
+    //     if (prev == NULL && next != NULL) {
+    //         printf("Invalid operation \"%s%s\".\n", cur->value, next->value);
+    //     } 
+    //     else if (next == NULL && prev != NULL) {
+    //         printf("Invalid operation \"%s%s\".\n", prev->value, cur->value);
+    //     }
+    //     else {
+    //         printf("Invalid operation \"%s\"\n", cur->value);
+    //     }
+
+    //     return 0;
+    // }
+
+    return 1;
 }
 
 /**
@@ -246,25 +256,21 @@ static int handleNegatives(Token **ptr, Token *prev) {
     // (ie determines this is a negative and not a subtraction)
     if (prev != NULL && prev->type != TOKEN_OPERATOR && prev->type != TOKEN_LEFT_PAREN && prev->type != TOKEN_SEPARATOR) return 0;
     
-    //printf("Creating -1 and multiplication tokens.\n");
+    Debug(0, "Creating -1 and multiplication tokens.\n");
 
-    Token *negative_one = createToken(TOKEN_NUMBER, "-1", 2);
+    cur->type = TOKEN_NUMBER;
+    free(cur->value);
+    cur->value = strdup("-1");
     Token *mult = createToken(TOKEN_OPERATOR, "*", 1);
 
-    if (negative_one == NULL || mult == NULL) {
+    if (mult == NULL) {
         printf("Error handling negatives.\n");
         return -1;
     }
 
     // Modifies Token list to include new Tokens
-    negative_one->next = mult;
     mult->next = cur->next;
-
-    if (prev != NULL) prev->next = negative_one;
-    free(cur->value);
-    free(cur);
-
-    *ptr = negative_one;
+    cur->next = mult;
     
     return 1;
 }
@@ -348,7 +354,7 @@ int lex(Token** head) {
         if (handleNegatives(&cur, prev) == -1) return 0;
         if (handleImplicitMul(cur, prev) == -1) return 0;
         if (handleExponentRewrite(&cur, prev) == -1) return 0;
-        if (checkInvalidBinop(cur, prev) == -1) return 0;
+        if (!checkInvalidBinop(cur, prev)) return 0;
         if (handleFunctionParens(&cur) == -1) return 0;
 
         // Counts open parenthesis
@@ -373,6 +379,9 @@ int lex(Token** head) {
         printf("Mismatched parenthesis.\n");
         return 0;
     } 
+
+    Debug(0, "Updated Tokens\n");
+    Debug(1, printTokens(*head));
 
     return 1;
 
