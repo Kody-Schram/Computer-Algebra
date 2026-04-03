@@ -1,0 +1,19 @@
+log:
+  level: Debug
+  location: "logs/environment.txt"
+
+runtime:
+  strict: true
+
+startup: |
+  f:x->2x
+  g:y,z->yfz
+  f(1)
+  n:1+3
+  4+n
+  m:4+k
+  m-7
+  j:u,n->2un
+  j(1,2)
+  env
+  quit

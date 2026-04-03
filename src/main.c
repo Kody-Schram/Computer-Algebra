@@ -23,7 +23,7 @@ static int handleKeywords(char *buffer) {
             case K_QUIT:
                 return -1;
             case K_ENV:
-                printf("\n");
+                printf("\nEnvironment\n\n");
                 printStream(printEnvironment(GLOBALCONTEXT->env));
                 printf("\n");
                 return 1;

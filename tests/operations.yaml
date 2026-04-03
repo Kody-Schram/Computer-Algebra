@@ -1,6 +1,6 @@
 log:
   level: Debug
-  location: "logs/t1.txt"
+  location: "logs/operations.txt"
 
 runtime:
   strict: true
@@ -19,5 +19,7 @@ startup: |
 
   -1^2
   (-1)^2
+  3^3^2
+  3^0
 
   quit
