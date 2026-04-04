@@ -1,18 +1,55 @@
 name: Build
 run-name: Build ${{ github.ref_name }}
-on: [workflow_dispatch]
+on: workflow_dispatch
 jobs:
-  windows:
+  build-mac:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Install Dependencies
+        run: brew install cmake pkg-config libyaml
+
+      - name: Configure CMake
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build MacOS
+        run: cmake --build build
+
+  build-windows:
     runs-on: windows-latest
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
       - name: Install Dependencies
-        run: vcpkg install libyaml:x64-windows-static
+        run: |
+          choco install msys2 -y
+          C:\tools\msys64\usr\bin\bash -lc "pacman -Sy --noconfirm mingw-w64-x86_64-libyaml"
 
+      - name: Add MinGW to PATH
+        run: echo "C:\tools\msys64\mingw64\bin" >> $GITHUB_PATH
+       
       - name: Configure CMake
-        run: cmake -B build -DCMAKE_EXE_LINKER_FLAGS="-static" -DCMAKE_BUILD_TYPE=RELEASE
+        run: cmake -B build -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Release -DCMAKE_EXE_LINKER_FLAGS="-static"
         
       - name: Build Windows
+        run: cmake --build build
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Install Dependencies
+        run: |
+          apt update
+          apt install -y cmake libyaml-dev
+        
+      - name: Configure CMake
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
         run: cmake --build build
