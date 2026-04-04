@@ -190,7 +190,7 @@ Token *tokenize(char *buffer) {
             end += cRet.len;
 
             if (cRet.cmp == NULL || cRet.cmp->type == VARIABLE) type = TOKEN_IDENTIFIER;
-            else type = TOKEN_FUNC_CALL;
+            else type = TOKEN_FUNC_CALL_PLACEHOLDER;
         }
         
         else {
@@ -213,7 +213,7 @@ Token *tokenize(char *buffer) {
 
         // Prevents ambiguous syntax due to spaces
         if (spaceI != -1) {
-            if ((prevT == TOKEN_NUMBER || prevT == TOKEN_IDENTIFIER) && (type == TOKEN_IDENTIFIER || type == TOKEN_NUMBER || type == TOKEN_FUNC_CALL)) {
+            if ((prevT == TOKEN_NUMBER || prevT == TOKEN_IDENTIFIER) && (type == TOKEN_IDENTIFIER || type == TOKEN_NUMBER || type == TOKEN_FUNC_CALL_PLACEHOLDER)) {
                 printf("Spacing lead to ambiguous intent.\n");
                 return NULL;
             }

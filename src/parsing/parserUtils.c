@@ -50,7 +50,7 @@ static void printToken(Token *token, FILE *stream) {
                 type = "MAPPING";
                 break;
             case TOKEN_SEPARATOR:
-                type = "SEPERATOR";
+                type = "SEPARATOR";
                 break;
             default:
                 type = "FUNC_CALL";
@@ -168,8 +168,13 @@ void freeTokens(Token *head) {
     Token* current = head;
     while (current != NULL) {
         Token *next = current->next;
-        Debug(0, "Freeing '%s'\n", current->value);
-        if (current->type != TOKEN_FUNC_CALL) free(current->value);
+        
+        if (current->type != TOKEN_FUNC_CALL) {
+            Debug(0, "Freeing '%s'\n", current->value);
+            free(current->value);
+        }
+        else Debug(0, "Freeing function call\n");
+
         free(current);
         current = next;
     }

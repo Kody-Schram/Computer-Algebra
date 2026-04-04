@@ -50,7 +50,7 @@ static int parseFunctionCalls(Token **head) {
 
     while (cur != NULL) {
         // Recursively parses nested function calls
-        if (cur->type == TOKEN_FUNC_CALL) {
+        if (cur->type == TOKEN_FUNC_CALL_PLACEHOLDER) {
             Debug(0, "Function call: %s found\n", cur->value);
             Token *funcCall = cur;
             Token *prev = NULL;
