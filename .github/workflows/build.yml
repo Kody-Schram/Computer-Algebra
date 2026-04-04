@@ -32,8 +32,10 @@ jobs:
         run: echo "C:\tools\msys64\mingw64\bin" >> $GITHUB_PATH
        
       - name: Configure CMake
-        run: cmake -B build -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Release -DCMAKE_EXE_LINKER_FLAGS="-static"
-        
+        run: |
+          set PKG_CONFIG_PATH "C:\tools\msys64\mingw64\lib\pkgconfig"
+          cmake -B build -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Release
+
       - name: Build Windows
         run: cmake --build build
 

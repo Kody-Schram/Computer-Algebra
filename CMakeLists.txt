@@ -19,7 +19,8 @@ if(CMAKE_BUILD_TYPE STREQUAL "Release")
 endif()
 
 find_package(PkgConfig REQUIRED)
-pkg_check_modules(YAML REQUIRED yaml-0.1)
+pkg_check_modules(YAML REQUIRED yaml-0.2)
+link_directories(${YAML_LIBRARY_DIRS})
 
 include_directories(include src ${YAML_INCLUDE_DIRS})
 
