@@ -2,18 +2,19 @@ log:
   level: Debug
   location: "logs/environment.txt"
 
-runtime:
-  strict: true
-
 startup: |
+  n:1+3
+  m:4+k
+  4+n
+  m-7
+
   f:x->2x
   g:y,z->yfz
-  f(1)
-  n:1+3
-  4+n
-  m:4+k
-  m-7
   j:u,n->2un
+  r:->5-n
+
+  f(1)
+  f()
+  j(1)
   j(1,2)
-  env
   quit

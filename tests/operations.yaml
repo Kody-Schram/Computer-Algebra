@@ -2,16 +2,13 @@ log:
   level: Debug
   location: "logs/operations.txt"
 
-runtime:
-  strict: true
-
 # Test basic operations
 startup: |
   1+2
   1+-2
   -1+2
   (-1+2)
-  (1+-2)
+  1--2
 
   1*2
   -1*2
@@ -21,5 +18,8 @@ startup: |
   (-1)^2
   3^3^2
   3^0
+
+  x^y^z
+  x(1-2)
 
   quit
