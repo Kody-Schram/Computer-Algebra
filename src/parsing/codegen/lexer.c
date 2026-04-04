@@ -23,7 +23,7 @@
 static int handleImplicitMul(Token *cur, Token *prev) {
     // Handle implicit multiplcation with left bracket or function
     // x(x-1) => x*(x-1)
-    if ((cur->type == TOKEN_LEFT_PAREN || cur->type == TOKEN_FUNC_CALL) && prev != NULL) {
+    if ((cur->type == TOKEN_LEFT_PAREN || cur->type == TOKEN_FUNC_CALL_PLACEHOLDER) && prev != NULL) {
         //printf("checking for left paren and function\n");
         if (prev->type == TOKEN_NUMBER || prev->type == TOKEN_IDENTIFIER) {
             Token *mult = createToken(TOKEN_OPERATOR, "*", 1);
@@ -43,7 +43,7 @@ static int handleImplicitMul(Token *cur, Token *prev) {
     else if (cur->type == TOKEN_RIGHT_PAREN && cur->next != NULL) {
         //printf("checking for right paren\n");
         Token *nextToken = cur->next;
-        if (nextToken->type == TOKEN_NUMBER || nextToken->type == TOKEN_IDENTIFIER || nextToken->type == TOKEN_LEFT_PAREN || nextToken->type == TOKEN_FUNC_CALL) {
+        if (nextToken->type == TOKEN_NUMBER || nextToken->type == TOKEN_IDENTIFIER || nextToken->type == TOKEN_LEFT_PAREN || nextToken->type == TOKEN_FUNC_CALL_PLACEHOLDER) {
             Token *mult = createToken(TOKEN_OPERATOR, "*", 1);
             if (mult == NULL) {
                 printf("Error allocating for implicit multiplcation token.");
@@ -89,76 +89,66 @@ static int handleImplicitMul(Token *cur, Token *prev) {
  * @return int 
  */
 static int handleExponentRewrite(Token **cur, Token *prev) {
-    if ((*cur)->value[0] == '*' && (*cur)->next != NULL) {
-        if ((*cur)->next->value[0] == '*') {
-            Token *exponent = createToken(TOKEN_OPERATOR, "^", 1);
-            if (exponent == NULL) {
-                printf("Error allocating for '**' to '^' conversion token.");
-                return -1;
-            }
+    if ((*cur)->value[0] != '*' || !((*cur)->next == NULL && (*cur)->next->value[0] != '*')) return 0;
+    Debug(0, "Rewriting exponent\n");
 
-            prev->next = exponent;
-            exponent->next = (*cur)->next->next;
-
-            free((*cur)->next->value);
-            free((*cur)->next);
-
-            *cur = exponent;
-
-            return 1;
-        }
+    Token *exponent = createToken(TOKEN_OPERATOR, "^", 1);
+    if (exponent == NULL) {
+        printf("Error allocating for '**' to '^' conversion token.");
+        return -1;
     }
 
-    return 0;
+    exponent->next = (*cur)->next->next;
+
+    free((*cur)->next->value);
+    free((*cur)->next);
+    free((*cur)->value);
+    free(*cur);
+
+    if (prev != NULL) prev->next = exponent;
+    else *cur = exponent;
+
+    return 1;
 }
 
 /**
  * @brief Checks to ensure binary operators valid
  * 
- * @retval -1: Error, binary operator is invalid
- * @retval 0: All binary operators are valid
+ * @retval -1: Invalid binary operation
+ * @retval 0: No binary operation
+ * @retval 1: Binary operator is valid
  * 
  * @param cur Current node in the list
  * @param prev Previous node in the list
  * @return int Error code
  */
 static int checkInvalidBinop(Token *cur, Token *prev) {
-    Token *next = cur->next;
-    if (prev != NULL && next != NULL) {
-        if (cur->type == TOKEN_OPERATOR) {
-            if (prev->type == TOKEN_OPERATOR || next->type == TOKEN_OPERATOR) {
-                printf("Invalid operation \"%s %s %s\".\n", prev->value, cur->value, next->value);
-                //printf("Two operators, \"%s%s\" are not allowed next to each other.\n", cur->value, next->value);
-                return -1;
-
-            } 
-            else if (prev->type != TOKEN_NUMBER && prev->type != TOKEN_IDENTIFIER && prev->type != TOKEN_RIGHT_PAREN) {
-                printf("Invalid operation \"%s %s %s\".\n", prev->value, cur->value, next->value);
-                //printf("Operator must be preceeded by a number, an identifer, or a right parenthesis.\n");
-                return -1;
-            }
-            else if (next->type != TOKEN_NUMBER && next->type != TOKEN_IDENTIFIER && next->type != TOKEN_LEFT_PAREN && next->type != TOKEN_FUNC_CALL) {
-                printf("Invalid operation \"%s %s %s\".\n", prev->value, cur->value, next->value);
-                //printf("Operator must be followed by a number, an identifier, a left parenthesis, or a function call.\n");
-                return -1;
-            }
-        }
-    }
-    else if (cur->type == TOKEN_OPERATOR) {
-        if (prev == NULL && next != NULL) {
-            printf("Invalid operation \"%s%s\".\n", cur->value, next->value);
-        } 
-        else if (next == NULL && prev != NULL) {
-            printf("Invalid operation \"%s%s\".\n", prev->value, cur->value);
-        }
-        else {
-            printf("Invalid operation \"%s\"\n", cur->value);
-        }
-
+    if (cur->type != TOKEN_OPERATOR) return 0;
+    if (cur->next == NULL) {
+        printf("Operator must be followed by another token.\n");
         return -1;
     }
 
-    return 0;
+    if (prev == NULL) {
+        printf("Operator must be preceeded by another token.\n");
+        return -1;
+    }
+
+    // If next op is -, will recheck later, may be a negative number instead of a minus
+    if (cur->next->type == TOKEN_OPERATOR && cur->next->value[0] == '-') return 0;
+
+    // Handles invalid negative signs
+    if (cur->value[0] == '-' && (cur->next == NULL || cur->next->type == TOKEN_OPERATOR)) {
+        printf("Invalid operation \"%s %s %s\".\n", prev->value, cur->value, cur->next->value);
+        return -1;
+    }
+
+    if (cur->next->type != TOKEN_IDENTIFIER && cur->next->type != TOKEN_NUMBER && cur->next->type != TOKEN_FUNC_CALL_PLACEHOLDER && cur->next->type != TOKEN_LEFT_PAREN) {
+        printf("Invalid operation \"%s %s %s\".\n", prev->value, cur->value, cur->next->value);
+        return -1;
+    }
+    
+    return 1;
 }
 
 /**
@@ -173,7 +163,7 @@ static int checkInvalidBinop(Token *cur, Token *prev) {
  */
 static int handleFunctionParens(Token **cur) {
     // revisit
-    if ((*cur)->type == TOKEN_FUNC_CALL) {
+    if ((*cur)->type == TOKEN_FUNC_CALL_PLACEHOLDER) {
         Token *func = *cur;
         if (func->next != NULL) {
             // Try to implicitly add opening parenthesis
@@ -236,35 +226,31 @@ static int handleFunctionParens(Token **cur) {
  * @param prev Pointer to the previous Token
  * @return int Error code
  */
-static int handleNegatives(Token **ptr, Token *prev) {
-    Token *cur = *ptr;
-
+static int handleNegatives(Token *cur, Token *prev) {
     // Determines if a '-' is in place
     if (cur->type != TOKEN_OPERATOR && strcmp(cur->value, "-")) return 0;
 
     // Outlines cases for following negative handling
     // (ie determines this is a negative and not a subtraction)
+    if (cur->next == NULL || (cur->next->type != TOKEN_IDENTIFIER && cur->next->type != TOKEN_NUMBER && cur->next->type != TOKEN_FUNC_CALL_PLACEHOLDER)) return 0;
     if (prev != NULL && prev->type != TOKEN_OPERATOR && prev->type != TOKEN_LEFT_PAREN && prev->type != TOKEN_SEPARATOR) return 0;
-    
-    //printf("Creating -1 and multiplication tokens.\n");
 
-    Token *negative_one = createToken(TOKEN_NUMBER, "-1", 2);
+    Debug(0, "Creating -1 and multiplication tokens.\n");
     Token *mult = createToken(TOKEN_OPERATOR, "*", 1);
-
-    if (negative_one == NULL || mult == NULL) {
-        printf("Error handling negatives.\n");
+    if (mult == NULL) {
+        printf("Error handling negative.\n");
         return -1;
     }
 
-    // Modifies Token list to include new Tokens
-    negative_one->next = mult;
-    mult->next = cur->next;
-
-    if (prev != NULL) prev->next = negative_one;
+    cur->type = TOKEN_NUMBER;
     free(cur->value);
-    free(cur);
+    cur->value = strdup("-1");
 
-    *ptr = negative_one;
+    Token *number = cur->next;
+
+    // Modifies Token list to include new Tokens
+    cur->next = mult;
+    mult->next = number;
     
     return 1;
 }
@@ -292,6 +278,7 @@ void handleLocalVariables(Token **ptr, Environment *localEnv) {
                 Component *global = searchEnvironment(env, id);
                 id[i + 1] = temp;
 
+                // Any subsequent iterations will always yeild a larger char size if found, so no check required
                 // If local var is found take it 
                 if (local != NULL) {
                     max = strlen(local->identifier);
@@ -299,7 +286,7 @@ void handleLocalVariables(Token **ptr, Environment *localEnv) {
                     continue;
                 }
                 
-                // Any subsequent iteration will always yeild a larger char size if found, so no check required
+                // If global var is found take it
                 if (global != NULL) {
                     max = strlen(global->identifier);
                     cmp = global;
@@ -334,29 +321,36 @@ void handleLocalVariables(Token **ptr, Environment *localEnv) {
     }
 }
 
+
 int lex(Token** head) {
     Config *config = GLOBALCONTEXT->config;
     Debug(0, "\nLexing Tokens\n");
 
-    Token *cur = *head;
+    Token **ptr = head;
     Token *prev = NULL;
 
     int openParenthesis = 0;
 
-    while (cur != NULL) {
-        // printf("Current Token: <%u, %s>\n", cur->type, cur->value);
-        if (handleNegatives(&cur, prev) == -1) return 0;
-        if (handleImplicitMul(cur, prev) == -1) return 0;
-        if (handleExponentRewrite(&cur, prev) == -1) return 0;
-        if (checkInvalidBinop(cur, prev) == -1) return 0;
-        if (handleFunctionParens(&cur) == -1) return 0;
+    while (*ptr != NULL) {
+        if (handleNegatives(*ptr, prev) == -1) return 0;
+        if (handleImplicitMul(*ptr, prev) == -1) return 0;
+        if (handleExponentRewrite(ptr, prev) == -1) return 0;
+        if (checkInvalidBinop(*ptr, prev) == -1) return 0;
+        if (handleFunctionParens(ptr) == -1) return 0;
 
         // Counts open parenthesis
-        if (cur->type == TOKEN_LEFT_PAREN) {
+        if ((*ptr)->type == TOKEN_LEFT_PAREN) {
+            // Empty parens, what are we doing gang
+            if ((*ptr)->next->type == TOKEN_RIGHT_PAREN) {
+                printf("Empty parenthesis.\n");
+                Debug(0, "Empty parens\n");
+                Debug(1, printTokens(*head));
+                return 0;
+            }
             openParenthesis ++;
         }
 
-        if (cur->type == TOKEN_RIGHT_PAREN) {
+        if ((*ptr)->type == TOKEN_RIGHT_PAREN) {
             if (openParenthesis <= 0) {
                 printf("Mismatched parenthesis.\n");
                 return 0;
@@ -365,14 +359,17 @@ int lex(Token** head) {
             openParenthesis --;
         }
 
-        prev = cur;
-        cur = cur->next;
+        prev = *ptr;
+        ptr = &((*ptr)->next);
     }
 
     if (openParenthesis > 0) {
         printf("Mismatched parenthesis.\n");
         return 0;
     } 
+
+    Debug(0, "Updated Tokens\n");
+    Debug(1, printTokens(*head));
 
     return 1;
 

@@ -42,6 +42,7 @@ static int executeRecur(ASTNode **ptr, Environment *env) {
     ASTNode *ast = *ptr;
     if (ast == NULL) return 0;
 
+    Debug(0, "Recursively executing\n");
     Debug(1, printAST(ast));
 
     switch (ast->type) {
@@ -118,12 +119,17 @@ static int executeRecur(ASTNode **ptr, Environment *env) {
             return 1;
 
         case NODE_OPERATOR:
-            if (!executeRecur(&ast->left, env) || !executeRecur(&ast->right, env)) return 0;
+            int lAst = executeRecur(&(ast->left), env);
+            int rAst = executeRecur(&(ast->right), env);
+            if (!lAst || !rAst) return 0;
 
+            Debug(0, "Running main operator now\n");
+            Debug(1, printAST(ast));
             // Evaluates if both children aren't a variable
             ASTNode *left = ast->left;
             ASTNode *right = ast->right;
-            if (left->type != NODE_VARIABLE && right->type != NODE_VARIABLE) {
+            if ((left->type == NODE_INTEGER || left->type == NODE_DOUBLE) && (right->type == NODE_INTEGER || right->type == NODE_DOUBLE)) {
+                Debug(0, "Evaluating operation\n");
                 switch (ast->op) {
                     case OP_ADDITION: {
                         ASTNode *new = NULL;
@@ -187,17 +193,25 @@ static int executeRecur(ASTNode **ptr, Environment *env) {
 
                     case OP_EXPONTENTIATION: {
                         ASTNode *new = NULL;
-                        if (left->type == NODE_INTEGER && right->type == NODE_INTEGER) {
-                            new = dummyASTNode(NODE_INTEGER);
-                            if (new == NULL) return 0;
-                            new->integer = powi(left->integer, right->integer);
+
+                        if (left->type == NODE_INTEGER && right->type == NODE_INTEGER && right->integer >= 0) {
+                            if (left->integer == 0 && right->integer == 0) {
+                                new = dummyASTNode(NODE_INTEGER);
+                                if (new == NULL) return 0;
+                                new->integer = 1;
+                            } else {
+                                new = dummyASTNode(NODE_INTEGER);
+                                if (new == NULL) return 0;
+                                new->integer = powi(left->integer, right->integer);
+                            }
                         } else {
                             new = dummyASTNode(NODE_DOUBLE);
                             if (new == NULL) return 0;
-                            double l = (left->type == NODE_INTEGER) ? (double) left->integer : left->value;
-                            double r = (right->type == NODE_INTEGER) ? (double) right->integer : right->value;
+                            long double l = (left->type == NODE_INTEGER) ? (long double) left->integer : left->value;
+                            long double r = (right->type == NODE_INTEGER) ? (long double) right->integer : right->value;
 
-                            new->value = powf(l, r);
+                            if (left->value == 0 && right->value == 0) new->value = 1;
+                            else new->value = powl(l, r);
                         }
 
                         freeAST(ast);

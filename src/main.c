@@ -23,7 +23,7 @@ static int handleKeywords(char *buffer) {
             case K_QUIT:
                 return -1;
             case K_ENV:
-                printf("\n");
+                printf("\nEnvironment\n\n");
                 printStream(printEnvironment(GLOBALCONTEXT->env));
                 printf("\n");
                 return 1;
@@ -50,9 +50,11 @@ static int process(char *buffer) {
     else if (result == 1) return 1;
 
     ASTNode *head = parse(buffer);
+    if (head == NULL && GLOBALCONTEXT->config->STRICT) return 0;
     if (head != NULL) {
         if (!execute(&head)) {
             freeAST(head);
+            if (GLOBALCONTEXT->config->STRICT) return 0;
             return 1;
         }
     }
@@ -167,8 +169,14 @@ static int runStartup() {
 }
 
 
-int main() {
-    if (!initContext())  {
+int main(int argc, char *argv[]) {
+    char *cpath = NULL;
+    if (argc > 1) {
+        cpath = argv[1];
+        printf("Loading config from '%s'\n", cpath);
+    }
+
+    if (!initContext(cpath))  {
         freeContext(GLOBALCONTEXT);
         return 1;
     }

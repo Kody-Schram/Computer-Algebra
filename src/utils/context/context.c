@@ -18,10 +18,10 @@ Context *createContext(Config *config, Environment *env) {
     return context;
 }
 
-int initContext() {
+int initContext(char *cpath) {
     if (GLOBALCONTEXT != NULL) return 0;
 
-    Config *config = loadConfig();
+    Config *config = loadConfig(cpath);
     Environment *env = createEnvironment();
 
     if (config == NULL || env == NULL) {

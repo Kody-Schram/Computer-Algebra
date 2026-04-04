@@ -117,15 +117,15 @@ RPNList *shuntingYard(Token *head) {
 
         } else if (cur->type == TOKEN_OPERATOR) {
             if (operators.entries > 0) {
-                /*
-                Handle right associativity with ^
-                */
-
                 // Pops all operators on stack with greater or equal precedent
                 while ((operators.entries > 0) 
-                        && (((Token *) operators.items[operators.entries - 1])->value[0] != '(') 
-                        && (getPrecedent(((Token *) operators.items[operators.entries - 1])->value) >= getPrecedent(cur->value))) {
-
+                    && (((Token *) operators.items[operators.entries - 1])->value[0] != '(') 
+                    && (getPrecedent(((Token *) operators.items[operators.entries - 1])->value) >= getPrecedent(cur->value))) {
+                    
+                            // Right associativity for exponents
+                    if (((Token *) operators.items[operators.entries - 1])->value[0] == '^' 
+                        && getPrecedent(((Token *) operators.items[operators.entries - 1])->value) == getPrecedent(cur->value)) break;
+                    
                     operators.entries --;
                     output.items[output.entries] = operators.items[operators.entries];
                     output.entries ++;
@@ -169,6 +169,9 @@ RPNList *shuntingYard(Token *head) {
 
     list->length = output.entries;
     list->items = (Token**) output.items;
+
+    Debug(0, "RPN List\n");
+    Debug(1, printRPN(list));
 
     return list;
 

@@ -83,6 +83,7 @@ static int getNumber(char *c) {
  * @return int Length of largest component found or length of contiuguous valid identifier characters
  */
 static ComponentReturn getComponentLength(char *c) {
+    Debug(0, "Checking component.\n");
     ComponentReturn result = {0, NULL};
     // If not valid character type for variable name, automatically skip check
     if (!isalpha(c[0])) return result;
@@ -189,7 +190,7 @@ Token *tokenize(char *buffer) {
             end += cRet.len;
 
             if (cRet.cmp == NULL || cRet.cmp->type == VARIABLE) type = TOKEN_IDENTIFIER;
-            else type = TOKEN_FUNC_CALL;
+            else type = TOKEN_FUNC_CALL_PLACEHOLDER;
         }
         
         else {
@@ -212,9 +213,8 @@ Token *tokenize(char *buffer) {
 
         // Prevents ambiguous syntax due to spaces
         if (spaceI != -1) {
-            if ((prevT == TOKEN_NUMBER || prevT == TOKEN_IDENTIFIER) && (type == TOKEN_IDENTIFIER || type == TOKEN_NUMBER || type == TOKEN_FUNC_CALL)) {
+            if ((prevT == TOKEN_NUMBER || prevT == TOKEN_IDENTIFIER) && (type == TOKEN_IDENTIFIER || type == TOKEN_NUMBER || type == TOKEN_FUNC_CALL_PLACEHOLDER)) {
                 printf("Spacing lead to ambiguous intent.\n");
-
                 return NULL;
             }
         }
@@ -222,7 +222,6 @@ Token *tokenize(char *buffer) {
         spaceI = -1;
         prevT = type;
 
-        //if (type == -1) printf("Error getting token type\n");
         Token *newToken = createToken(type, buffer + i, end - i);
         if (newToken == NULL) return NULL;
 
@@ -237,6 +236,8 @@ Token *tokenize(char *buffer) {
         i = end;
 
     }
+
+    Debug(1, printTokens(head));
     
     return head;
 }

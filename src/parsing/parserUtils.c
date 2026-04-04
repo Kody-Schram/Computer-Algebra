@@ -8,8 +8,6 @@
 
 
 Token *createToken(TokenType type, char *value, int l) {
-    //printf("creating token '%s' %d, of type %d\n", value, l, type);
-
     // Allocates new token
     Token *token = (Token*) calloc(1, sizeof(Token));
     if (token == NULL) {
@@ -52,7 +50,7 @@ static void printToken(Token *token, FILE *stream) {
                 type = "MAPPING";
                 break;
             case TOKEN_SEPARATOR:
-                type = "SEPERATOR";
+                type = "SEPARATOR";
                 break;
             default:
                 type = "FUNC_CALL";
@@ -170,7 +168,13 @@ void freeTokens(Token *head) {
     Token* current = head;
     while (current != NULL) {
         Token *next = current->next;
-        if (current->type != TOKEN_FUNC_CALL) free(current->value);
+        
+        if (current->type != TOKEN_FUNC_CALL) {
+            Debug(0, "Freeing '%s'\n", current->value);
+            free(current->value);
+        }
+        else Debug(0, "Freeing function call\n");
+
         free(current);
         current = next;
     }

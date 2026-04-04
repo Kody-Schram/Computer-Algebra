@@ -50,7 +50,7 @@ static int parseFunctionCalls(Token **head) {
 
     while (cur != NULL) {
         // Recursively parses nested function calls
-        if (cur->type == TOKEN_FUNC_CALL) {
+        if (cur->type == TOKEN_FUNC_CALL_PLACEHOLDER) {
             Debug(0, "Function call: %s found\n", cur->value);
             Token *funcCall = cur;
             Token *prev = NULL;
@@ -196,8 +196,6 @@ static int parseFunctionCalls(Token **head) {
                 return 0;
         }
 
-        Debug(0, "Finished parsing a function call.\n");
-
         if (cur != NULL) {
             funcPrev = cur;
             cur = cur->next;
@@ -250,6 +248,10 @@ static ASTNode *parseFunctionDefinition(Token *head) {
             // Switches to BODY if '->' is found
             if (cur->type == TOKEN_MAPPING) {
                 Debug(0, "Moving to function body.\n");
+                if (localEnv->entries == 0) {
+                    printf("No parameters were passed. If this is intentional, define a variable instead.\n");
+                    goto error;
+                }
                 asgn = cur;
                 component = BODY;
             } else if (cur->type != TOKEN_IDENTIFIER && cur->type != TOKEN_SEPARATOR) {
@@ -391,7 +393,10 @@ ASTNode *parse(char *buffer) {
     head = tokenize(buffer);
     if (head == NULL) return NULL;
 
-    if (!lex(&head)) return NULL;
+    if (!lex(&head)) {
+        freeTokens(head);
+        return NULL;
+    }
 
     if (containsAssignment(head)) {
         if (!containsFunctionDefinition(head)) return parseAssignment(head);
@@ -415,7 +420,6 @@ ASTNode *parse(char *buffer) {
 
     free(RPN->items);
     free(RPN);
-
     freeTokens(head);
 
     return ast;
