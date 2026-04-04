@@ -4,7 +4,7 @@ project(algebra C)
 
 if(NOT CMAKE_BUILD_TYPE) 
     message("No build type specified, defaulting to release.")
-    set(CMAKE_BUILD_TYPE DEVELOP)
+    set(CMAKE_BUILD_TYPE RELEASE)
 endif()
 
 if(CMAKE_BUILD_TYPE STREQUAL "DEVELOP")

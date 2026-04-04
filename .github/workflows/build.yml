@@ -1,0 +1,18 @@
+name: Build
+run-name: Build ${{ github.ref_name }}
+on: [workflow_dispatch]
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Install Dependencies
+        run: vcpkg install libyaml:x64-windows-static
+
+      - name: Configure CMake
+        run: cmake -B build -DCMAKE_EXE_LINKER_FLAGS="-static" -DCMAKE_BUILD_TYPE=RELEASE
+        
+      - name: Build Windows
+        run: cmake --build build

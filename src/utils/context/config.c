@@ -424,15 +424,13 @@ Config *loadConfig(char *cpath) {
 
         if (cfile == NULL) {
             printf("Error loading config.\n");
-            freeConfig(config);
-            return NULL;
+            return config;
         }
     } else {
         cfile = fopen(cpath, "rb");
         if (cfile == NULL) {
             printf("Error loading config.\n");
-            freeConfig(config);
-            return NULL;
+            return config;
         }
     }
 

@@ -17,7 +17,17 @@ Token *createToken(TokenType type, char *value, int l) {
 
     // Populates newToken attributes
     token->type = type;
-    token->value = strndup(value, l);
+
+    token->value = malloc(l + 1);
+    if (token->value == NULL) {
+        printf("Error allocating for token value.\n");
+        free(token);
+        return NULL;
+    } 
+
+    memcpy(token->value, value, l);
+    token->value[l] = '\0';
+
     token->next = NULL;
 
     return token;
