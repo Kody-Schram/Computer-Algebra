@@ -170,6 +170,9 @@ RPNList *shuntingYard(Token *head) {
     list->length = output.entries;
     list->items = (Token**) output.items;
 
+    Debug(0, "RPN List\n");
+    Debug(1, printRPN(list));
+
     return list;
 
     error:

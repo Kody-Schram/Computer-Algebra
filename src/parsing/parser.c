@@ -248,6 +248,10 @@ static ASTNode *parseFunctionDefinition(Token *head) {
             // Switches to BODY if '->' is found
             if (cur->type == TOKEN_MAPPING) {
                 Debug(0, "Moving to function body.\n");
+                if (localEnv->entries == 0) {
+                    printf("No parameters were passed. If this is intentional, define a variable instead.\n");
+                    goto error;
+                }
                 asgn = cur;
                 component = BODY;
             } else if (cur->type != TOKEN_IDENTIFIER && cur->type != TOKEN_SEPARATOR) {
