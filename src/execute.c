@@ -193,7 +193,7 @@ static int executeRecur(ASTNode **ptr, Environment *env) {
 
                     case OP_EXPONTENTIATION: {
                         ASTNode *new = NULL;
-                        if (left->type == NODE_INTEGER && right->type == NODE_INTEGER) {
+                        if (left->type == NODE_INTEGER && right->type == NODE_INTEGER && right->integer > 0) {
                             new = dummyASTNode(NODE_INTEGER);
                             if (new == NULL) return 0;
                             new->integer = powi(left->integer, right->integer);
