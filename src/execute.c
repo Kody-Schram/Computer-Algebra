@@ -193,17 +193,25 @@ static int executeRecur(ASTNode **ptr, Environment *env) {
 
                     case OP_EXPONTENTIATION: {
                         ASTNode *new = NULL;
-                        if (left->type == NODE_INTEGER && right->type == NODE_INTEGER && right->integer > 0) {
-                            new = dummyASTNode(NODE_INTEGER);
-                            if (new == NULL) return 0;
-                            new->integer = powi(left->integer, right->integer);
+
+                        if (left->type == NODE_INTEGER && right->type == NODE_INTEGER && right->integer >= 0) {
+                            if (left->integer == 0 && right->integer == 0) {
+                                new = dummyASTNode(NODE_INTEGER);
+                                if (new == NULL) return 0;
+                                new->integer = 1;
+                            } else {
+                                new = dummyASTNode(NODE_INTEGER);
+                                if (new == NULL) return 0;
+                                new->integer = powi(left->integer, right->integer);
+                            }
                         } else {
                             new = dummyASTNode(NODE_DOUBLE);
                             if (new == NULL) return 0;
-                            double l = (left->type == NODE_INTEGER) ? (double) left->integer : left->value;
-                            double r = (right->type == NODE_INTEGER) ? (double) right->integer : right->value;
+                            long double l = (left->type == NODE_INTEGER) ? (long double) left->integer : left->value;
+                            long double r = (right->type == NODE_INTEGER) ? (long double) right->integer : right->value;
 
-                            new->value = powf(l, r);
+                            if (left->value == 0 && right->value == 0) new->value = 1;
+                            else new->value = powl(l, r);
                         }
 
                         freeAST(ast);
