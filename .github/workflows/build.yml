@@ -19,6 +19,12 @@ jobs:
       - name: Build MacOS
         run: cmake --build build
 
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: algebra-${{ runner.os }} # This names it algebra-macOS, algebra-Windows, etc.
+          path: build/algebra*
+
   build-windows:
     runs-on: windows-latest
     steps:
@@ -41,6 +47,12 @@ jobs:
       - name: Build Windows
         run: cmake --build build
 
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: algebra-${{ runner.os }} # This names it algebra-macOS, algebra-Windows, etc.
+          path: build/algebra*
+
   build:
     runs-on: ubuntu-latest
     steps:
@@ -57,3 +69,9 @@ jobs:
 
       - name: Build
         run: cmake --build build
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: algebra-${{ runner.os }} # This names it algebra-macOS, algebra-Windows, etc.
+          path: build/algebra*
