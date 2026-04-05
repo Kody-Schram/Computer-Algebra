@@ -185,6 +185,7 @@ RPNList *shuntingYard(Token *head) {
 
 
 ASTNode *astFromRPN(RPNList *rpn) {
+    // Look into block allocation to pack nodes nearby, a very good estimate on the size of the block needed comes from the size of the token list
     Debug(0, "\nGenerating AST.\n");
 
     Stack nodes = {

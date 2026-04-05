@@ -117,7 +117,7 @@ static void printASTRec(ASTNode *node, int level, FILE *stream) {
             break;
 
         case NODE_DOUBLE:
-            fprintf(stream, "<type: DOUBLE, value: %Lf>\n", node->value);
+            fprintf(stream, "<type: DOUBLE, value: %g>\n", node->value);
             break;
 
         case NODE_OPERATOR:
@@ -283,7 +283,7 @@ static void astToStringRecur(ASTNode *ast, FILE *stream) {
             break;
 
         case NODE_DOUBLE:
-            fprintf(stream, "%Lf", ast->value);
+            fprintf(stream, "%g", ast->value);
             break;
 
         case NODE_INTEGER:

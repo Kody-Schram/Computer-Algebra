@@ -36,8 +36,8 @@ struct Config {
 
     KeywordMapping MAPPING[3];
 
-    int OUTPUTS;
     char *OUTPUT_ID;
+    int OUTPUTS;
 
     int STRICT;
     int PRESERVE_FRACS;

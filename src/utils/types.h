@@ -49,10 +49,12 @@ enum OperationType {
 
 struct ASTNode {
     NodeType type;
+    // Look into packing an int in here to support scientific notation
+
     union {
         OperationType op;
         char *identifier;
-        long double value;
+        double value; // Uses double over long double as most math.h funcs cast to double, and would leave 12 bytes of wasted space
         long long integer;
         Function *func;
         FunctionCall *call;
