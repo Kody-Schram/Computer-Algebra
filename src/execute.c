@@ -130,10 +130,10 @@ static int executeRecur(ASTNode **ptr, Environment *env) {
             ASTNode *right = ast->right;
             if ((left->type == NODE_INTEGER || left->type == NODE_DOUBLE) && (right->type == NODE_INTEGER || right->type == NODE_DOUBLE)) {
                 Debug(0, "Evaluating operation\n");
-                
+
                 ASTNode *new = NULL;
-                long double l = (left->type == NODE_INTEGER) ? (long double) left->integer : left->value;
-                long double r = (right->type == NODE_INTEGER) ? (long double) right->integer: right->value;
+                double l = (left->type == NODE_INTEGER) ? (double) left->integer : left->value;
+                double r = (right->type == NODE_INTEGER) ? (double) right->integer: right->value;
                 
                 switch (ast->op) {
                     case OP_ADDITION: {
@@ -222,7 +222,7 @@ static int executeRecur(ASTNode **ptr, Environment *env) {
                             if (!GLOBALCONTEXT->config->PRESERVE_FRACS) {
                                 new = dummyASTNode(NODE_DOUBLE);
                                 if (new == NULL) return 0;
-                                new->value = ((long double) ast->left->value) / ((long double) ast->right->value);
+                                new->value = ((double) ast->left->value) / ((double) ast->right->value);
 
                                 freeAST(ast);
                                 *ptr = new;
