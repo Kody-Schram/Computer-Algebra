@@ -3,7 +3,7 @@
 *A system which parses and executes mathematical expressions and equations.*
 
 ## Dependencies
--[libyaml](https://github.com/yaml/libyaml)
+- [libyaml](https://github.com/yaml/libyaml)
 
 
 ## Configuration
