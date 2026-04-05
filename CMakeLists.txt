@@ -16,7 +16,7 @@ endif()
 
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
     add_definitions(-DRelease)
-    add_compile_options(-O3)
+    add_compile_options(-s -O3)
     message("Making release build.")
 endif()
 
