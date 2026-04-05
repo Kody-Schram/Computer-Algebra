@@ -395,7 +395,7 @@ static void initConfig(Config *config) {
 
 
 Config *loadConfig(char *cpath) {
-    Config *config = malloc(sizeof(Config));
+    Config *config = calloc(1, sizeof(Config));
     if (config == NULL) {
         fprintf(stdout, "Error allocating for config.\n");
         return NULL;

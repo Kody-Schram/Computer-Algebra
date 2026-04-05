@@ -9,10 +9,10 @@ const int DEFAULT_TABLE_SIZE = 10;
 const int DEFAULT_INCREASE_SIZE = 5;
 
 Environment *createEnvironment() {
-    Environment *env = malloc(sizeof(Environment));
+    Environment *env = calloc(1, sizeof(Environment));
     env->entries = 0;
     env->size = DEFAULT_TABLE_SIZE;
-    env->components = malloc(sizeof(Component) * DEFAULT_TABLE_SIZE);
+    env->components = calloc(1, sizeof(Component) * DEFAULT_TABLE_SIZE);
     env->parent = NULL;
 
     return env;

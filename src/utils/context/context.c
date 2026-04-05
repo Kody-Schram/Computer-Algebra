@@ -6,7 +6,7 @@
 Context *GLOBALCONTEXT = NULL;
 
 Context *createContext(Config *config, Environment *env) {
-    Context *context = malloc(sizeof(Context));
+    Context *context = calloc(1, sizeof(Context));
     if (context == NULL) {
         printf("Error allocating for context.\n");
         return NULL;
