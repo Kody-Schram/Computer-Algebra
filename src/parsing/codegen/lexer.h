@@ -5,7 +5,7 @@
 #include "parsing/parserTypes.h"
 
 
-void handleLocalVariables(Token **ptr, Environment *localEnv);
+int handleLocalVariables(Token **ptr, Environment *localEnv);
 
 /**
  * @brief Refines tokens list for AST generation

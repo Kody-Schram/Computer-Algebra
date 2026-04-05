@@ -446,7 +446,7 @@ static void initConfig(Config *config) {
 Config *loadConfig(char *cpath) {
     Config *config = calloc(1, sizeof(Config));
     if (config == NULL) {
-        fprintf(stdout, "Error allocating for config.\n");
+        perror("Error in config");
         return NULL;
     }
 
@@ -472,13 +472,13 @@ Config *loadConfig(char *cpath) {
         }
 
         if (cfile == NULL) {
-            printf("Error loading config.\n");
+            perror("Error loading config");
             return config;
         }
     } else {
         cfile = fopen(cpath, "rb");
         if (cfile == NULL) {
-            printf("Error loading config.\n");
+            perror("Error loading config");
             return config;
         }
     }

@@ -141,7 +141,7 @@ static int runStartup() {
                 Debug(0, "Running startup script from file: '%s'.\n", line);
                 FILE *file = fopen(line, "r");
                 if (file == NULL) {
-                    printf("Couldn't load startup script.\n");
+                    perror("Couldn't load startup script");
                     return 0;
                 }
 

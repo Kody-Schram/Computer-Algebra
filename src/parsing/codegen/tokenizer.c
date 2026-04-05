@@ -223,7 +223,10 @@ Token *tokenize(char *buffer) {
         prevT = type;
 
         Token *newToken = createToken(type, buffer + i, end - i);
-        if (newToken == NULL) return NULL;
+        if (newToken == NULL) {
+            perror("Error in tokenizer");
+            return NULL;
+        }
 
         // Updates linked list
         if (prev != NULL) {

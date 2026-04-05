@@ -11,13 +11,13 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 if(CMAKE_BUILD_TYPE STREQUAL "Develop")
-    add_compile_options(-Og)
+    add_compile_options(-g -Og)
     message("Making develop build.")
 endif()
 
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
     add_definitions(-DRelease)
-    add_compile_options(-O3)
+    add_compile_options(-s -O3)
     message("Making release build.")
 endif()
 

@@ -28,7 +28,7 @@ static int handleImplicitMul(Token *cur, Token *prev) {
         if (prev->type == TOKEN_NUMBER || prev->type == TOKEN_IDENTIFIER) {
             Token *mult = createToken(TOKEN_OPERATOR, "*", 1);
             if (mult == NULL) {
-                printf("Error allocating for implicit multiplcation token.");
+                perror("Error in implicit multiplication");
                 return -1;
             }
 
@@ -46,7 +46,7 @@ static int handleImplicitMul(Token *cur, Token *prev) {
         if (nextToken->type == TOKEN_NUMBER || nextToken->type == TOKEN_IDENTIFIER || nextToken->type == TOKEN_LEFT_PAREN || nextToken->type == TOKEN_FUNC_CALL_PLACEHOLDER) {
             Token *mult = createToken(TOKEN_OPERATOR, "*", 1);
             if (mult == NULL) {
-                printf("Error allocating for implicit multiplcation token.");
+                perror("Error in implicit multiplication");
                 return -1;
             }
 
@@ -63,7 +63,7 @@ static int handleImplicitMul(Token *cur, Token *prev) {
 
             Token *mult = createToken(TOKEN_OPERATOR, "*", 1);
             if (mult == NULL) {
-                printf("Error allocating for implicit multiplcation token.");
+                perror("Error in implicit multiplication");
                 return -1;
             }
 
@@ -94,7 +94,7 @@ static int handleExponentRewrite(Token **cur, Token *prev) {
 
     Token *exponent = createToken(TOKEN_OPERATOR, "^", 1);
     if (exponent == NULL) {
-        printf("Error allocating for '**' to '^' conversion token.");
+        perror("Error in exponent rewrite");
         return -1;
     }
 
@@ -170,7 +170,7 @@ static int handleFunctionParens(Token **cur) {
             if (func->next->type != TOKEN_LEFT_PAREN) {
                 Token *parenthesis = createToken(TOKEN_LEFT_PAREN, "(", 1);
                 if (parenthesis == NULL) {
-                    printf("Error creating the opening parenthesis token.\n");
+                    perror("Error handling function parenthesis");
                     return -1;
                 }
                 parenthesis->next = func->next;
@@ -182,7 +182,7 @@ static int handleFunctionParens(Token **cur) {
                     if (func->next == NULL) {
                         Token *closing = createToken(TOKEN_RIGHT_PAREN, ")", 1);
                         if (closing == NULL) {
-                            printf("Error creating the closing parenthesis token.\n");
+                            perror("Error handling function parenthesis");
                             return -1;
                         }
                         closing->next = NULL;
@@ -196,7 +196,7 @@ static int handleFunctionParens(Token **cur) {
 
                 Token *closing = createToken(TOKEN_RIGHT_PAREN, ")", 1);
                 if (closing == NULL) {
-                    printf("Error creating the closing parenthesis token.\n");
+                    perror("Error handling function parenthesis");
                     return -1;
                 }
                 closing->next = func->next->next;
@@ -238,7 +238,7 @@ static int handleNegatives(Token *cur, Token *prev) {
     Debug(0, "Creating -1 and multiplication tokens.\n");
     Token *mult = createToken(TOKEN_OPERATOR, "*", 1);
     if (mult == NULL) {
-        printf("Error handling negative.\n");
+        perror("Error handling negative");
         return -1;
     }
 
@@ -256,7 +256,7 @@ static int handleNegatives(Token *cur, Token *prev) {
 }
 
 
-void handleLocalVariables(Token **ptr, Environment *localEnv) {
+int handleLocalVariables(Token **ptr, Environment *localEnv) {
     Config *config = GLOBALCONTEXT->config;
     Environment *env = GLOBALCONTEXT->env;
 
@@ -299,7 +299,17 @@ void handleLocalVariables(Token **ptr, Environment *localEnv) {
             if (max != strlen(cur->value) && max != 0) {
                 // create new tokens to split
                 Token *left = createToken(TOKEN_IDENTIFIER, cmp->identifier, max);
+                if (left == NULL) {
+                    perror("Error handling local variables");
+                    return 0;
+                }
+
                 Token *right = createToken(TOKEN_IDENTIFIER, id + max, strlen(id) - max);
+                if (right == NULL) {
+                    perror("Error handling local variables");
+                    free(left);
+                    return 0;
+                }
 
                 left->next = right;
                 right->next = cur->next;
@@ -319,6 +329,8 @@ void handleLocalVariables(Token **ptr, Environment *localEnv) {
         prev = cur;
         cur = cur->next;
     }
+
+    return 1;
 }
 
 

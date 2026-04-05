@@ -8,7 +8,7 @@ Context *GLOBALCONTEXT = NULL;
 Context *createContext(Config *config, Environment *env) {
     Context *context = calloc(1, sizeof(Context));
     if (context == NULL) {
-        printf("Error allocating for context.\n");
+        perror("Error in context");
         return NULL;
     }
 

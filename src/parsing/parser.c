@@ -18,6 +18,7 @@ typedef enum FunctionComponent {
     BODY
 } FunctionComponent;
 
+
 static int containsFunctionDefinition(Token *head) {
     Token *cur = head;
     while (cur != NULL) {
@@ -61,10 +62,7 @@ static int parseFunctionCalls(Token **head) {
             int size = DEFAULT_PARAMETERS_SIZE;
             int nParameters = 0;
             ASTNode **paramASTs = malloc(sizeof(ASTNode *) * size);
-            if (paramASTs == NULL) {
-                printf("Error allocating for parameter ASTs.\n");
-                goto error;
-            }
+            if (paramASTs == NULL) goto error;
 
             // Selects opening paren to be freed
             Token *opening = cur->next;
@@ -142,19 +140,15 @@ static int parseFunctionCalls(Token **head) {
             
             // Creates new function call token
             Debug(0, "Creating new function call token.\n");
-             callToken = calloc(1, sizeof(Token));
-            if (callToken == NULL) {
-                printf("Error allocating memory for new function call token.\n");
-                goto error;
-            }
+            callToken = calloc(1, sizeof(Token));
+            if (callToken == NULL) goto error;
+            
             callToken->type = TOKEN_FUNC_CALL;
             callToken->next = seperator->next;
 
             call = malloc(sizeof(FunctionCall));
-            if (call == NULL) {
-                printf("Error allocating memory for function call.\n");
-                goto error;
-            }
+            if (call == NULL) goto error;
+            
             call->identifier = strdup(funcCall->value);
             if (call->identifier == NULL) goto error;
             call->nParams = nParameters;
@@ -181,6 +175,7 @@ static int parseFunctionCalls(Token **head) {
             continue; 
 
             error:
+                perror("Error in parsing function call");
                 freeTokens(*head);
                 
                 for (int i = 0; i < nParameters; i ++) {
@@ -259,6 +254,11 @@ static ASTNode *parseFunctionDefinition(Token *head) {
             } else if (cur->type == TOKEN_IDENTIFIER) {
                 Debug(0, "Binding parameter '%s' to local environment.\n", cur->value);
                 ASTNode *dummy = dummyASTNode(NODE_DOUBLE);
+                if (dummy == NULL) {
+                    perror("Error in parsing function definition");
+                    goto error;
+                }
+
                 dummy->value = 0;
 
                 if (!bindComponent(localEnv, VARIABLE, cur->value, dummy)) {
@@ -277,13 +277,10 @@ static ASTNode *parseFunctionDefinition(Token *head) {
     }
 
     // Redoes identifier tokens now that local variables for parameters are established, then redoes lexing
-    handleLocalVariables(&asgn, localEnv);
+    if (!handleLocalVariables(&asgn, localEnv)) goto error;
     if (!lex(&asgn->next)) goto error;
 
-    if (!parseFunctionCalls(&asgn->next)) {
-        printf("Error parsing function call(s)\n");
-        goto error;
-    }
+    if (!parseFunctionCalls(&asgn->next)) goto error;
 
     rpn = shuntingYard(asgn->next);
     if (rpn == NULL) goto error;
@@ -406,7 +403,6 @@ ASTNode *parse(char *buffer) {
     }
 
     if (!parseFunctionCalls(&head)) {
-        printf("Error parsing function call(s)\n");
         freeTokens(head);
         return NULL;
     }
