@@ -31,26 +31,30 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Install Dependencies
-        run: |
-          choco install msys2 -y
-          C:\tools\msys64\usr\bin\bash -lc "pacman -Sy --noconfirm mingw-w64-x86_64-libyaml"
+      - name: Setup MSYS2
+        uses: msys2/setup-msys2@v2
+        with:
+          update: true
+          install: >-
+            mingw-w64-x86_64-libyaml
+            mingw-w64-x86_64-pkg-config
+            mingw-w64-x86_64-cmake
+            mingw-w64-x86_64-gcc
+            mingw-w64-x86_64-make
 
-      - name: Add MinGW to PATH
-        run: echo "C:\tools\msys64\mingw64\bin" >> $GITHUB_PATH
-       
-      - name: Configure CMake
+      - name: Configure and Build
+        # This 'shell: msys2 {0}' is the secret sauce. 
+        # It runs the commands inside the MSYS2 environment where pkg-config lives.
+        shell: msys2 {0}
         run: |
-          set PKG_CONFIG_PATH "C:\tools\msys64\mingw64\lib\pkgconfig"
           cmake -B build -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Release
-
-      - name: Build Windows
-        run: cmake --build build
+          cmake --build build
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: algebra-${{ runner.os }} # This names it algebra-macOS, algebra-Windows, etc.
+          name: algebra-Windows
+          # Using a wildcard to catch .exe on Windows
           path: build/algebra*
 
   build:
