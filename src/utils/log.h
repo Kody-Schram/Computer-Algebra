@@ -3,7 +3,7 @@
 
 #include "utils/context/context.h"
 
-#ifdef RELEASE
+#ifdef Release
 
 #define Debug(fileStream, stream, ...) ((void) 0)
 
