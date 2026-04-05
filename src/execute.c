@@ -130,9 +130,13 @@ static int executeRecur(ASTNode **ptr, Environment *env) {
             ASTNode *right = ast->right;
             if ((left->type == NODE_INTEGER || left->type == NODE_DOUBLE) && (right->type == NODE_INTEGER || right->type == NODE_DOUBLE)) {
                 Debug(0, "Evaluating operation\n");
+                
+                ASTNode *new = NULL;
+                long double l = (left->type == NODE_INTEGER) ? (long double) left->integer : left->value;
+                long double r = (right->type == NODE_INTEGER) ? (long double) right->integer: right->value;
+                
                 switch (ast->op) {
                     case OP_ADDITION: {
-                        ASTNode *new = NULL;
                         if (left->type == NODE_INTEGER && right->type == NODE_INTEGER) {
                             new = dummyASTNode(NODE_INTEGER);
                             if (new == NULL) return 0;
@@ -140,8 +144,6 @@ static int executeRecur(ASTNode **ptr, Environment *env) {
                         } else {
                             new = dummyASTNode(NODE_DOUBLE);
                             if (new == NULL) return 0;
-                            double l = (left->type == NODE_INTEGER) ? (double) left->integer : left->value;
-                            double r = (right->type == NODE_INTEGER) ? (double) right->integer : right->value;
 
                             new->value = r + l;
                         }
@@ -152,7 +154,6 @@ static int executeRecur(ASTNode **ptr, Environment *env) {
                     }
 
                     case OP_SUBTRACTION: {
-                        ASTNode *new = NULL;
                         if (left->type == NODE_INTEGER && right->type == NODE_INTEGER) {
                             new = dummyASTNode(NODE_INTEGER);
                             if (new == NULL) return 0;
@@ -160,8 +161,6 @@ static int executeRecur(ASTNode **ptr, Environment *env) {
                         } else {
                             new = dummyASTNode(NODE_DOUBLE);
                             if (new == NULL) return 0;
-                            long double l = (left->type == NODE_INTEGER) ? (long double) left->integer : left->value;
-                            long double r = (right->type == NODE_INTEGER) ? (long double) right->integer : right->value;
 
                             new->value = l - r;
                         }
@@ -172,7 +171,6 @@ static int executeRecur(ASTNode **ptr, Environment *env) {
                     }
 
                     case OP_MULTIPLICATION: {
-                        ASTNode *new = NULL;
                         if (left->type == NODE_INTEGER && right->type == NODE_INTEGER) {
                             new = dummyASTNode(NODE_INTEGER);
                             if (new == NULL) return 0;
@@ -180,9 +178,7 @@ static int executeRecur(ASTNode **ptr, Environment *env) {
                         } else {
                             new = dummyASTNode(NODE_DOUBLE);
                             if (new == NULL) return 0;
-                            double l = (left->type == NODE_INTEGER) ? (double) left->integer : left->value;
-                            double r = (right->type == NODE_INTEGER) ? (double) right->integer : right->value;
-
+            
                             new->value = r * l;
                         }
 
@@ -192,8 +188,6 @@ static int executeRecur(ASTNode **ptr, Environment *env) {
                     }
 
                     case OP_EXPONTENTIATION: {
-                        ASTNode *new = NULL;
-
                         if (left->type == NODE_INTEGER && right->type == NODE_INTEGER && right->integer >= 0) {
                             if (left->integer == 0 && right->integer == 0) {
                                 new = dummyASTNode(NODE_INTEGER);
@@ -207,9 +201,7 @@ static int executeRecur(ASTNode **ptr, Environment *env) {
                         } else {
                             new = dummyASTNode(NODE_DOUBLE);
                             if (new == NULL) return 0;
-                            long double l = (left->type == NODE_INTEGER) ? (long double) left->integer : left->value;
-                            long double r = (right->type == NODE_INTEGER) ? (long double) right->integer : right->value;
-
+                    
                             if (left->value == 0 && right->value == 0) new->value = 1;
                             else new->value = powl(l, r);
                         }
@@ -228,7 +220,7 @@ static int executeRecur(ASTNode **ptr, Environment *env) {
 
                             // Evaluate fraction
                             if (!GLOBALCONTEXT->config->PRESERVE_FRACS) {
-                                ASTNode *new = dummyASTNode(NODE_DOUBLE);
+                                new = dummyASTNode(NODE_DOUBLE);
                                 if (new == NULL) return 0;
                                 new->value = ((long double) ast->left->value) / ((long double) ast->right->value);
 
@@ -250,11 +242,8 @@ static int executeRecur(ASTNode **ptr, Environment *env) {
                                 return 0;
                             }
 
-                            ASTNode *new = dummyASTNode(NODE_DOUBLE);
+                            new = dummyASTNode(NODE_DOUBLE);
                             if (new == NULL) return 0;
-
-                            double l = (left->type == NODE_INTEGER) ? (double) left->integer : left->value;
-                            double r = (right->type == NODE_INTEGER) ? (double) right->integer : right->value;
 
                             new->value = l / r;
                             freeAST(ast);
