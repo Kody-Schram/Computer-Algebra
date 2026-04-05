@@ -17,7 +17,7 @@ void printStream(FILE *stream) {
     fclose(stream);
 }
 
-#ifndef RELEASE
+#ifndef Release
 void Debug(const int fileStream, const void *stream, ...) {
     if (GLOBALCONTEXT->config->LOG_LEVEL < DEBUG) {
         if (fileStream) fclose((FILE *) stream);
