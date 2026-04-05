@@ -163,7 +163,7 @@ static int executeRecur(ASTNode **ptr, Environment *env) {
                             long double l = (left->type == NODE_INTEGER) ? (long double) left->integer : left->value;
                             long double r = (right->type == NODE_INTEGER) ? (long double) right->integer : right->value;
 
-                            new->value = r - l;
+                            new->value = l - r;
                         }
 
                         freeAST(ast);
@@ -344,6 +344,9 @@ static int executeRecur(ASTNode **ptr, Environment *env) {
                     Debug(1, printAST(exec));
                     *ptr = exec;
                     return 1;
+
+                default:
+                    printf("Undefined behavior as of now.\n");
             }
             
             return 1;
