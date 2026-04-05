@@ -47,7 +47,7 @@ jobs:
         # It runs the commands inside the MSYS2 environment where pkg-config lives.
         shell: msys2 {0}
         run: |
-          cmake -B build -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Release
+          cmake -B build -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Release -DCMAKE_EXE_LINKER_FLAGS="-static"
           cmake --build build
 
       - name: Upload Artifact
