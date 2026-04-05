@@ -137,8 +137,9 @@ static int runStartup() {
 
         while (line != NULL) {
             if (!strcmp(line, "FILE")) {
-                Debug(0, "Running startup script from file.\n");
-                FILE *file = fopen(strtok(line, "\n"), "r");
+                line = strtok(NULL, "\n");
+                Debug(0, "Running startup script from file: '%s'.\n", line);
+                FILE *file = fopen(line, "r");
                 if (file == NULL) {
                     printf("Couldn't load startup script.\n");
                     return 0;
@@ -146,7 +147,7 @@ static int runStartup() {
 
                 char buffer[128];
                 while (fgets(buffer, 128, file)) {
-                    printf("S > %s\n", line);
+                    printf("S > %s\n", buffer);
                     if (!process(buffer)) {
                         fclose(file);
                         return 0;

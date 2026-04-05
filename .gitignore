@@ -61,6 +61,7 @@ compile_commands.json
 .clangd
 
 config.yaml
+startup.txt
 log.txt
 
 tests/logs/*

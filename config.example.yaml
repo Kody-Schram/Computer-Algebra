@@ -9,7 +9,7 @@ log:
 
   # Set the location for logs to appear
   # Default is the terminal
-  location: "log.txt"
+  location: log.txt
 
 # Enables the use of scripts to run during startup
 # Can be inline commands or define a file with the startup script
@@ -25,19 +25,19 @@ startup: |
 keywords:
   # Input string to exit the program
   # Default is "quit"
-  QUIT: "quit"
+  QUIT: quit
 
   # Input string to show the environment
   # Default is "env"
-  ENV: "env"
+  ENV: env
 
   # Input string to reload the config
   # Default is "reload"
-  RELOAD: "reload"
+  RELOAD: reload
 
   # Identifier of previous output
   # Default is "ans" 
-  OUTPUT: "ans"
+  OUTPUT: ans
 
 # Enables configuring runtime settings
 runtime:
