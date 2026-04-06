@@ -10,32 +10,32 @@
 Token *createToken(TokenType type, char *value, int l) {
     // Allocates new token
     Token *token = (Token*) calloc(1, sizeof(Token));
-    if (token == NULL) {
+    if (token == nullptr) {
         printf("Error allocating space for token.");
-        return NULL;
+        return nullptr;
     }
 
     // Populates newToken attributes
     token->type = type;
 
     token->value = malloc(l + 1);
-    if (token->value == NULL) {
+    if (token->value == nullptr) {
         printf("Error allocating for token value.\n");
         free(token);
-        return NULL;
+        return nullptr;
     } 
 
     memcpy(token->value, value, l);
     token->value[l] = '\0';
 
-    token->next = NULL;
+    token->next = nullptr;
 
     return token;
 }
 
 
 static void printToken(Token *token, FILE *stream) {
-    const char *type = NULL;
+    const char *type = nullptr;
 
         switch(token->type) {
             case TOKEN_NUMBER:
@@ -79,12 +79,12 @@ static void printToken(Token *token, FILE *stream) {
 
 FILE *printTokens(Token *head) {
     FILE *stream = tmpfile();
-    if (stream == NULL) return NULL;
+    if (stream == nullptr) return nullptr;
 
     Token *cur = head;
 
     fprintf(stream, "\n");
-    while (cur != NULL) {
+    while (cur != nullptr) {
         printToken(cur, stream);
         cur = cur->next;
     }
@@ -96,9 +96,9 @@ FILE *printTokens(Token *head) {
 
 ASTNode *createASTNode(Token *token) {
     ASTNode *node = calloc(1, sizeof(ASTNode));
-    if (node == NULL) {
+    if (node == nullptr) {
         printf("Error allocating for new node.\n");
-        return NULL;
+        return nullptr;
     }
 
     switch (token->type)
@@ -146,10 +146,10 @@ ASTNode *createASTNode(Token *token) {
     case TOKEN_FUNC_CALL:
         node->type = NODE_FUNC_CALL;
         node->call = token->call;
-        token->call = NULL;
+        token->call = nullptr;
         break;
     default:
-        return NULL;
+        return nullptr;
     }
 
     return node;
@@ -158,7 +158,7 @@ ASTNode *createASTNode(Token *token) {
 
 FILE *printRPN(RPNList *list) {
     FILE *stream = tmpfile();
-    if (stream == NULL) return NULL;
+    if (stream == nullptr) return nullptr;
 
     fprintf(stream, "RPN: ");
 
@@ -176,7 +176,7 @@ void freeTokens(Token *head) {
     Debug(0, "Freeing tokens.\n");
 
     Token* current = head;
-    while (current != NULL) {
+    while (current != nullptr) {
         Token *next = current->next;
         
         if (current->type != TOKEN_FUNC_CALL) {

@@ -39,9 +39,8 @@ struct Config {
     char *OUTPUT_ID;
     int OUTPUTS;
 
-    int STRICT;
-    int PRESERVE_FRACS;
-    int LAZY_CALLS;
+    bool PRESERVE_FRACS;
+    bool LAZY_CALLS;
 };
 
 

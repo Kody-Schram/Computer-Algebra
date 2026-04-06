@@ -3,13 +3,13 @@
 
 #include "context.h"
 
-Context *GLOBALCONTEXT = NULL;
+Context *GLOBALCONTEXT = nullptr;
 
 Context *createContext(Config *config, Environment *env) {
     Context *context = calloc(1, sizeof(Context));
-    if (context == NULL) {
+    if (context == nullptr) {
         perror("Error in context");
-        return NULL;
+        return nullptr;
     }
 
     context->config = config;
@@ -19,19 +19,19 @@ Context *createContext(Config *config, Environment *env) {
 }
 
 int initContext(char *cpath) {
-    if (GLOBALCONTEXT != NULL) return 0;
+    if (GLOBALCONTEXT != nullptr) return 0;
 
     Config *config = loadConfig(cpath);
     Environment *env = createEnvironment();
 
-    if (config == NULL || env == NULL) {
+    if (config == nullptr || env == nullptr) {
         freeConfig(config);
         freeEnvironment(env);
         return 0;
     }
     
     GLOBALCONTEXT = createContext(config, env);
-    if (GLOBALCONTEXT == NULL) {
+    if (GLOBALCONTEXT == nullptr) {
         freeConfig(config);
         freeEnvironment(env);
         return 0;
@@ -46,7 +46,7 @@ int initContext(char *cpath) {
 }
 
 void freeContext(Context *context) {
-    if (context != NULL) {
+    if (context != nullptr) {
         freeEnvironment(context->env);
         freeConfig(context->config);
     }

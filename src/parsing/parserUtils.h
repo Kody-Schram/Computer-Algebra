@@ -9,7 +9,7 @@
 /**
  * @brief Creates a Token object
  * 
- * @retval NULL: Error creating the new token
+ * @retval nullptr: Error creating the new token
  * @retval Token*: Properly created the new token
  * 
  * @param type The type of the Token

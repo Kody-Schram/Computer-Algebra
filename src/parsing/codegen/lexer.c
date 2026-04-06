@@ -23,11 +23,11 @@
 static int handleImplicitMul(Token *cur, Token *prev) {
     // Handle implicit multiplcation with left bracket or function
     // x(x-1) => x*(x-1)
-    if ((cur->type == TOKEN_LEFT_PAREN || cur->type == TOKEN_FUNC_CALL_PLACEHOLDER) && prev != NULL) {
+    if ((cur->type == TOKEN_LEFT_PAREN || cur->type == TOKEN_FUNC_CALL_PLACEHOLDER) && prev != nullptr) {
         //printf("checking for left paren and function\n");
         if (prev->type == TOKEN_NUMBER || prev->type == TOKEN_IDENTIFIER) {
             Token *mult = createToken(TOKEN_OPERATOR, "*", 1);
-            if (mult == NULL) {
+            if (mult == nullptr) {
                 perror("Error in implicit multiplication");
                 return -1;
             }
@@ -40,12 +40,12 @@ static int handleImplicitMul(Token *cur, Token *prev) {
     }
     // Handle implicit multiplcation with right bracket
     // (x-1)x => (x-1)*x
-    else if (cur->type == TOKEN_RIGHT_PAREN && cur->next != NULL) {
+    else if (cur->type == TOKEN_RIGHT_PAREN && cur->next != nullptr) {
         //printf("checking for right paren\n");
         Token *nextToken = cur->next;
         if (nextToken->type == TOKEN_NUMBER || nextToken->type == TOKEN_IDENTIFIER || nextToken->type == TOKEN_LEFT_PAREN || nextToken->type == TOKEN_FUNC_CALL_PLACEHOLDER) {
             Token *mult = createToken(TOKEN_OPERATOR, "*", 1);
-            if (mult == NULL) {
+            if (mult == nullptr) {
                 perror("Error in implicit multiplication");
                 return -1;
             }
@@ -58,11 +58,11 @@ static int handleImplicitMul(Token *cur, Token *prev) {
     }
     // Handle constant and identifier multiplication
     // 2x => 2*x
-    else if (cur->type == TOKEN_IDENTIFIER && prev != NULL) {
+    else if (cur->type == TOKEN_IDENTIFIER && prev != nullptr) {
         if (prev->type == TOKEN_NUMBER || prev->type == TOKEN_IDENTIFIER) {
 
             Token *mult = createToken(TOKEN_OPERATOR, "*", 1);
-            if (mult == NULL) {
+            if (mult == nullptr) {
                 perror("Error in implicit multiplication");
                 return -1;
             }
@@ -89,11 +89,11 @@ static int handleImplicitMul(Token *cur, Token *prev) {
  * @return int 
  */
 static int handleExponentRewrite(Token **cur, Token *prev) {
-    if ((*cur)->value[0] != '*' || !((*cur)->next == NULL && (*cur)->next->value[0] != '*')) return 0;
+    if ((*cur)->value[0] != '*' || !((*cur)->next == nullptr && (*cur)->next->value[0] != '*')) return 0;
     Debug(0, "Rewriting exponent\n");
 
     Token *exponent = createToken(TOKEN_OPERATOR, "^", 1);
-    if (exponent == NULL) {
+    if (exponent == nullptr) {
         perror("Error in exponent rewrite");
         return -1;
     }
@@ -105,7 +105,7 @@ static int handleExponentRewrite(Token **cur, Token *prev) {
     free((*cur)->value);
     free(*cur);
 
-    if (prev != NULL) prev->next = exponent;
+    if (prev != nullptr) prev->next = exponent;
     else *cur = exponent;
 
     return 1;
@@ -124,12 +124,12 @@ static int handleExponentRewrite(Token **cur, Token *prev) {
  */
 static int checkInvalidBinop(Token *cur, Token *prev) {
     if (cur->type != TOKEN_OPERATOR) return 0;
-    if (cur->next == NULL) {
+    if (cur->next == nullptr) {
         printf("Operator must be followed by another token.\n");
         return -1;
     }
 
-    if (prev == NULL) {
+    if (prev == nullptr) {
         printf("Operator must be preceeded by another token.\n");
         return -1;
     }
@@ -138,7 +138,7 @@ static int checkInvalidBinop(Token *cur, Token *prev) {
     if (cur->next->type == TOKEN_OPERATOR && cur->next->value[0] == '-') return 0;
 
     // Handles invalid negative signs
-    if (cur->value[0] == '-' && (cur->next == NULL || cur->next->type == TOKEN_OPERATOR)) {
+    if (cur->value[0] == '-' && (cur->next == nullptr || cur->next->type == TOKEN_OPERATOR)) {
         printf("Invalid operation \"%s %s %s\".\n", prev->value, cur->value, cur->next->value);
         return -1;
     }
@@ -165,11 +165,11 @@ static int handleFunctionParens(Token **cur) {
     // revisit
     if ((*cur)->type == TOKEN_FUNC_CALL_PLACEHOLDER) {
         Token *func = *cur;
-        if (func->next != NULL) {
+        if (func->next != nullptr) {
             // Try to implicitly add opening parenthesis
             if (func->next->type != TOKEN_LEFT_PAREN) {
                 Token *parenthesis = createToken(TOKEN_LEFT_PAREN, "(", 1);
-                if (parenthesis == NULL) {
+                if (parenthesis == nullptr) {
                     perror("Error handling function parenthesis");
                     return -1;
                 }
@@ -179,13 +179,13 @@ static int handleFunctionParens(Token **cur) {
                 // Loops till end of term and adds closing parenthesis
                 while (func->type != TOKEN_OPERATOR || func->value[0] == '*' || func->value[0] == '^')
                 {
-                    if (func->next == NULL) {
+                    if (func->next == nullptr) {
                         Token *closing = createToken(TOKEN_RIGHT_PAREN, ")", 1);
-                        if (closing == NULL) {
+                        if (closing == nullptr) {
                             perror("Error handling function parenthesis");
                             return -1;
                         }
-                        closing->next = NULL;
+                        closing->next = nullptr;
                         func->next = closing;
 
                         return 1;
@@ -195,7 +195,7 @@ static int handleFunctionParens(Token **cur) {
                 }
 
                 Token *closing = createToken(TOKEN_RIGHT_PAREN, ")", 1);
-                if (closing == NULL) {
+                if (closing == nullptr) {
                     perror("Error handling function parenthesis");
                     return -1;
                 }
@@ -232,12 +232,12 @@ static int handleNegatives(Token *cur, Token *prev) {
 
     // Outlines cases for following negative handling
     // (ie determines this is a negative and not a subtraction)
-    if (cur->next == NULL || (cur->next->type != TOKEN_IDENTIFIER && cur->next->type != TOKEN_NUMBER && cur->next->type != TOKEN_FUNC_CALL_PLACEHOLDER)) return 0;
-    if (prev != NULL && prev->type != TOKEN_OPERATOR && prev->type != TOKEN_LEFT_PAREN && prev->type != TOKEN_SEPARATOR) return 0;
+    if (cur->next == nullptr || (cur->next->type != TOKEN_IDENTIFIER && cur->next->type != TOKEN_NUMBER && cur->next->type != TOKEN_FUNC_CALL_PLACEHOLDER)) return 0;
+    if (prev != nullptr && prev->type != TOKEN_OPERATOR && prev->type != TOKEN_LEFT_PAREN && prev->type != TOKEN_SEPARATOR) return 0;
 
     Debug(0, "Creating -1 and multiplication tokens.\n");
     Token *mult = createToken(TOKEN_OPERATOR, "*", 1);
-    if (mult == NULL) {
+    if (mult == nullptr) {
         perror("Error handling negative");
         return -1;
     }
@@ -262,9 +262,9 @@ int handleLocalVariables(Token **ptr, Environment *localEnv) {
 
     Debug(0, "\nRechecking identifiers against local variables.\n");
     Token *cur = *ptr;
-    Token *prev = NULL;
+    Token *prev = nullptr;
     
-    while (cur != NULL) {
+    while (cur != nullptr) {
         if (cur->type == TOKEN_IDENTIFIER) {
             int max = 0;
             Component *cmp;
@@ -280,14 +280,14 @@ int handleLocalVariables(Token **ptr, Environment *localEnv) {
 
                 // Any subsequent iterations will always yeild a larger char size if found, so no check required
                 // If local var is found take it 
-                if (local != NULL) {
+                if (local != nullptr) {
                     max = strlen(local->identifier);
                     cmp = local;
                     continue;
                 }
                 
                 // If global var is found take it
-                if (global != NULL) {
+                if (global != nullptr) {
                     max = strlen(global->identifier);
                     cmp = global;
                     continue;
@@ -299,13 +299,13 @@ int handleLocalVariables(Token **ptr, Environment *localEnv) {
             if (max != strlen(cur->value) && max != 0) {
                 // create new tokens to split
                 Token *left = createToken(TOKEN_IDENTIFIER, cmp->identifier, max);
-                if (left == NULL) {
+                if (left == nullptr) {
                     perror("Error handling local variables");
                     return 0;
                 }
 
                 Token *right = createToken(TOKEN_IDENTIFIER, id + max, strlen(id) - max);
-                if (right == NULL) {
+                if (right == nullptr) {
                     perror("Error handling local variables");
                     free(left);
                     return 0;
@@ -314,7 +314,7 @@ int handleLocalVariables(Token **ptr, Environment *localEnv) {
                 left->next = right;
                 right->next = cur->next;
 
-                if (prev != NULL) prev->next = left;
+                if (prev != nullptr) prev->next = left;
                 else *ptr = left;
 
                 free(cur->value);
@@ -339,11 +339,11 @@ int lex(Token** head) {
     Debug(0, "\nLexing Tokens\n");
 
     Token **ptr = head;
-    Token *prev = NULL;
+    Token *prev = nullptr;
 
     int openParenthesis = 0;
 
-    while (*ptr != NULL) {
+    while (*ptr != nullptr) {
         if (handleNegatives(*ptr, prev) == -1) return 0;
         if (handleImplicitMul(*ptr, prev) == -1) return 0;
         if (handleExponentRewrite(ptr, prev) == -1) return 0;

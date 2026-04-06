@@ -47,7 +47,7 @@ static int getLinkedListLength(Token *head) {
     Token *cur = head;
 
     int i = 0;
-    while (cur != NULL) {
+    while (cur != nullptr) {
         i ++;
         cur = cur->next;
     }
@@ -67,7 +67,7 @@ static int getLinkedListLength(Token *head) {
 static int reallocStack(Stack *stack) {
     stack->size *= 2;
     void **temp = realloc(stack->items, stack->size * sizeof(void*));
-    if (temp == NULL) {
+    if (temp == nullptr) {
         printf("Error reallocating space for stack.\n");
         return 1;
     }
@@ -96,11 +96,11 @@ RPNList *shuntingYard(Token *head) {
         malloc(size / 2 * sizeof(Token *))
     };
 
-    RPNList *list = NULL;
+    RPNList *list = nullptr;
 
-    if (output.items == NULL || operators.items == NULL) goto error;
+    if (output.items == nullptr || operators.items == nullptr) goto error;
 
-    while (cur != NULL) {
+    while (cur != nullptr) {
         // Add numbers, identifiers, and function calls to output stack
         if (cur->type == TOKEN_NUMBER || cur->type == TOKEN_IDENTIFIER || cur->type == TOKEN_FUNC_CALL) {
             output.items[output.entries] = cur;
@@ -165,7 +165,7 @@ RPNList *shuntingYard(Token *head) {
     free(operators.items);
 
     list = malloc(sizeof(RPNList));
-    if (list == NULL) goto error;
+    if (list == nullptr) goto error;
 
     list->length = output.entries;
     list->items = (Token**) output.items;
@@ -180,7 +180,7 @@ RPNList *shuntingYard(Token *head) {
         free(operators.items);
         free(list);
 
-        return NULL;
+        return nullptr;
 }
 
 
@@ -193,12 +193,12 @@ ASTNode *astFromRPN(RPNList *rpn) {
         0,
         malloc(DEFAULT_NODE_STACK_SIZE * sizeof(ASTNode *))
     };
-    if (nodes.items == NULL) return NULL;
-    ASTNode *ast = NULL;
+    if (nodes.items == nullptr) return nullptr;
+    ASTNode *ast = nullptr;
 
     for (int i = 0; i < rpn->length; i ++) {
         ASTNode *node = createASTNode(rpn->items[i]);
-        if (node == NULL) goto cleanup;
+        if (node == nullptr) goto cleanup;
 
         if (node->type == NODE_OPERATOR) {
 
@@ -227,5 +227,5 @@ ASTNode *astFromRPN(RPNList *rpn) {
     cleanup:
         freeAST(ast);
         free(nodes.items);
-        return NULL;
+        return nullptr;
 }

@@ -30,8 +30,8 @@ static int handleKeywords(char *buffer) {
                 printf("Reloading config.\n");
 
                 freeConfig(GLOBALCONTEXT->config);
-                GLOBALCONTEXT->config = loadConfig(NULL);
-                if (GLOBALCONTEXT->config == NULL) return -1;
+                GLOBALCONTEXT->config = loadConfig(nullptr);
+                if (GLOBALCONTEXT->config == nullptr) return -1;
 
                 Info(1, printConfig(GLOBALCONTEXT->config));
                 return 1;
@@ -49,26 +49,25 @@ static int process(char *buffer) {
     else if (result == 1) return 1;
 
     ASTNode *head = parse(buffer);
-    if (head == NULL && GLOBALCONTEXT->config->STRICT) return 0;
-    if (head != NULL) {
+    if (head == nullptr) return 0;
+    if (head != nullptr) {
         if (!execute(&head)) {
             freeAST(head);
-            if (GLOBALCONTEXT->config->STRICT) return 0;
             return 1;
         }
     }
 
-    if (head == NULL) return 1;
+    if (head == nullptr) return 1;
 
     char *str = astToString(head);
-    if (str != NULL) printf("%s\n\n", str);
+    if (str != nullptr) printf("%s\n\n", str);
     free(str);
 
     if (GLOBALCONTEXT->config->OUTPUTS > 0) {
         Debug(0, "Updating output variable(s).\n");
         if (GLOBALCONTEXT->config->OUTPUTS == 1) {
             Component *cmp = searchEnvironment(GLOBALCONTEXT->env, GLOBALCONTEXT->config->OUTPUT_ID);
-            if (cmp == NULL) return 0;
+            if (cmp == nullptr) return 0;
 
             freeAST(cmp->value);
             cmp->value = head;
@@ -76,11 +75,11 @@ static int process(char *buffer) {
         } else {
             int size = strlen(GLOBALCONTEXT->config->OUTPUT_ID) + 12;
             char *str = malloc(size);
-            if (str == NULL) return 0;
+            if (str == nullptr) return 0;
             snprintf(str, size, "%s_%d", GLOBALCONTEXT->config->OUTPUT_ID, GLOBALCONTEXT->config->OUTPUTS - 1);
 
             Component *last = searchEnvironment(GLOBALCONTEXT->env, str);
-            if (last == NULL) {
+            if (last == nullptr) {
                 free(str);
                 return 0;
             }
@@ -90,11 +89,11 @@ static int process(char *buffer) {
             for (int i = GLOBALCONTEXT->config->OUTPUTS - 2; i >= 0; i --) {
                 size = strlen(GLOBALCONTEXT->config->OUTPUT_ID) + 12;
                 str = malloc(size);
-                if (str == NULL) return 0;
+                if (str == nullptr) return 0;
                 snprintf(str, size, "%s_%d", GLOBALCONTEXT->config->OUTPUT_ID, i);
 
                 Component *cmp = searchEnvironment(GLOBALCONTEXT->env, str);
-                if (cmp == NULL) {
+                if (cmp == nullptr) {
                     free(str);
                     return 0;
                 }
@@ -106,11 +105,11 @@ static int process(char *buffer) {
 
             size = strlen(GLOBALCONTEXT->config->OUTPUT_ID) + 12;
             str = malloc(size);
-            if (str == NULL) return 0;
+            if (str == nullptr) return 0;
             snprintf(str, size, "%s_0", GLOBALCONTEXT->config->OUTPUT_ID);
 
             Component *first = searchEnvironment(GLOBALCONTEXT->env, str);
-            if (first == NULL) {
+            if (first == nullptr) {
                 free(str);
                 return 0;
             }
@@ -131,16 +130,16 @@ static int process(char *buffer) {
 
 static int runStartup() {
     // Load startup script
-    if (GLOBALCONTEXT->config->STARTUP != NULL) {
+    if (GLOBALCONTEXT->config->STARTUP != nullptr) {
         Debug(0, "\nRunning Startup Script\n");
         char *line = strtok(GLOBALCONTEXT->config->STARTUP, "\n");
 
-        while (line != NULL) {
+        while (line != nullptr) {
             if (!strcmp(line, "FILE")) {
-                line = strtok(NULL, "\n");
+                line = strtok(nullptr, "\n");
                 Debug(0, "Running startup script from file: '%s'.\n", line);
                 FILE *file = fopen(line, "r");
-                if (file == NULL) {
+                if (file == nullptr) {
                     perror("Couldn't load startup script");
                     return 0;
                 }
@@ -159,11 +158,11 @@ static int runStartup() {
                 printf("S > %s\n", line);
                 if (!process(line)) return 0;
             }
-            line = strtok(NULL, "\n");
+            line = strtok(nullptr, "\n");
         }
 
         free(GLOBALCONTEXT->config->STARTUP);
-        GLOBALCONTEXT->config->STARTUP = NULL;
+        GLOBALCONTEXT->config->STARTUP = nullptr;
     }
 
     return 1;
@@ -171,7 +170,7 @@ static int runStartup() {
 
 
 int main(int argc, char *argv[]) {
-    char *cpath = NULL;
+    char *cpath = nullptr;
     if (argc > 1) {
         cpath = argv[1];
         printf("Loading config from '%s'\n", cpath);

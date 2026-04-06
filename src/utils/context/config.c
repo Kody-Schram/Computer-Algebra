@@ -26,7 +26,6 @@ typedef enum {
     STATE_K_ANS,
 
     STATE_RUNTIME,
-    STATE_STRICT,
     STATE_OUTPUTS,
     STATE_PRESERVE_FRACS,
     STATE_LAZY_CALLS,
@@ -37,8 +36,8 @@ typedef enum {
 
 // Maps strings to correct boolean value
 static int get_boolean(const char *string) {
-    char *t[] = {"y", "Y", "yes", "Yes", "YES", "true", "True", "TRUE", "on", "On", "ON", NULL};
-    char *f[] = {"n", "N", "no", "No", "NO", "false", "False", "FALSE", "off", "Off", "OFF", NULL};
+    char *t[] = {"y", "Y", "yes", "Yes", "YES", "true", "True", "TRUE", "on", "On", "ON", nullptr};
+    char *f[] = {"n", "N", "no", "No", "NO", "false", "False", "FALSE", "off", "Off", "OFF", nullptr};
     char **p;
 
     // Checks valid values for true
@@ -189,7 +188,7 @@ static int consumeEvent(State *state, yaml_event_t *event, Config *config) {
                 value = (char *) event->data.scalar.value;
 
                 FILE *location = fopen(value, "w+");
-                if (location == NULL) {
+                if (location == nullptr) {
                     printf("Error opening log file '%s'. Falling back on stdout.\n", value);
                     config->LOG_STREAM = stdout;
                 } else config->LOG_STREAM = location;
@@ -314,7 +313,6 @@ static int consumeEvent(State *state, yaml_event_t *event, Config *config) {
                 if (!strcmp(value, "saveOutputs")) *state = STATE_OUTPUTS;
                 else if (!strcmp(value, "preserveFractions")) *state = STATE_PRESERVE_FRACS;
                 else if (!strcmp(value, "lazyFunctionCalls")) *state = STATE_LAZY_CALLS;
-                else if (!strcmp(value, "strict")) *state = STATE_STRICT;
                 else {
                     printf("Unexpected keyword: %s.\n", value);
                     return 0;
@@ -394,28 +392,6 @@ static int consumeEvent(State *state, yaml_event_t *event, Config *config) {
                 
         }
         break;
-
-    case STATE_STRICT:
-        switch (event->type) {
-            case YAML_MAPPING_END_EVENT:
-                *state = STATE_RUNTIME;
-                break;
-
-            case YAML_SCALAR_EVENT:
-                value = (char *) event->data.scalar.value;
-                int b = get_boolean(value);
-
-                if (b == -1) return 0;
-                config->STRICT = b;
-                *state = STATE_RUNTIME;
-
-                return 1;
-                break;
-                
-            default: 
-                return 0;
-        }
-        break;
     
     case STATE_STOP:
         break;
@@ -428,7 +404,7 @@ static int consumeEvent(State *state, yaml_event_t *event, Config *config) {
 static void initConfig(Config *config) {
     config->LOG_LEVEL = 0;
     config->LOG_STREAM = stdout;
-    config->STARTUP = NULL;
+    config->STARTUP = nullptr;
 
     config->MAPPING[0] = (KeywordMapping) {.cmd=K_QUIT, .keyword=strdup("quit")};
     config->MAPPING[1] = (KeywordMapping) {.cmd=K_ENV, .keyword=strdup("env")};
@@ -437,23 +413,22 @@ static void initConfig(Config *config) {
     config->OUTPUTS = 1;
     config->OUTPUT_ID = strdup("ans");
 
-    config->STRICT = 0;
-    config->PRESERVE_FRACS = 1;
-    config->LAZY_CALLS = 1;
+    config->PRESERVE_FRACS = true;
+    config->LAZY_CALLS = true;
 }
 
 
 Config *loadConfig(char *cpath) {
     Config *config = calloc(1, sizeof(Config));
-    if (config == NULL) {
+    if (config == nullptr) {
         perror("Error in config");
-        return NULL;
+        return nullptr;
     }
 
     initConfig(config);
 
-    FILE *cfile = NULL;
-    if (cpath == NULL) {
+    FILE *cfile = nullptr;
+    if (cpath == nullptr) {
         char *paths[] = {
             "config.yaml",
             "../config.yaml",
@@ -463,7 +438,7 @@ Config *loadConfig(char *cpath) {
         int path = 0;
 
         cfile = fopen(paths[path], "rb");
-        while (cfile == NULL) {
+        while (cfile == nullptr) {
             path ++;
             if (path < npaths) {
                 cfile = fopen(paths[path], "rb");
@@ -471,13 +446,13 @@ Config *loadConfig(char *cpath) {
             else break;
         }
 
-        if (cfile == NULL) {
+        if (cfile == nullptr) {
             perror("Error loading config");
             return config;
         }
     } else {
         cfile = fopen(cpath, "rb");
-        if (cfile == NULL) {
+        if (cfile == nullptr) {
             perror("Error loading config");
             return config;
         }
@@ -508,7 +483,7 @@ Config *loadConfig(char *cpath) {
     yaml_parser_delete(&parser);
 
     if (config->LOG_STREAM != stdout) {
-        setvbuf(config->LOG_STREAM, NULL, _IONBF, 0); 
+        setvbuf(config->LOG_STREAM, nullptr, _IONBF, 0); 
     }
 
     fclose(cfile);
@@ -523,13 +498,13 @@ Config *loadConfig(char *cpath) {
         yaml_parser_delete(&parser);
         fclose(cfile);
 
-        return NULL;
+        return nullptr;
 }
 
 
 FILE *printConfig(Config *config) {
     FILE *stream = tmpfile();
-    if (stream == NULL) return NULL;
+    if (stream == nullptr) return nullptr;
 
     fprintf(stream, "\nConfig\n");
     char *level;
@@ -576,7 +551,6 @@ FILE *printConfig(Config *config) {
     fprintf(stream, "Outputs: %d\n", config->OUTPUTS);
     fprintf(stream, "Output: '%s'\n", config->OUTPUT_ID);
 
-    fprintf(stream, "Strict: %d\n", config->STRICT);
     fprintf(stream, "Preserve Fractions: %d\n", config->PRESERVE_FRACS);
     fprintf(stream, "Lazy Function Calls: %d\n", config->LAZY_CALLS);
 
@@ -585,7 +559,7 @@ FILE *printConfig(Config *config) {
 
 
 void freeConfig(Config *config) {
-    if (config == NULL) return;
+    if (config == nullptr) return;
     fclose(config->LOG_STREAM);
 
     // Frees keyword identifiers

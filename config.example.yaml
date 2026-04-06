@@ -3,7 +3,7 @@ log:
   # Valid levels are:
   # - None/0
   # - Info/1
-  # - Debug/2 (Debug logs only work on Develop build, Release build nullifys debugs for far lower memory usage)
+  # - Debug/2 (Debug logs only work on Develop build, Release build nullptrifys debugs for far lower memory usage)
   # Default is None
   level: Debug
 
@@ -41,11 +41,6 @@ keywords:
 
 # Enables configuring runtime settings
 runtime:
-  # Determines if program stops for any errors, including syntax errors
-  # Used as flag for debugging
-  # Default is false
-  strict: false
-
   # Defines how many previous outputs are saved
   # For one output, the most recent output is stored under the variable OUTPUT as defined in keywords
   # For more outputs than 1, most recent output is stored under variable OUTPUT_0, and subsequent outputs are OUTPUT_(n-1)

@@ -13,7 +13,7 @@ Environment *createEnvironment() {
     env->entries = 0;
     env->size = DEFAULT_TABLE_SIZE;
     env->components = calloc(1, sizeof(Component) * DEFAULT_TABLE_SIZE);
-    env->parent = NULL;
+    env->parent = nullptr;
 
     return env;
 }
@@ -23,7 +23,7 @@ int bindComponent(Environment *env, ComponentType type, char *identifier, void *
     if (env->entries >= env->size) {
         env->size += DEFAULT_INCREASE_SIZE;
         Component* temp = realloc(env->components, sizeof(Component) * env->size);
-        if (temp == NULL) {
+        if (temp == nullptr) {
             perror("Error in environment");
             return 0;
         }
@@ -46,20 +46,20 @@ int bindComponent(Environment *env, ComponentType type, char *identifier, void *
 
 
 Component* searchEnvironment(Environment *env, char *identifier) {
-    if (identifier == NULL) return NULL;
+    if (identifier == nullptr) return nullptr;
     for (int i = 0; i < env->entries; i ++) {
         if (!strcmp(env->components[i].identifier, identifier)) {
             return &env->components[i];
         }
     }
 
-    return NULL;
+    return nullptr;
 }
 
 
 FILE *printEnvironment(Environment *env) {
     FILE *stream = tmpfile();
-    if (stream == NULL || env == NULL) return NULL;
+    if (stream == nullptr || env == nullptr) return nullptr;
 
     if (env->entries == 0) {
         fprintf(stream, "Environment Empty.\n");
@@ -79,7 +79,7 @@ FILE *printEnvironment(Environment *env) {
                 }
                 
                 char *str = astToString(func->definition);
-                if (str == NULL) return stream;
+                if (str == nullptr) return stream;
                 fprintf(stream, "%s\n", str);
                 free(str);
                 
@@ -89,7 +89,7 @@ FILE *printEnvironment(Environment *env) {
                 fprintf(stream, "%s = ", env->components[i].identifier);
                 
                 str = astToString(env->components[i].value);
-                if (str == NULL) return stream;
+                if (str == nullptr) return stream;
                 fprintf(stream, "%s\n", str);
                 free(str);
 
@@ -103,7 +103,7 @@ FILE *printEnvironment(Environment *env) {
 
 
 void freeEnvironment(Environment *env) {
-    if (env != NULL && env->components != NULL) {
+    if (env != nullptr && env->components != nullptr) {
         for (int c = 0; c < env->entries; c ++) {
             Component *cmp = &env->components[c];
             free(cmp->identifier);
@@ -137,7 +137,7 @@ int initOutputVariables(Environment *env) {
     if (outputs > 0) {
         if (outputs == 1) {
             ASTNode *temp = dummyASTNode(NODE_DOUBLE);
-            if (temp == NULL) return 0;
+            if (temp == nullptr) return 0;
             temp->value = 0;
 
             if (!bindComponent(env, VARIABLE, GLOBALCONTEXT->config->OUTPUT_ID, temp)) {
@@ -151,11 +151,11 @@ int initOutputVariables(Environment *env) {
             int size = strlen(GLOBALCONTEXT->config->OUTPUT_ID) + 12;
 
             char *str = malloc(size);
-            if (str == NULL) return 0;
+            if (str == nullptr) return 0;
             snprintf(str, size, "%s_%d", GLOBALCONTEXT->config->OUTPUT_ID, i);
 
             ASTNode *temp = dummyASTNode(NODE_DOUBLE);
-            if (temp == NULL) return 0;
+            if (temp == nullptr) return 0;
             temp->value = 0;
 
             if (!bindComponent(env, VARIABLE, str, temp)) {
