@@ -87,6 +87,9 @@ static ASTNode *deepCopyASTRecur(ASTNode *ast) {
             new->call = call;
             break;
 
+        default:
+            break;
+            
     }
 
     return new;
@@ -234,6 +237,8 @@ void freeAST(ASTNode *ast) {
             freeAST(ast->right);
             break;
             
+        default:
+            break;
         
     }
 

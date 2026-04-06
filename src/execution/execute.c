@@ -1,12 +1,12 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
-#include <string.h>
 
 #include "execute.h"
 #include "utils/types.h"
 #include "utils/context/context.h"
 #include "utils/log.h"
+
 
 static const int DEFAULT_ENV_STACK = 3;
 

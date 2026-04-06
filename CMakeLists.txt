@@ -29,7 +29,3 @@ include_directories(include src ${YAML_INCLUDE_DIRS})
 
 file(GLOB_RECURSE SOURCES "src/*.c")
 list(REMOVE_ITEM SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/main.c")
-
-add_executable(${PROJECT_NAME} src/main.c ${SOURCES})
-target_link_libraries(${PROJECT_NAME} ${YAML_LIBRARIES} m)
-target_compile_definitions(${PROJECT_NAME} PRIVATE PROJECT_NAME="${PROJECT_NAME}")
