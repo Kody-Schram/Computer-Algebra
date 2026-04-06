@@ -9,7 +9,6 @@
 
 #include "utils/input.h"
 #include "parsing/parser.h"
-#include "parsing/parserTypes.h"
 
 #include "execute.h"
 
@@ -31,7 +30,7 @@ static int handleKeywords(char *buffer) {
                 printf("Reloading config.\n");
 
                 freeConfig(GLOBALCONTEXT->config);
-                GLOBALCONTEXT->config = loadConfig();
+                GLOBALCONTEXT->config = loadConfig(NULL);
                 if (GLOBALCONTEXT->config == NULL) return -1;
 
                 Info(1, printConfig(GLOBALCONTEXT->config));

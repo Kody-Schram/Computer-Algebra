@@ -56,11 +56,12 @@ dkms.conf
 
 # Builds
 build/
-win_build/
+compile_commands.json
+.clangd
 
 config.yaml
 log.txt
-test
+
 tests/logs/*
 
 *.ps1

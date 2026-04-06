@@ -3,7 +3,7 @@
 #include <string.h>
 
 #include "config.h"
-#include "utils/types.h"
+
 
 static const int DEFAULT_MAPPING_SIZE = 5;
 
@@ -107,7 +107,7 @@ static int consumeEvent(State *state, yaml_event_t *event, Config *config) {
     case STATE_SECTION:
         switch (event->type) {
             case YAML_SCALAR_EVENT:
-                value = event->data.scalar.value;
+                value = (char *) event->data.scalar.value;
                 if (!strcmp(value, "log")) *state = STATE_LOG;
                 else if (!strcmp(value, "startup")) *state = STATE_STARTUP;
                 else if (!strcmp(value, "keywords")) *state = STATE_KEYWORDS;
@@ -117,12 +117,15 @@ static int consumeEvent(State *state, yaml_event_t *event, Config *config) {
                     return 0;
                 }
                 break;
+                
             case YAML_DOCUMENT_END_EVENT:
                 *state = STATE_STREAM;
                 break;
+                
             case YAML_MAPPING_END_EVENT:
                 *state = STATE_DOCUMENT;
                 break;
+                
             default:
                 printf("Unexpected event %d in state %d.\n", event->type, *state);
                 return 0;
@@ -135,7 +138,7 @@ static int consumeEvent(State *state, yaml_event_t *event, Config *config) {
                 *state = STATE_SECTION;
                 break;
             case YAML_SCALAR_EVENT:
-                value = event->data.scalar.value;
+                value = (char *) event->data.scalar.value;
                 if (!strcmp(value, "level")) *state = STATE_LOG_LEVEL;
                 else if (!strcmp(value, "location")) *state = STATE_LOG_LOCATION;
                 else {
@@ -143,6 +146,9 @@ static int consumeEvent(State *state, yaml_event_t *event, Config *config) {
                     return 0;
                 }
                 break;
+                
+            default:
+                return 0;
         }
         break;
     
@@ -166,9 +172,11 @@ static int consumeEvent(State *state, yaml_event_t *event, Config *config) {
                 }
                 *state = STATE_LOG;
                 break;
+                
             default:
                 printf("Unexpected event %d in state %d.\n", event->type, *state);
                 return 0;
+                
         }
         break;
 
@@ -188,9 +196,11 @@ static int consumeEvent(State *state, yaml_event_t *event, Config *config) {
 
                 *state = STATE_LOG;
                 break;
+                
             default:
                 printf("Unexpected event %d in state %d.\n", event->type, *state);
                 return 0;
+                
         }
         break;
 
@@ -199,10 +209,15 @@ static int consumeEvent(State *state, yaml_event_t *event, Config *config) {
             case YAML_MAPPING_END_EVENT:
                 *state = STATE_SECTION;
                 break;
+                
             case YAML_SCALAR_EVENT:
                 config->STARTUP = strdup((char *) event->data.scalar.value);
                 *state = STATE_SECTION;
                 break;
+                
+            default:
+                return 0;
+                
         }
         break;
 
@@ -213,7 +228,7 @@ static int consumeEvent(State *state, yaml_event_t *event, Config *config) {
                 break;
 
             case YAML_SCALAR_EVENT:
-                char *value = event->data.scalar.value;
+                value = (char *) event->data.scalar.value;
 
                 if (!strcmp(value, "QUIT")) *state = STATE_K_QUIT;
                 else if (!strcmp(value, "ENV")) *state = STATE_K_ENV;
@@ -224,6 +239,10 @@ static int consumeEvent(State *state, yaml_event_t *event, Config *config) {
                     return 0;
                 }
                 break;
+                
+            default:
+                return 0;
+                
         }
         break;
 
@@ -237,7 +256,7 @@ static int consumeEvent(State *state, yaml_event_t *event, Config *config) {
                 break;
             
             case YAML_SCALAR_EVENT:
-                char *value = event->data.scalar.value;
+                value = (char *) event->data.scalar.value;
                 printf("key word %s\n", value);
 
                 KeywordCMD cmd;
@@ -245,16 +264,23 @@ static int consumeEvent(State *state, yaml_event_t *event, Config *config) {
                     case STATE_K_QUIT:
                         cmd = K_QUIT;
                         break;
+                        
                     case STATE_K_ENV:
                         cmd = K_ENV;
                         break;
+                        
                     case STATE_K_RELOAD:
                         cmd = K_RELOAD;
                         break;
+                        
                     case STATE_K_ANS:
                         config->OUTPUT_ID = strdup(value);
                         *state = STATE_KEYWORDS;
                         return 1;
+                        
+                    default:
+                        return 0;
+                        
                 }
 
                 // Replaces default setting
@@ -268,7 +294,11 @@ static int consumeEvent(State *state, yaml_event_t *event, Config *config) {
                         return 1;
                     }
                 }
-            break;
+                break;
+            
+            default:
+                return 0;
+                
         }
         break;
 
@@ -279,7 +309,7 @@ static int consumeEvent(State *state, yaml_event_t *event, Config *config) {
                 break;
 
             case YAML_SCALAR_EVENT:
-                char *value = event->data.scalar.value;
+                value = (char *) event->data.scalar.value;
 
                 if (!strcmp(value, "saveOutputs")) *state = STATE_OUTPUTS;
                 else if (!strcmp(value, "preserveFractions")) *state = STATE_PRESERVE_FRACS;
@@ -291,6 +321,10 @@ static int consumeEvent(State *state, yaml_event_t *event, Config *config) {
                 }
 
                 break;
+                
+            default:
+                return 0;
+                
         }
         break;
 
@@ -301,13 +335,17 @@ static int consumeEvent(State *state, yaml_event_t *event, Config *config) {
                 break;
 
             case YAML_SCALAR_EVENT:
-                char *value = event->data.scalar.value;
+                value = (char *) event->data.scalar.value;
                 int outputs = atoi(value);
                 config->OUTPUTS = outputs;
                 *state = STATE_RUNTIME;
                 return 1;
 
                 break;
+                
+            default:
+                return 0;
+                
         }
         break;
 
@@ -318,7 +356,7 @@ static int consumeEvent(State *state, yaml_event_t *event, Config *config) {
                 break;
 
             case YAML_SCALAR_EVENT:
-                char *value = event->data.scalar.value;
+                value = (char *) event->data.scalar.value;
                 int b = get_boolean(value);
 
                 if (b == -1) return 0;
@@ -327,6 +365,10 @@ static int consumeEvent(State *state, yaml_event_t *event, Config *config) {
 
                 return 1;
                 break;
+                
+            default:
+                return 0;
+                
         }
         break;
 
@@ -337,7 +379,7 @@ static int consumeEvent(State *state, yaml_event_t *event, Config *config) {
                 break;
 
             case YAML_SCALAR_EVENT:
-                char *value = event->data.scalar.value;
+                value = (char *) event->data.scalar.value;
                 int b = get_boolean(value);
 
                 if (b == -1) return 0;
@@ -346,6 +388,10 @@ static int consumeEvent(State *state, yaml_event_t *event, Config *config) {
 
                 return 1;
                 break;
+                
+            default:
+                return 0;
+                
         }
         break;
 
@@ -356,7 +402,7 @@ static int consumeEvent(State *state, yaml_event_t *event, Config *config) {
                 break;
 
             case YAML_SCALAR_EVENT:
-                char *value = event->data.scalar.value;
+                value = (char *) event->data.scalar.value;
                 int b = get_boolean(value);
 
                 if (b == -1) return 0;
@@ -365,6 +411,9 @@ static int consumeEvent(State *state, yaml_event_t *event, Config *config) {
 
                 return 1;
                 break;
+                
+            default: 
+                return 0;
         }
         break;
     

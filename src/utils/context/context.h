@@ -17,7 +17,7 @@ extern Context *GLOBALCONTEXT;
 Context *createContext(Config *config, Environment *env);
 
 
-int initContext();
+int initContext(char *cpath);
 
 
 void freeContext(Context *context);

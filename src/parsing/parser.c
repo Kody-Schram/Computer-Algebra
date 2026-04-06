@@ -3,7 +3,6 @@
 #include <string.h>
 
 #include "parser.h"
-#include "utils/context/context.h"
 #include "utils/log.h"
 
 #include "parsing/codegen/tokenizer.h"
@@ -382,6 +381,8 @@ static ASTNode *parseAssignment(Token *head) {
         if (rpn != NULL) free(rpn->items);
         free(rpn);
         freeAST(ast);
+        
+    return NULL;
 }
 
 

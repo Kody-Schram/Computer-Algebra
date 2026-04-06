@@ -1,6 +1,8 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
+#include <stdio.h>
+
 typedef enum LOG_LEVEL LOG_LEVEL;
 typedef struct KeywordMapping KeywordMapping;
 typedef struct Config Config;
@@ -43,7 +45,7 @@ struct Config {
 };
 
 
-Config *loadConfig();
+Config *loadConfig(char *cpath);
 
 
 FILE *printConfig(Config *config);
