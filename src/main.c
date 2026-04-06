@@ -189,6 +189,7 @@ int main(int argc, char *argv[]) {
     }
 
     int line = 1;
+    
     // System loop
     while (1) {
         char *input = terminalEntry(line);
