@@ -37,19 +37,19 @@ typedef enum {
 
 // Maps strings to correct boolean value
 static int get_boolean(const char *string) {
-    char *true[] = {"y", "Y", "yes", "Yes", "YES", "true", "True", "TRUE", "on", "On", "ON", NULL};
-    char *false[] = {"n", "N", "no", "No", "NO", "false", "False", "FALSE", "off", "Off", "OFF", NULL};
+    char *t[] = {"y", "Y", "yes", "Yes", "YES", "true", "True", "TRUE", "on", "On", "ON", NULL};
+    char *f[] = {"n", "N", "no", "No", "NO", "false", "False", "FALSE", "off", "Off", "OFF", NULL};
     char **p;
 
     // Checks valid values for true
-    for (p = true; *p; p++) {
+    for (p = t; *p; p++) {
         if (strcmp(string, *p) == 0) {
             return 1;
         }
     }
 
     // Checks valid values for false
-    for (p = false; *p; p++) {
+    for (p = f; *p; p++) {
         if (strcmp(string, *p) == 0) {
             return 0;
         }

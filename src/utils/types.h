@@ -6,7 +6,9 @@
 #endif
 
 #include <stdio.h>
-#include "utils/context/environment.h"
+
+// Forward declare from environment.h
+typedef struct Environment Environment;
 
 typedef enum ComponentType ComponentType;
 typedef struct Component Component;

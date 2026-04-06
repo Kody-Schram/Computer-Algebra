@@ -53,6 +53,7 @@ dkms.conf
 
 .DS_Store
 .vscode
+.zed
 
 # Builds
 build/

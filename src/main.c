@@ -128,6 +128,7 @@ static int process(char *buffer) {
 }
 
 
+
 static int runStartup() {
     // Load startup script
     if (GLOBALCONTEXT->config->STARTUP != NULL) {
