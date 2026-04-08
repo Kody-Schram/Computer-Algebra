@@ -67,6 +67,7 @@ log.txt
 tests/logs/*
 
 *.ps1
+combine.sh
 project_dump.txt
 
 # pseudo code

@@ -2,8 +2,6 @@
 #define ENVIRONMENT_H
 
 #include "utils/types.h"
-typedef struct Function Function;
-typedef struct ASTNode ASTNode;
 
 typedef enum ComponentType ComponentType;
 typedef struct ComponentData ComponentData;

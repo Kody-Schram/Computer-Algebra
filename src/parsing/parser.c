@@ -19,11 +19,11 @@ typedef enum FunctionComponent {
 } FunctionComponent;
 
 
-static int containsFunctionDefinition(Token *head) {
+static int containsFunctionAssignment(Token *head) {
     Token *cur = head;
     while (cur != nullptr) {
         if (cur->type == TOKEN_MAPPING) {
-            Debug(0, "Assignment found.\n");
+            Debug(0, "Function mapping found.\n");
             return 1;
         }
         cur = cur->next;
@@ -201,7 +201,7 @@ static int parseFunctionCalls(Token **head) {
 }
 
 
-static ASTNode *parseFunctionDefinition(Token *head) {
+static ASTNode *parseFunctionAssignment(Token *head) {
     ASTNode *assignment = dummyASTNode(NODE_ASSIGN_FUNC);
     if (assignment == nullptr) goto error;
 
@@ -271,7 +271,8 @@ static ASTNode *parseFunctionDefinition(Token *head) {
         cur = cur->next;
     }
 
-    if (containsAssignment(asgn->next)) {
+    // Checks body for second assignment/mapping token
+    if (containsAssignment(asgn->next) || containsFunctionAssignment(asgn->next)) {
         printf("Cannot have assignment within a function definition.\n");
         goto error;
     }
@@ -397,9 +398,9 @@ ASTNode *parse(char *buffer) {
     }
 
     if (containsAssignment(head)) {
-        if (!containsFunctionDefinition(head)) return parseAssignment(head);
+        if (!containsFunctionAssignment(head)) return parseAssignment(head);
 
-        return parseFunctionDefinition(head);
+        return parseFunctionAssignment(head);
     }
 
     if (!parseFunctionCalls(&head)) {
