@@ -12,6 +12,173 @@
 static const int DEFAULT_ENV_STACK = 3;
 
 
+int evaluateAddition(ASTNode **ast) {
+    ASTNode *left = (*ast)->left;
+    ASTNode *right = (*ast)->right;
+    
+    if (!(left->type == NODE_INTEGER || left->type == NODE_DOUBLE) && !(right->type == NODE_INTEGER || right->type == NODE_DOUBLE)) return 1;
+    
+    ASTNode *new = nullptr;
+    
+    if ((*ast)->left->type == NODE_INTEGER && (*ast)->right->type == NODE_INTEGER) {
+        new = dummyASTNode(NODE_INTEGER);
+        if (new == nullptr) return 0;
+        new->integer = left->integer + right->integer;
+    } else {
+        new = dummyASTNode(NODE_DOUBLE);
+        if (new == nullptr) return 0;
+
+        double l = (left->type == NODE_INTEGER) ? (double) left->integer : left->value;
+        double r = (right->type == NODE_INTEGER) ? (double) right->integer: right->value;
+        new->value = l + r;
+    }
+
+    freeAST(*ast);
+    *ast = new;
+    return 1;
+}
+
+
+int evaluateSubtraction(ASTNode **ast) {
+    ASTNode *left = (*ast)->left;
+    ASTNode *right = (*ast)->right;
+    
+    if (!(left->type == NODE_INTEGER || left->type == NODE_DOUBLE) && !(right->type == NODE_INTEGER || right->type == NODE_DOUBLE)) return 1;
+    
+    ASTNode *new = nullptr;
+    
+    if ((*ast)->left->type == NODE_INTEGER && (*ast)->right->type == NODE_INTEGER) {
+        new = dummyASTNode(NODE_INTEGER);
+        if (new == nullptr) return 0;
+        new->integer = left->integer - right->integer;
+    } else {
+        new = dummyASTNode(NODE_DOUBLE);
+        if (new == nullptr) return 0;
+
+        double l = (left->type == NODE_INTEGER) ? (double) left->integer : left->value;
+        double r = (right->type == NODE_INTEGER) ? (double) right->integer: right->value;
+        new->value = l - r;
+    }
+
+    freeAST(*ast);
+    *ast = new;
+    return 1;
+}
+
+
+int evaluateMultiplication(ASTNode **ast) {
+    ASTNode *left = (*ast)->left;
+    ASTNode *right = (*ast)->right;
+    
+    if (!(left->type == NODE_INTEGER || left->type == NODE_DOUBLE) && !(right->type == NODE_INTEGER || right->type == NODE_DOUBLE)) return 1;
+    
+    ASTNode *new = nullptr;
+    
+    if (left->type == NODE_INTEGER && right->type == NODE_INTEGER) {
+        new = dummyASTNode(NODE_INTEGER);
+        if (new == nullptr) return 0;
+        new->integer = left->integer * right->integer;
+    } else {
+        new = dummyASTNode(NODE_DOUBLE);
+        if (new == nullptr) return 0;
+
+        double l = (left->type == NODE_INTEGER) ? (double) left->integer : left->value;
+        double r = (right->type == NODE_INTEGER) ? (double) right->integer: right->value;
+        new->value = l * r;
+    }
+
+    freeAST(*ast);
+    *ast = new;
+    return 1;
+}
+
+
+int evaluateDivision(ASTNode **ast) {
+    ASTNode *left = (*ast)->left;
+    ASTNode *right = (*ast)->right;
+    
+    if (!(left->type == NODE_INTEGER || left->type == NODE_DOUBLE) && !(right->type == NODE_INTEGER || right->type == NODE_DOUBLE)) return 1;
+    
+    ASTNode *new = nullptr;
+    
+    if (left->type == NODE_INTEGER && right->type == NODE_INTEGER) {
+        if (right->integer == 0) {
+            printf("Division by 0.\n");
+            return 0;
+        }
+
+        // Evaluate fraction
+        if (!GLOBALCONTEXT->config->PRESERVE_FRACS) {
+            new = dummyASTNode(NODE_DOUBLE);
+            if (new == nullptr) return 0;
+            new->value = ((double) left->integer) / ((double) right->integer);
+
+            freeAST(*ast);
+            *ast = new;
+            return 1;
+        }
+
+        // Simplify fraction
+        int g = _gcd(left->integer, right->integer);
+        if (g != 1) {
+            left->integer = left->integer / g;
+            right->integer = right->integer / g;
+        }
+        return 1;
+    } else {
+        if (right->value == 0) {
+            printf("Division by 0.\n");
+            return 0;
+        }
+
+        new = dummyASTNode(NODE_DOUBLE);
+        if (new == nullptr) return 0;
+
+        double l = (left->type == NODE_INTEGER) ? (double) left->integer : left->value;
+        double r = (right->type == NODE_INTEGER) ? (double) right->integer: right->value;
+        new->value = l / r;
+        freeAST(*ast);
+        *ast = new;
+
+        return 1;
+    }
+}
+
+
+int evaluateExponentiation(ASTNode **ast) {
+    ASTNode *left = (*ast)->left;
+    ASTNode *right = (*ast)->right;
+    
+    if (!(left->type == NODE_INTEGER || left->type == NODE_DOUBLE) && !(right->type == NODE_INTEGER || right->type == NODE_DOUBLE)) return 1;
+    
+    ASTNode *new = nullptr;
+    
+    if (left->type == NODE_INTEGER && right->type == NODE_INTEGER && right->integer >= 0) {
+        if (left->integer == 0 && right->integer == 0) {
+            new = dummyASTNode(NODE_INTEGER);
+            if (new == nullptr) return 0;
+            new->integer = 1;
+        } else {
+            new = dummyASTNode(NODE_INTEGER);
+            if (new == nullptr) return 0;
+            new->integer = _powi(left->integer, right->integer);
+        }
+    } else {
+        new = dummyASTNode(NODE_DOUBLE);
+        if (new == nullptr) return 0;
+        
+        double l = (left->type == NODE_INTEGER) ? (double) left->integer : left->value;
+        double r = (right->type == NODE_INTEGER) ? (double) right->integer: right->value;
+
+        if (left->value == 0 && right->value == 0) new->value = 1;
+        else new->value = powl(l, r);
+    }
+
+    freeAST(*ast);
+    *ast = new;
+    return 1;
+}
+
 static int executeRecur(ASTNode **ptr, Environment *env) {
     ASTNode *ast = *ptr;
     if (ast == nullptr) return 0;
@@ -98,137 +265,28 @@ static int executeRecur(ASTNode **ptr, Environment *env) {
             if (!lAst || !rAst) return 0;
 
             Debug(0, "Running main operator now\n");
-            Debug(1, printAST(ast));
-            // Evaluates if both children aren't a variable
-            ASTNode *left = ast->left;
-            ASTNode *right = ast->right;
-            if ((left->type == NODE_INTEGER || left->type == NODE_DOUBLE) && (right->type == NODE_INTEGER || right->type == NODE_DOUBLE)) {
-                Debug(0, "Evaluating operation\n");
-
-                ASTNode *new = nullptr;
-                double l = (left->type == NODE_INTEGER) ? (double) left->integer : left->value;
-                double r = (right->type == NODE_INTEGER) ? (double) right->integer: right->value;
-                
-                switch (ast->op) {
-                    case OP_ADDITION: {
-                        if (left->type == NODE_INTEGER && right->type == NODE_INTEGER) {
-                            new = dummyASTNode(NODE_INTEGER);
-                            if (new == nullptr) return 0;
-                            new->integer = left->integer + right->integer;
-                        } else {
-                            new = dummyASTNode(NODE_DOUBLE);
-                            if (new == nullptr) return 0;
-
-                            new->value = r + l;
-                        }
-
-                        freeAST(ast);
-                        *ptr = new;
-                        return 1;
-                    }
-
-                    case OP_SUBTRACTION: {
-                        if (left->type == NODE_INTEGER && right->type == NODE_INTEGER) {
-                            new = dummyASTNode(NODE_INTEGER);
-                            if (new == nullptr) return 0;
-                            new->integer = left->integer - right->integer;
-                        } else {
-                            new = dummyASTNode(NODE_DOUBLE);
-                            if (new == nullptr) return 0;
-
-                            new->value = l - r;
-                        }
-
-                        freeAST(ast);
-                        *ptr = new;
-                        return 1;
-                    }
-
-                    case OP_MULTIPLICATION: {
-                        if (left->type == NODE_INTEGER && right->type == NODE_INTEGER) {
-                            new = dummyASTNode(NODE_INTEGER);
-                            if (new == nullptr) return 0;
-                            new->integer = left->integer * right->integer;
-                        } else {
-                            new = dummyASTNode(NODE_DOUBLE);
-                            if (new == nullptr) return 0;
-            
-                            new->value = r * l;
-                        }
-
-                        freeAST(ast);
-                        *ptr = new;
-                        return 1;
-                    }
-
-                    case OP_EXPONTENTIATION: {
-                        if (left->type == NODE_INTEGER && right->type == NODE_INTEGER && right->integer >= 0) {
-                            if (left->integer == 0 && right->integer == 0) {
-                                new = dummyASTNode(NODE_INTEGER);
-                                if (new == nullptr) return 0;
-                                new->integer = 1;
-                            } else {
-                                new = dummyASTNode(NODE_INTEGER);
-                                if (new == nullptr) return 0;
-                                new->integer = _powi(left->integer, right->integer);
-                            }
-                        } else {
-                            new = dummyASTNode(NODE_DOUBLE);
-                            if (new == nullptr) return 0;
+            switch (ast->op) {
+                case OP_ADDITION:
+                    evaluateAddition(ptr);
+                    break;
                     
-                            if (left->value == 0 && right->value == 0) new->value = 1;
-                            else new->value = powl(l, r);
-                        }
-
-                        freeAST(ast);
-                        *ptr = new;
-                        return 1;
-                    }
-
-                    case OP_DIVISION: {
-                        if (left->type == NODE_INTEGER && right->type == NODE_INTEGER) {
-                            if (right->integer == 0) {
-                                printf("Division by 0.\n");
-                                return 0;
-                            }
-
-                            // Evaluate fraction
-                            if (!GLOBALCONTEXT->config->PRESERVE_FRACS) {
-                                new = dummyASTNode(NODE_DOUBLE);
-                                if (new == nullptr) return 0;
-                                new->value = ((double) ast->left->value) / ((double) ast->right->value);
-
-                                freeAST(ast);
-                                *ptr = new;
-                                return 1;
-                            }
-
-                            // Simplify fraction
-                            int g = _gcd(left->integer, right->integer);
-                            if (g != 1) {
-                                left->integer = left->integer / g;
-                                right->integer = right->integer / g;
-                            }
-                            return 1;
-                        } else {
-                            if (right->value == 0) {
-                                printf("Division by 0.\n");
-                                return 0;
-                            }
-
-                            new = dummyASTNode(NODE_DOUBLE);
-                            if (new == nullptr) return 0;
-
-                            new->value = l / r;
-                            freeAST(ast);
-                            *ptr = new;
-
-                            return 1;
-                        }
-                    }
-                }
-
+                case OP_SUBTRACTION:
+                    evaluateSubtraction(ptr);
+                    break;
+                    
+                case OP_MULTIPLICATION:
+                    evaluateMultiplication(ptr);
+                    break;
+            
+                case OP_DIVISION:
+                    evaluateDivision(ptr);
+                    break;
+                
+                case OP_EXPONTENTIATION:
+                    evaluateExponentiation(ptr);
+                    break;
             }
+            
             return 1;
 
         case NODE_FUNC_CALL:
@@ -317,6 +375,7 @@ static int executeRecur(ASTNode **ptr, Environment *env) {
 
     return 1;
 }
+
 
 int execute(ASTNode **ast) {
     Info(0, "\nExecuting\n");
