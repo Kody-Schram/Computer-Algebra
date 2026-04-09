@@ -3,39 +3,13 @@
 #include <math.h>
 
 #include "execute.h"
+#include "algebra/algebra.h"
 #include "utils/types.h"
 #include "utils/context/context.h"
 #include "utils/log.h"
 
 
 static const int DEFAULT_ENV_STACK = 3;
-
-
-static long long gcd(long long a, long long b)
-{
-    long long temp;
-    while (b != 0)
-    {
-        temp = a % b;
-
-        a = b;
-        b = temp;
-    }
-    return a;
-}
-
-
-static long long powi(long long a, long long e) {
-    long long r = 1;
-
-    while (e > 0) {
-        if (e % 2 == 1) r *= a;
-        a *= a;
-        e /= 2;
-    }
-
-    return r;
-}
 
 
 static int executeRecur(ASTNode **ptr, Environment *env) {
@@ -196,7 +170,7 @@ static int executeRecur(ASTNode **ptr, Environment *env) {
                             } else {
                                 new = dummyASTNode(NODE_INTEGER);
                                 if (new == nullptr) return 0;
-                                new->integer = powi(left->integer, right->integer);
+                                new->integer = _powi(left->integer, right->integer);
                             }
                         } else {
                             new = dummyASTNode(NODE_DOUBLE);
@@ -230,7 +204,7 @@ static int executeRecur(ASTNode **ptr, Environment *env) {
                             }
 
                             // Simplify fraction
-                            int g = gcd(left->integer, right->integer);
+                            int g = _gcd(left->integer, right->integer);
                             if (g != 1) {
                                 left->integer = left->integer / g;
                                 right->integer = right->integer / g;
