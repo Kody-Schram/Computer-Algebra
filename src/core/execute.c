@@ -1,12 +1,10 @@
 #include <stdlib.h>
 #include <stdio.h>
-#include <math.h>
 
 #include "execute.h"
-#include "algebra/algebra.h"
-#include "utils/types.h"
-#include "utils/context/context.h"
-#include "utils/log.h"
+#include "core/utils/types.h"
+#include "core/utils/context/context.h"
+#include "core/utils/log.h"
 
 
 static const int DEFAULT_ENV_STACK = 3;
@@ -118,12 +116,12 @@ int evaluateDivision(ASTNode **ast) {
             return 1;
         }
 
-        // Simplify fraction
-        int g = _gcd(left->integer, right->integer);
-        if (g != 1) {
-            left->integer = left->integer / g;
-            right->integer = right->integer / g;
-        }
+        // // Simplify fraction (will be handled by algebra later)
+        // int g = _gcd(left->integer, right->integer);
+        // if (g != 1) {
+        //     left->integer = left->integer / g;
+        //     right->integer = right->integer / g;
+        // }
         return 1;
     } else {
         if (right->value == 0) {
@@ -152,6 +150,7 @@ int evaluateExponentiation(ASTNode **ast) {
     if (!(left->type == NODE_INTEGER || left->type == NODE_DOUBLE) && !(right->type == NODE_INTEGER || right->type == NODE_DOUBLE)) return 1;
     
     ASTNode *new = nullptr;
+    return 1; // temporary fix;
     
     if (left->type == NODE_INTEGER && right->type == NODE_INTEGER && right->integer >= 0) {
         if (left->integer == 0 && right->integer == 0) {
@@ -161,7 +160,7 @@ int evaluateExponentiation(ASTNode **ast) {
         } else {
             new = dummyASTNode(NODE_INTEGER);
             if (new == nullptr) return 0;
-            new->integer = _powi(left->integer, right->integer);
+            //new->integer = _powi(left->integer, right->integer);
         }
     } else {
         new = dummyASTNode(NODE_DOUBLE);
@@ -171,7 +170,7 @@ int evaluateExponentiation(ASTNode **ast) {
         double r = (right->type == NODE_INTEGER) ? (double) right->integer: right->value;
 
         if (left->value == 0 && right->value == 0) new->value = 1;
-        else new->value = powl(l, r);
+        //else new->value = powl(l, r);
     }
 
     freeAST(*ast);

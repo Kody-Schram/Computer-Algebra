@@ -1,7 +1,7 @@
 #ifndef ENVIRONMENT_H
 #define ENVIRONMENT_H
 
-#include "utils/types.h"
+#include "core/utils/types.h"
 
 typedef enum ComponentType ComponentType;
 typedef struct ComponentData ComponentData;

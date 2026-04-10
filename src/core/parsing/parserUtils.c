@@ -3,8 +3,8 @@
 #include <math.h>
 
 #include "parserUtils.h"
-#include "utils/context/context.h"
-#include "utils/log.h"
+#include "core/utils/context/context.h"
+#include "core/utils/log.h"
 
 
 Token *createToken(TokenType type, char *value, int l) {

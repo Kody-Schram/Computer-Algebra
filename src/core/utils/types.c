@@ -3,7 +3,7 @@
 #include <string.h>
 
 #include "types.h"
-#include "utils/log.h"
+#include "core/utils/log.h"
 
 
 static const int DEFUALT_STRING_SIZE = 64;

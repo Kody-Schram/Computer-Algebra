@@ -3,7 +3,7 @@
 #include <string.h>
 
 #include "parser.h"
-#include "utils/log.h"
+#include "core/utils/log.h"
 
 #include "parsing/codegen/tokenizer.h"
 #include "parsing/codegen/lexer.h"

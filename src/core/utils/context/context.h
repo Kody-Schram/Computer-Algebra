@@ -1,7 +1,7 @@
 #ifndef CONTEXT_H
 #define CONTEXT_H
 
-#include "utils/types.h"
+#include "core/utils/types.h"
 #include "environment.h"
 #include "config.h"
 

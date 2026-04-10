@@ -2,8 +2,8 @@
 #include <stdio.h>
 
 #include "ast.h"
-#include "utils/context/context.h"
-#include "utils/log.h"
+#include "core/utils/context/context.h"
+#include "core/utils/log.h"
 #include "parsing/parserUtils.h"
 
 static int DEFAULT_NODE_STACK_SIZE = 10;

@@ -1,7 +1,7 @@
 #ifndef ALGEBRA_H
 #define ALGEBRA_H
 
-#include "utils/types.h"
+#include "core/utils/types.h"
 
 
 long long _powi(long long a, long long e);

@@ -3,14 +3,14 @@
 #include <string.h>
 #include <math.h>
 
-#include "utils/context/context.h"
-#include "utils/types.h"
-#include "utils/log.h"
+#include "core/utils/context/context.h"
+#include "core/utils/types.h"
+#include "core/utils/log.h"
 
-#include "utils/input.h"
-#include "parsing/parser.h"
+#include "core/utils/input.h"
+#include "core/parsing/parser.h"
 
-#include "execution/execute.h"
+#include "core/execute.h"
 
 
 static int handleKeywords(char *buffer) {
