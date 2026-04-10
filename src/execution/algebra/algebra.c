@@ -29,7 +29,6 @@ long long _powi(long long a, long long e) {
 }
 
 
-
 static int simplifyRecur(ASTNode **ast) {
     if (ast == NULL) return 1;
     

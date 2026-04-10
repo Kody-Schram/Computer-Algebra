@@ -179,6 +179,7 @@ int evaluateExponentiation(ASTNode **ast) {
     return 1;
 }
 
+
 static int executeRecur(ASTNode **ptr, Environment *env) {
     ASTNode *ast = *ptr;
     if (ast == nullptr) return 0;
