@@ -4,7 +4,7 @@
 #include "ast.h"
 #include "core/utils/context/context.h"
 #include "core/utils/log.h"
-#include "parsing/parserUtils.h"
+#include "core/parsing/parserUtils.h"
 
 static int DEFAULT_NODE_STACK_SIZE = 10;
 

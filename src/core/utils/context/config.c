@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include "config.h"
+#include "core/utils/types.h"
 
 
 static const int DEFAULT_MAPPING_SIZE = 5;
@@ -147,7 +148,7 @@ static int consumeEvent(State *state, yaml_event_t *event, Config *config) {
                 break;
                 
             default:
-                return 0;
+                break;
         }
         break;
     
@@ -215,7 +216,7 @@ static int consumeEvent(State *state, yaml_event_t *event, Config *config) {
                 break;
                 
             default:
-                return 0;
+                break;
                 
         }
         break;
@@ -425,6 +426,7 @@ Config *loadConfig(char *cpath) {
         return nullptr;
     }
 
+    printf("initting config\n");
     initConfig(config);
 
     FILE *cfile = nullptr;
@@ -458,6 +460,7 @@ Config *loadConfig(char *cpath) {
         }
     }
 
+    printf("parsing\n");
     yaml_parser_t parser;
     yaml_event_t event;
 
@@ -474,12 +477,16 @@ Config *loadConfig(char *cpath) {
             goto cleanup;
         }
 
-        if (!consumeEvent(&parserState, &event, config)) goto cleanup;
+        if (!consumeEvent(&parserState, &event, config)) {
+            printf("Error in consume event\n");
+            goto cleanup;
+        }
 
         done = (event.type == YAML_STREAM_END_EVENT);
         yaml_event_delete(&event);
     }
 
+    printf("done parsing\n");
     yaml_parser_delete(&parser);
 
     if (config->LOG_STREAM != stdout) {

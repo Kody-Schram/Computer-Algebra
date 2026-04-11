@@ -2,7 +2,6 @@
 #include <stdio.h>
 
 #include "execute.h"
-#include "core/utils/types.h"
 #include "core/utils/context/context.h"
 #include "core/utils/log.h"
 

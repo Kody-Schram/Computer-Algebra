@@ -6,7 +6,7 @@
 #include "tokenizer.h"
 #include "core/utils/context/context.h"
 #include "core/utils/log.h"
-#include "parsing/parserUtils.h"
+#include "core/parsing/parserUtils.h"
 
 typedef struct  {
     char *op;

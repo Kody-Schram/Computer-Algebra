@@ -5,7 +5,7 @@
 #include "lexer.h"
 #include "core/utils/context/context.h"
 #include "core/utils/log.h"
-#include "parsing/parserUtils.h"
+#include "core/parsing/parserUtils.h"
 
 /**
  * @brief Adds * where it is implied through standard math notation

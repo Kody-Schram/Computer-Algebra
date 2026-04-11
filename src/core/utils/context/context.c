@@ -21,7 +21,9 @@ Context *createContext(Config *config, Environment *env) {
 int initContext(char *cpath) {
     if (GLOBALCONTEXT != nullptr) return 0;
 
+    printf("loading config\n");
     Config *config = loadConfig(cpath);
+    printf("loading env\n");
     Environment *env = createEnvironment();
 
     if (config == nullptr || env == nullptr) {

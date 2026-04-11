@@ -23,9 +23,15 @@ endif()
 
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(YAML REQUIRED yaml-0.1)
-link_directories(${YAML_LIBRARY_DIRS})
 
-include_directories(include src ${YAML_INCLUDE_DIRS})
+add_subdirectory(src/core)
+add_subdirectory(src/modules)
+add_executable(${PROJECT_NAME} src/main.c)
 
-file(GLOB_RECURSE SOURCES "src/*.c")
-list(REMOVE_ITEM SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/main.c")
+target_link_libraries(${PROJECT_NAME}
+    PRIVATE
+    Core
+    Modules
+    ${YAML_LIBRARIES}
+    m
+)

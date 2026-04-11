@@ -1,7 +1,7 @@
 #ifndef LOG_H
 #define LOG_H
 
-#include "core/utils/context/context.h"
+#include <stdio_ext.h>
 
 #ifdef Release
 

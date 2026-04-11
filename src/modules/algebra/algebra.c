@@ -1,6 +1,5 @@
 #include "algebra.h"
 #include "core/utils/log.h"
-#include "core/utils/types.h"
 
 
 ASTNode *gcd(ASTNode *a, ASTNode *b) {

@@ -176,6 +176,7 @@ int main(int argc, char *argv[]) {
         printf("Loading config from '%s'\n", cpath);
     }
 
+    printf("Loading context\n");
     if (!initContext(cpath))  {
         freeContext(GLOBALCONTEXT);
         return 1;
