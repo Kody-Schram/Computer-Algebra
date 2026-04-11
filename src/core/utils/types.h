@@ -16,11 +16,10 @@ typedef struct Component Component;
 typedef struct Environment Environment;
 
 // Forward declaring types
-typedef enum NodeType NodeType;
 typedef enum OperationType OperationType;
-typedef enum NumberType NumberType;
-typedef struct Number Number;
-typedef struct ASTNode ASTNode;
+typedef struct Operation Operation;
+typedef enum ExpressionType ExpressionType;
+typedef struct Expression Expression;
 
 typedef struct FunctionCall FunctionCall;
 typedef enum FunctionType FunctionType;
@@ -28,7 +27,7 @@ typedef struct Function Function;
 
 
 // ASTNode related definitions
-enum NodeType {
+enum ExpressionType {
     NODE_INTEGER,
     NODE_DOUBLE,
     NODE_OPERATOR,
@@ -38,38 +37,42 @@ enum NodeType {
     NODE_ASSIGN_FUNC
 };
 
-
 enum OperationType {
-    OP_ADDITION,
-    OP_SUBTRACTION,
-    OP_MULTIPLICATION,
-    OP_DIVISION,
-    OP_EXPONTENTIATION
+    AXIOMATIC,
+    CUSTOM
 };
 
 
-struct ASTNode {
-    NodeType type;
-    // Look into packing an int in here to support scientific notation
+struct Operation {
+    bool associative;
+    bool commutative;
+    OperationType type;
+    Function *definition;
+};
 
+struct Expression {
+    ExpressionType type;
+    // Look into packing an int in here to support scientific notation
+    
     union {
-        OperationType op;
+        struct {
+            Operation op;
+            int arity; // Number of operands
+            struct Expression **operands;
+        };
+        
         char *identifier;
-        double value; // Uses double over as most math.h funcs cast to double, and would leave 12 bytes of wasted space
+        double value;
         long long integer;
-        Function *func;
         FunctionCall *call;
     };
-
-    struct ASTNode *left;
-    struct ASTNode *right;
 };
 
 
 // Function related definitions
 struct FunctionCall {
     char *identifier;
-    ASTNode **parameters;
+    Expression **parameters;
     int nParams;
 };
 
@@ -86,26 +89,26 @@ struct Function {
     FunctionType type;
 
     union {
-        ASTNode *definition;
+        Expression *definition;
         double (*builtin) (double);
-        ASTNode *(*transform) (ASTNode **args, int nArgs);
+        Expression *(*transform) (Expression **args, int nArgs);
     };
 };
 
 
 
-ASTNode *dummyASTNode(NodeType type);
+Expression *dummyASTNode(ExpressionType type);
 
 
-ASTNode *deepCopyAST(ASTNode *ast);
+Expression *deepCopyAST(Expression *ast);
 
 
-FILE *printAST(ASTNode *root);
+FILE *printAST(Expression *root);
 
 
-void freeAST(ASTNode *ast);
+void freeAST(Expression *ast);
 
 
-char *astToString(ASTNode *ast);
+char *astToString(Expression *ast);
 
 #endif
