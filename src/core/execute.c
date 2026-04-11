@@ -13,7 +13,7 @@ int evaluateAddition(ASTNode **ast) {
     ASTNode *left = (*ast)->left;
     ASTNode *right = (*ast)->right;
     
-    if (!(left->type == NODE_INTEGER || left->type == NODE_DOUBLE) && !(right->type == NODE_INTEGER || right->type == NODE_DOUBLE)) return 1;
+    if ((left->type != NODE_INTEGER && left->type != NODE_DOUBLE) || (right->type != NODE_INTEGER && right->type != NODE_DOUBLE)) return 1;
     
     ASTNode *new = nullptr;
     
@@ -40,7 +40,7 @@ int evaluateSubtraction(ASTNode **ast) {
     ASTNode *left = (*ast)->left;
     ASTNode *right = (*ast)->right;
     
-    if (!(left->type == NODE_INTEGER || left->type == NODE_DOUBLE) && !(right->type == NODE_INTEGER || right->type == NODE_DOUBLE)) return 1;
+    if ((left->type != NODE_INTEGER && left->type != NODE_DOUBLE) || (right->type != NODE_INTEGER && right->type != NODE_DOUBLE)) return 1;
     
     ASTNode *new = nullptr;
     
@@ -67,7 +67,9 @@ int evaluateMultiplication(ASTNode **ast) {
     ASTNode *left = (*ast)->left;
     ASTNode *right = (*ast)->right;
     
-    if (!(left->type == NODE_INTEGER || left->type == NODE_DOUBLE) && !(right->type == NODE_INTEGER || right->type == NODE_DOUBLE)) return 1;
+    Debug(0, "left: %d, right: %d\n", left->type, right->type);
+    
+    if ((left->type != NODE_INTEGER && left->type != NODE_DOUBLE) || (right->type != NODE_INTEGER && right->type != NODE_DOUBLE)) return 1;
     
     ASTNode *new = nullptr;
     
@@ -94,7 +96,7 @@ int evaluateDivision(ASTNode **ast) {
     ASTNode *left = (*ast)->left;
     ASTNode *right = (*ast)->right;
     
-    if (!(left->type == NODE_INTEGER || left->type == NODE_DOUBLE) && !(right->type == NODE_INTEGER || right->type == NODE_DOUBLE)) return 1;
+    if ((left->type != NODE_INTEGER && left->type != NODE_DOUBLE) || (right->type != NODE_INTEGER && right->type != NODE_DOUBLE)) return 1;
     
     ASTNode *new = nullptr;
     
@@ -146,7 +148,7 @@ int evaluateExponentiation(ASTNode **ast) {
     ASTNode *left = (*ast)->left;
     ASTNode *right = (*ast)->right;
     
-    if (!(left->type == NODE_INTEGER || left->type == NODE_DOUBLE) && !(right->type == NODE_INTEGER || right->type == NODE_DOUBLE)) return 1;
+    if ((left->type != NODE_INTEGER && left->type != NODE_DOUBLE) || (right->type != NODE_INTEGER && right->type != NODE_DOUBLE)) return 1;
     
     ASTNode *new = nullptr;
     return 1; // temporary fix;
@@ -266,23 +268,23 @@ static int executeRecur(ASTNode **ptr, Environment *env) {
             Debug(0, "Running main operator now\n");
             switch (ast->op) {
                 case OP_ADDITION:
-                    evaluateAddition(ptr);
+                    if (!evaluateAddition(ptr)) return 0;
                     break;
                     
                 case OP_SUBTRACTION:
-                    evaluateSubtraction(ptr);
+                    if (!evaluateSubtraction(ptr)) return 0;
                     break;
                     
                 case OP_MULTIPLICATION:
-                    evaluateMultiplication(ptr);
+                    if (!evaluateMultiplication(ptr)) return 0;
                     break;
             
                 case OP_DIVISION:
-                    evaluateDivision(ptr);
+                    if (!evaluateDivision(ptr)) return 0;
                     break;
                 
                 case OP_EXPONTENTIATION:
-                    evaluateExponentiation(ptr);
+                    if (!evaluateExponentiation(ptr)) return 0;
                     break;
             }
             

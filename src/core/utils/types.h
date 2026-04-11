@@ -55,7 +55,7 @@ struct ASTNode {
     union {
         OperationType op;
         char *identifier;
-        double value; // Uses double over long double as most math.h funcs cast to double, and would leave 12 bytes of wasted space
+        double value; // Uses double over as most math.h funcs cast to double, and would leave 12 bytes of wasted space
         long long integer;
         Function *func;
         FunctionCall *call;
