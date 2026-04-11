@@ -4,6 +4,7 @@
 
 #include "environment.h"
 #include "context.h"
+#include "core/utils/types.h"
 
 const int DEFAULT_TABLE_SIZE = 10;
 const int DEFAULT_INCREASE_SIZE = 5;
@@ -37,7 +38,7 @@ int bindComponent(Environment *env, ComponentType type, char *identifier, void *
     new->identifier = strdup(identifier);
 
     if (type == FUNCTION) new->func = (Function *) data;
-    else new->value = (ASTNode *) data;
+    else new->value = (Expression *) data;
 
     env->entries ++;
     return 1;
@@ -78,7 +79,7 @@ FILE *printEnvironment(Environment *env) {
                     fprintf(stream, "%s) = ", func->env->components[func->env->entries-1].identifier);
                 }
                 
-                char *str = astToString(func->definition);
+                char *str = expressionToString(func->definition);
                 if (str == nullptr) return stream;
                 fprintf(stream, "%s\n", str);
                 free(str);
@@ -88,7 +89,7 @@ FILE *printEnvironment(Environment *env) {
             case VARIABLE:
                 fprintf(stream, "%s = ", env->components[i].identifier);
                 
-                str = astToString(env->components[i].value);
+                str = expressionToString(env->components[i].value);
                 if (str == nullptr) return stream;
                 fprintf(stream, "%s\n", str);
                 free(str);
@@ -111,19 +112,10 @@ void freeEnvironment(Environment *env) {
             if (env->components[c].type == FUNCTION) {
                 freeEnvironment(cmp->func->env);
                 
-                switch (cmp->func->type) {
-                    case DEFINED:
-                        freeAST(cmp->func->definition);
-                        break;
-                    case BUILTIN:
-                        free(cmp->func->builtin);
-                        break;
-                    case TRANSFORM:
-                        free(cmp->func->transform);
-                        break;
-                }
+                if (cmp->func->type == DEFINED) freeExpression(cmp->func->definition);
+                
                 free(cmp->func);
-            } else freeAST(cmp->value);
+            } else freeExpression(cmp->value);
         }
         free(env->components);
     }
@@ -136,7 +128,7 @@ int initOutputVariables(Environment *env) {
     int outputs = GLOBALCONTEXT->config->OUTPUTS;
     if (outputs > 0) {
         if (outputs == 1) {
-            ASTNode *temp = dummyASTNode(NODE_DOUBLE);
+            Expression *temp = dummyExpression(EXPRESSION_DOUBLE);
             if (temp == nullptr) return 0;
             temp->value = 0;
 
@@ -154,7 +146,7 @@ int initOutputVariables(Environment *env) {
             if (str == nullptr) return 0;
             snprintf(str, size, "%s_%d", GLOBALCONTEXT->config->OUTPUT_ID, i);
 
-            ASTNode *temp = dummyASTNode(NODE_DOUBLE);
+            Expression *temp = dummyExpression(EXPRESSION_DOUBLE);
             if (temp == nullptr) return 0;
             temp->value = 0;
 

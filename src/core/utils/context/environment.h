@@ -21,7 +21,7 @@ struct Component {
 
     union {
         Function *func;
-        ASTNode *value;
+        Expression *value;
     };
 };
 
