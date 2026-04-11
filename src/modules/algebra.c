@@ -1,5 +1,5 @@
 #include "algebra.h"
-#include "core/utils/log.h"
+#include "core/utils/types.h"
 
 long long _gcd(long long a, long long b) {
     long long temp;
@@ -27,44 +27,15 @@ long long _powi(long long a, long long e) {
 }
 
 
-ASTNode *gcd(ASTNode *a, ASTNode *b) {
-    if (a->type != NODE_INTEGER || b->type != NODE_INTEGER) {
+Expression *gcd(Expression *a, Expression *b) {
+    if (a->type != EXPRESSION_INTEGER || b->type != EXPRESSION_INTEGER) {
         printf("GCD expects two integers as inputs.\n");
         return nullptr;
     }
     
-    ASTNode *new = dummyASTNode(NODE_INTEGER);
+    Expression *new = dummyExpression(EXPRESSION_INTEGER);
     if (new == nullptr) return nullptr;
     
     new->integer = _gcd(a->integer, b->integer);
     return new;
-}
-
-
-static int simplifyRecur(ASTNode **ptr) {
-    if (ptr == nullptr) return 1;
-    ASTNode *ast = *ptr;
-    
-    switch (ast->type) {
-        case NODE_OPERATOR:
-        simplifyRecur(&ast->left);
-        simplifyRecur(&ast->right);
-        
-        // Handle associativity
-            
-        default:
-            break;
-    }
-    
-    return 1;
-}
-
-
-int simplify(ASTNode **ast) {
-    Debug(0, "Simplifying AST");
-    Debug(1, printAST(*ast));
-    
-    simplifyRecur(ast);
-    
-    return 1;
 }

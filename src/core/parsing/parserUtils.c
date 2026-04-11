@@ -135,6 +135,13 @@ Expression *createExpression(Token *token) {
                 return nullptr;
             }
             expr->op = cmp->operation;
+            
+            // By default starts as binary operation, can be flattened and resized later
+            expr->operands = malloc(sizeof(Expression *) * 2);
+            if (expr->operands == nullptr) {
+                perror("Error creating expression");
+                return nullptr;
+            }
             break;
             
         case TOKEN_FUNC_CALL:

@@ -17,8 +17,8 @@ RPNList *shuntingYard(Token *head);
  * @brief Generates AST from RPN list
  * 
  * @param rpn 
- * @return ASTNode* Root of AST
+ * @return Expression* Root of AST
  */
-ASTNode *astFromRPN(RPNList *rpn);
+Expression *expressionFromRPN(RPNList *rpn);
 
 #endif

@@ -1,5 +1,5 @@
 add_library(Core STATIC
-    execute.c
+    execution/execute.c
     
     utils/input.c
     utils/log.c

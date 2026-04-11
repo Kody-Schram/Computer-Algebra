@@ -3,6 +3,6 @@
 
 #include "core/utils/types.h"
 
-ASTNode **flattenTree(ASTNode *ast);
+Expression **flattenTree(Expression *ast);
 
 #endif

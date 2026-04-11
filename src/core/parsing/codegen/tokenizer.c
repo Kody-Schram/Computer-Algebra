@@ -5,6 +5,7 @@
 
 #include "tokenizer.h"
 #include "core/utils/context/context.h"
+#include "core/utils/context/environment.h"
 #include "core/utils/log.h"
 #include "core/parsing/parserUtils.h"
 
@@ -189,7 +190,7 @@ Token *tokenize(char *buffer) {
             //if (cRet.cmp != nullptr) printf("largest component found was %s\n", cRet.cmp->identifier);
             end += cRet.len;
 
-            if (cRet.cmp == nullptr || cRet.cmp->type == VARIABLE) type = TOKEN_IDENTIFIER;
+            if (cRet.cmp == nullptr || cRet.cmp->type == COMP_VARIABLE) type = TOKEN_IDENTIFIER;
             else type = TOKEN_FUNC_CALL_PLACEHOLDER;
         }
         
