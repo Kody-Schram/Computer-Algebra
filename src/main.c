@@ -10,7 +10,7 @@
 #include "core/utils/input.h"
 #include "core/parsing/parser.h"
 
-#include "core/execute.h"
+#include "core/execution/execute.h"
 
 
 static int handleKeywords(char *buffer) {
@@ -44,22 +44,22 @@ static int handleKeywords(char *buffer) {
 
 static int process(char *buffer) {
     Debug(0, "\nProcessing '%s'\n", buffer);
-    int result = handleKeywords(buffer);
-    if (result == -1) return 0;
-    else if (result == 1) return 1;
+    int keyword = handleKeywords(buffer);
+    if (keyword == -1) return 0;
+    else if (keyword == 1) return 1;
 
-    ASTNode *head = parse(buffer);
-    if (head == nullptr) return 0;
-    if (head != nullptr) {
-        if (!execute(&head)) {
-            freeAST(head);
+    ParserResult result = parse(buffer);
+    if (result.type == PARSER_ERROR) return 0;
+    if (result.expr != nullptr) {
+        if (!execute(&result.expr)) {
+            freeExpression(result.expr);
             return 1;
         }
     }
 
-    if (head == nullptr) return 1;
+    if (result.expr == nullptr) return 1;
 
-    char *str = astToString(head);
+    char *str = expressionToString(result.expr);
     if (str != nullptr) printf("%s\n\n", str);
     free(str);
 
@@ -69,8 +69,8 @@ static int process(char *buffer) {
             Component *cmp = searchEnvironment(GLOBALCONTEXT->env, GLOBALCONTEXT->config->OUTPUT_ID);
             if (cmp == nullptr) return 0;
 
-            freeAST(cmp->value);
-            cmp->value = head;
+            freeExpression(cmp->value);
+            cmp->value = result.expr;
             return 1;
         } else {
             int size = strlen(GLOBALCONTEXT->config->OUTPUT_ID) + 12;
@@ -84,7 +84,7 @@ static int process(char *buffer) {
                 return 0;
             }
             free(str);
-            freeAST(last->value);
+            freeExpression(last->value);
 
             for (int i = GLOBALCONTEXT->config->OUTPUTS - 2; i >= 0; i --) {
                 size = strlen(GLOBALCONTEXT->config->OUTPUT_ID) + 12;
@@ -115,17 +115,16 @@ static int process(char *buffer) {
             }
             free(str);
 
-            first->value = head;
+            first->value = result.expr;
 
             return 1;
         }
 
         return 1;
-    } else freeAST(head);
+    } else freeExpression(result.expr);
 
     return 1;
 }
-
 
 
 static int runStartup() {
