@@ -26,7 +26,7 @@ typedef enum FunctionType FunctionType;
 typedef struct Function Function;
 
 
-// ASTNode related definitions
+// Expression related definitions
 enum ExpressionType {
     EXPRESSION_VARIABLE,
     EXPRESSION_INTEGER,
@@ -85,6 +85,7 @@ enum FunctionType {
 struct Function {
     Environment *env;
     FunctionType type;
+    int parameters;
 
     union {
         Expression *definition;
