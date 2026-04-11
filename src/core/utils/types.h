@@ -44,8 +44,8 @@ enum OperationType {
 struct Operation {
     bool associative;
     bool commutative;
-    OperationType type;
     char symbol;
+    OperationType type;
     Function *definition;
 };
 

@@ -3,6 +3,7 @@
 
 #include "parserUtils.h"
 #include "core/utils/log.h"
+#include "core/utils/types.h"
 
 
 Token *createToken(TokenType type, char *value, int l) {
@@ -92,9 +93,9 @@ FILE *printTokens(Token *head) {
 }
 
 
-ASTNode *createASTNode(Token *token) {
-    ASTNode *node = calloc(1, sizeof(ASTNode));
-    if (node == nullptr) {
+Expression *createExpression(Token *token) {
+    Expression *expr = calloc(1, sizeof(Expression));
+    if (expr == nullptr) {
         printf("Error allocating for new node.\n");
         return nullptr;
     }
@@ -102,24 +103,28 @@ ASTNode *createASTNode(Token *token) {
     switch (token->type)
     {
     case TOKEN_IDENTIFIER:
-        node->type = NODE_VARIABLE;
-        node->identifier = strdup(token->value);
+        expr->type = EXPRESSION_VARIABLE;
+        expr->identifier = strdup(token->value);
+        if (expr->identifier == nullptr) {
+            printf("Error copying variable identifier.\n");
+            return nullptr;
+        }
         break;
     case TOKEN_NUMBER:
-        node->type = NODE_DOUBLE;
+        expr->type = EXPRESSION_DOUBLE;
         char *end;
         double value = strtod(token->value, &end);
         
         if (value == (int) value) {
-            node->type = NODE_INTEGER;
-            node->integer = (int) value;
+            expr->type = EXPRESSION_INTEGER;
+            expr->integer = (long long) value;
             break;
         }
 
         node->value = value;
         break;
     case TOKEN_OPERATOR:
-        node->type = NODE_OPERATOR;
+        expr->type = EXPRESSION_OPERATOR;
         char id = token->value[0];
         switch (id) {
             case '+':
@@ -150,7 +155,7 @@ ASTNode *createASTNode(Token *token) {
         return nullptr;
     }
 
-    return node;
+    return expr;
 }
 
 

@@ -27,7 +27,7 @@ Token *createToken(TokenType type, char *value, int l);
 FILE *printTokens(Token *head);
 
 
-ASTNode *createASTNode(Token *token);
+Expression *createExpression(Token *token);
 
 
 FILE *printRPN(RPNList *list);

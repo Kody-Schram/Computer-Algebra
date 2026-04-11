@@ -4,37 +4,49 @@
 #include "core/utils/types.h"
 
 typedef enum ComponentType ComponentType;
-typedef struct ComponentData ComponentData;
 typedef struct Component Component;
+typedef enum EnvironmentType EnvironmentType;
 typedef struct Environment Environment;
 
 
 // Environment related definitions
 enum ComponentType {
-    VARIABLE,
-    FUNCTION
+    COMP_OPERATION,
+    COMP_VARIABLE,
+    COMP_FUNCTION
 };
 
 struct Component {
     ComponentType type;
     char *identifier;
+    
+    Component *next;
 
     union {
         Function *func;
         Expression *value;
+        Operation *operation;
     };
 };
 
+enum EnvironmentType {
+    ENV_LIST,
+    ENV_HASH
+}; 
+
 struct Environment {
-    int entries;
-    int size;
-    Component *components;
+    EnvironmentType type;
+    
+    union {
+        Component *compList;
+        Component **hashTable;
+    };
     Environment *parent;
 };
 
 
 
-Environment *createEnvironment();
+Environment *createEnvironment(EnvironmentType type);
 
 
 int bindComponent(Environment *env, ComponentType type, char *identifier, void *data);
