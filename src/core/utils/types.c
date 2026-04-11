@@ -13,7 +13,7 @@ Expression *dummyExpression(ExpressionType type) {
     Expression *expr = calloc(1, sizeof(Expression));
 
     if (expr == nullptr) {
-        printf("Error allocating for new node.\n");
+        perror("Error in creating dummy expression");
         return nullptr;
     }
 
@@ -32,10 +32,7 @@ Expression *deepCopyExpression(Expression *expr) {
     switch (new->type) {
         case EXPRESSION_VARIABLE:
             new->identifier = strdup(expr->identifier);
-            if (new->identifier == nullptr) {
-                printf("Error copying identifier.\n");
-                goto error;
-            }
+            if (new->identifier == nullptr) goto error;
             break;
 
         case EXPRESSION_INTEGER:
@@ -49,11 +46,8 @@ Expression *deepCopyExpression(Expression *expr) {
         case EXPRESSION_OPERATOR:
             new->op = expr->op;
             new->arity = expr->arity;
-            new->operands = calloc(1, sizeof(Expression *) * expr->arity);
-            if (new->operands == nullptr) {
-                printf("Error allocating for new operands list.\n");
-                goto error;
-            }
+            new->operands = calloc(expr->arity, sizeof(Expression *));
+            if (new->operands == nullptr) goto error;
             
             for (int i = 0; i < expr->arity; i ++) {
                 new->operands[i] = deepCopyExpression(expr->operands[i]);
@@ -71,15 +65,11 @@ Expression *deepCopyExpression(Expression *expr) {
 
         case EXPRESSION_FUNCTION_CALL:
             FunctionCall *call = malloc(sizeof(FunctionCall));
-            if (call == nullptr) {
-                printf("Error allocating memory for function call.\n");
-                goto error;
-            }
+            if (call == nullptr) goto error;
+            
             call->identifier = strdup(expr->call->identifier);
-            if (call->identifier == nullptr) {
-                printf("Error copying call identifier.\n");
-                goto error;
-            }
+            if (call->identifier == nullptr) goto error;
+            
             call->nParams = expr->call->nParams;
             
             call->parameters = malloc(sizeof(Expression *) * call->nParams);
@@ -116,6 +106,7 @@ Expression *deepCopyExpression(Expression *expr) {
     return new;
 
     error:
+        perror("Error in copying expression");
         free(new);
         return nullptr;
 }
