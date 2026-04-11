@@ -289,11 +289,13 @@ static void astToStringRecur(ASTNode *ast, FILE *stream) {
             break;
 
         case NODE_DOUBLE:
-            fprintf(stream, "%g", ast->value);
+            if (ast->value < 0) fprintf(stream, "(%g)", ast->value);
+            else fprintf(stream, "%g", ast->value);
             break;
 
         case NODE_INTEGER:
-            fprintf(stream, "%lld", ast->integer);
+            if (ast->integer < 0) fprintf(stream, "(%lld)", ast->integer);
+            else fprintf(stream, "%lld", ast->integer);
             break;
 
         case NODE_VARIABLE:
