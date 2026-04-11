@@ -28,13 +28,11 @@ typedef struct Function Function;
 
 // ASTNode related definitions
 enum ExpressionType {
-    NODE_INTEGER,
-    NODE_DOUBLE,
-    NODE_OPERATOR,
-    NODE_VARIABLE,
-    NODE_FUNC_CALL,
-    NODE_ASSIGN_VAR,
-    NODE_ASSIGN_FUNC
+    EXPRESSION_VARIABLE,
+    EXPRESSION_INTEGER,
+    EXPRESSION_DOUBLE,
+    EXPRESSION_FUNCTION_CALL,
+    EXPRESSION_OPERATOR
 };
 
 enum OperationType {
@@ -47,16 +45,16 @@ struct Operation {
     bool associative;
     bool commutative;
     OperationType type;
+    char symbol;
     Function *definition;
 };
 
 struct Expression {
     ExpressionType type;
-    // Look into packing an int in here to support scientific notation
     
     union {
         struct {
-            Operation op;
+            const Operation *op;
             int arity; // Number of operands
             struct Expression **operands;
         };
@@ -97,18 +95,18 @@ struct Function {
 
 
 
-Expression *dummyASTNode(ExpressionType type);
+Expression *dummyExpression(ExpressionType type);
 
 
-Expression *deepCopyAST(Expression *ast);
+Expression *deepCopyExpression(Expression *expr);
 
 
-FILE *printAST(Expression *root);
+FILE *printExpression(Expression *expr);
 
 
-void freeAST(Expression *ast);
+void freeExpression(Expression *expr);
 
 
-char *astToString(Expression *ast);
+char *expressionToString(Expression *expr);
 
 #endif
