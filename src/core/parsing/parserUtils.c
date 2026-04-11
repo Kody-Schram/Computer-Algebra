@@ -1,7 +1,10 @@
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "parserUtils.h"
+#include "core/utils/context/context.h"
+#include "core/utils/context/environment.h"
 #include "core/utils/log.h"
 #include "core/utils/types.h"
 
@@ -10,7 +13,7 @@ Token *createToken(TokenType type, char *value, int l) {
     // Allocates new token
     Token *token = (Token*) calloc(1, sizeof(Token));
     if (token == nullptr) {
-        printf("Error allocating space for token.");
+        perror("Error creating token");
         return nullptr;
     }
 
@@ -19,7 +22,7 @@ Token *createToken(TokenType type, char *value, int l) {
 
     token->value = malloc(l + 1);
     if (token->value == nullptr) {
-        printf("Error allocating for token value.\n");
+        perror("Error creating token");
         free(token);
         return nullptr;
     } 
@@ -96,63 +99,52 @@ FILE *printTokens(Token *head) {
 Expression *createExpression(Token *token) {
     Expression *expr = calloc(1, sizeof(Expression));
     if (expr == nullptr) {
-        printf("Error allocating for new node.\n");
+        perror("Error creating expression");
         return nullptr;
     }
 
-    switch (token->type)
-    {
-    case TOKEN_IDENTIFIER:
-        expr->type = EXPRESSION_VARIABLE;
-        expr->identifier = strdup(token->value);
-        if (expr->identifier == nullptr) {
-            printf("Error copying variable identifier.\n");
-            return nullptr;
-        }
-        break;
-    case TOKEN_NUMBER:
-        expr->type = EXPRESSION_DOUBLE;
-        char *end;
-        double value = strtod(token->value, &end);
-        
-        if (value == (int) value) {
-            expr->type = EXPRESSION_INTEGER;
-            expr->integer = (long long) value;
+    switch (token->type) {
+        case TOKEN_IDENTIFIER:
+            expr->type = EXPRESSION_VARIABLE;
+            expr->identifier = strdup(token->value);
+            if (expr->identifier == nullptr) {
+                perror("Error creating expression");
+                return nullptr;
+            }
             break;
-        }
-
-        node->value = value;
-        break;
-    case TOKEN_OPERATOR:
-        expr->type = EXPRESSION_OPERATOR;
-        char id = token->value[0];
-        switch (id) {
-            case '+':
-                node->op = OP_ADDITION;
+            
+        case TOKEN_NUMBER:
+            expr->type = EXPRESSION_DOUBLE;
+            char *end;
+            double value = strtod(token->value, &end);
+            
+            if (value == (int) value) {
+                expr->type = EXPRESSION_INTEGER;
+                expr->integer = (long long) value;
                 break;
-            case '-':
-                node->op = OP_SUBTRACTION;
-                break;
-            case '*':
-                node->op = OP_MULTIPLICATION;
-                break;
-            case '/':
-                node->op = OP_DIVISION;
-                break;
-            case '^':
-                node->op = OP_EXPONTENTIATION;
-                break;
-            default:
-                printf("Unknown operator '%c'\n", id);
-        }
-        break;
-    case TOKEN_FUNC_CALL:
-        node->type = NODE_FUNC_CALL;
-        node->call = token->call;
-        token->call = nullptr;
-        break;
-    default:
-        return nullptr;
+            }
+    
+            expr->value = value;
+            break;
+            
+        case TOKEN_OPERATOR:
+            expr->type = EXPRESSION_OPERATOR;
+            Component *cmp = searchEnvironment(GLOBALCONTEXT->env, token->value);
+            if (cmp == nullptr || cmp->type != COMP_OPERATION) {
+                printf("Couldn't locate operation %s in environment.\n", token->value);
+                return nullptr;
+            }
+            expr->op = cmp->operation;
+            break;
+            
+        case TOKEN_FUNC_CALL:
+            expr->type = EXPRESSION_FUNCTION_CALL;
+            expr->call = token->call;
+            token->call = nullptr;
+            break;
+            
+        default:
+            return nullptr;
     }
 
     return expr;
