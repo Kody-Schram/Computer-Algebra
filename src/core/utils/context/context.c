@@ -2,6 +2,7 @@
 #include <stdio.h>
 
 #include "context.h"
+#include "core/utils/context/environment.h"
 
 Context *GLOBALCONTEXT = nullptr;
 
@@ -24,7 +25,7 @@ int initContext(char *cpath) {
     printf("loading config\n");
     Config *config = loadConfig(cpath);
     printf("loading env\n");
-    Environment *env = createEnvironment();
+    Environment *env = createEnvironment(ENV_LIST); // will change to hash map later
 
     if (config == nullptr || env == nullptr) {
         freeConfig(config);

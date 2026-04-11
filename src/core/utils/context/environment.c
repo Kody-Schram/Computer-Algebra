@@ -124,6 +124,7 @@ Component* searchEnvironment(Environment *env, char *identifier) {
     return nullptr;
 }
 
+
 static void printLinkedCmpList(FILE *stream, Component *cmp) {
     while (cmp != nullptr) {
         switch (cmp->type) {

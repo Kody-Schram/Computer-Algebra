@@ -9,9 +9,6 @@
 #include "core/utils/types.h"
 
 
-static const int DEFAULT_ENV_STACK = 3;
-
-
 static int executeRecur(Expression **ptr, Environment *env) {
     Expression *expr = *ptr;
     if (expr == nullptr) return 0;
@@ -175,7 +172,7 @@ static int executeRecur(Expression **ptr, Environment *env) {
 
 int execute(Expression **expr) {
     Info(0, "\nExecuting\n");
-    Info(1, printAST(*expr));
+    Info(1, printExpression(*expr));
     if (!executeRecur(expr, GLOBALCONTEXT->env)) return 0;
 
     return 1;
