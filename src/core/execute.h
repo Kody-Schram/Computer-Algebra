@@ -4,21 +4,21 @@
 #include "core/utils/types.h"
 
 
-int evaluateAddition(ASTNode **ast);
+int evaluateAddition(Expression **ast);
 
 
-int evaluateSubtraction(ASTNode **ast);
+int evaluateSubtraction(Expression **ast);
 
 
-int evaluateMultiplication(ASTNode **ast);
+int evaluateMultiplication(Expression **ast);
 
 
-int evaluateDivision(ASTNode **ast);
+int evaluateDivision(Expression **ast);
 
 
-int evaluateExponentiation(ASTNode **ast);
+int evaluateExponentiation(Expression **ast);
 
 
-int execute(ASTNode **ast);
+int execute(Expression **ast);
 
 #endif
