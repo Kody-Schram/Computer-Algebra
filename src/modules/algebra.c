@@ -1,6 +1,31 @@
 #include "algebra.h"
 #include "core/utils/log.h"
 
+long long _gcd(long long a, long long b) {
+    long long temp;
+    while (b != 0)
+    {
+        temp = a % b;
+
+        a = b;
+        b = temp;
+    }
+    return a;
+}
+
+
+long long _powi(long long a, long long e) {
+    long long r = 1;
+
+    while (e > 0) {
+        if (e % 2 == 1) r *= a;
+        a *= a;
+        e /= 2;
+    }
+
+    return r;
+}
+
 
 ASTNode *gcd(ASTNode *a, ASTNode *b) {
     if (a->type != NODE_INTEGER || b->type != NODE_INTEGER) {

@@ -1,6 +1,6 @@
 add_library(Modules STATIC
-    algebra/algebra.c
-    algebra/utils.c
+    algebra.c
+    utils.c
 )
 
 target_link_libraries(Modules PRIVATE Core)
