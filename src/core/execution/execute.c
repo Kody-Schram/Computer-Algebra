@@ -1,6 +1,5 @@
 #include <stdlib.h>
 #include <stdio.h>
-#include <string.h>
 
 #include "execute.h"
 #include "core/utils/context/context.h"
@@ -32,8 +31,7 @@ static int executeRecur(Expression **ptr, Environment *env) {
 
                 if (cmp !=  nullptr && cmp->type == COMP_VARIABLE) {
                     Debug(1, printEnvironment(curEnv));
-                    free(expr->identifier);
-                    free(expr);
+                    freeExpression(expr);
 
                     *ptr = deepCopyExpression(cmp->value);
                     if (!executeRecur(ptr, env)) return 0;
@@ -106,8 +104,11 @@ static int executeRecur(Expression **ptr, Environment *env) {
                 }
                 
                 paramCmp->value = call->parameters[i];
+                call->parameters[i] = nullptr;
                 paramCmp = paramCmp->next;
             }
+            
+            expr->call->nParams = 0;
 
             switch (func->type) {
                 case DEFINED:
@@ -124,6 +125,7 @@ static int executeRecur(Expression **ptr, Environment *env) {
                     call->nParams = 0;
                     freeExpression(expr);
 
+                    Debug(0, "\nCall result\n");
                     Debug(1, printExpression(exec));
                     *ptr = exec;
                     return 1;

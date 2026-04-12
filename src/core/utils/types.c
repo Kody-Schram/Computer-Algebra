@@ -173,6 +173,7 @@ FILE *printExpression(Expression *expr) {
 
 void freeExpression(Expression *expr) {
     if (expr == nullptr) return;
+    Debug(0, "Freeing expression\n");
 
     switch (expr->type) {
         case EXPRESSION_FUNCTION_CALL:

@@ -11,7 +11,7 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 if(CMAKE_BUILD_TYPE STREQUAL "Develop")
-    add_compile_options(-g -Og)
+    add_compile_options(-g3 -O0 -fno-omit-frame-pointer)
     message("Making develop build.")
 endif()
 

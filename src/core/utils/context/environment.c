@@ -4,6 +4,7 @@
 
 #include "environment.h"
 #include "context.h"
+#include "core/utils/log.h"
 #include "core/utils/types.h" 
 
 
@@ -23,20 +24,23 @@ static void freeOperation(Operation *op) {
 
 
 static void freeComponent(Component *cmp) {
-    free(cmp->identifier);
     switch (cmp->type) {
         case COMP_FUNCTION:
+            Debug(0, "Freeing func '%s'\n", cmp->identifier);
             freeFunction(cmp->func);
             break;
             
         case COMP_OPERATION:
+            Debug(0, "Freeing operation '%s'\n", cmp->identifier);
             freeOperation(cmp->operation);
             break;
             
         case COMP_VARIABLE:
+            Debug(0, "Freeing variable '%s'\n", cmp->identifier);
             freeExpression(cmp->value);
             break;
     }
+    free(cmp->identifier);
     free(cmp);
 }
 
@@ -195,6 +199,7 @@ FILE *printEnvironment(Environment *env) {
 
 
 void freeEnvironment(Environment *env) {
+    Debug(0, "Freeing environment\n");
     switch (env->type) {
         case ENV_LIST:
             Component *cmp = env->compList;
@@ -203,7 +208,6 @@ void freeEnvironment(Environment *env) {
                 freeComponent(cmp);
                 cmp = temp;
             }
-            free(env->compList);
             break;
             
         case ENV_HASH:
@@ -212,6 +216,7 @@ void freeEnvironment(Environment *env) {
     }
 
     free(env);
+    Debug(0, "\n");
 }
 
 

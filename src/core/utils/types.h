@@ -9,7 +9,6 @@
 
 // Forward declare from environment.h
 typedef struct Environment Environment;
-void freeEnvironment(Environment *env);
 
 typedef enum ComponentType ComponentType;
 typedef struct Component Component;

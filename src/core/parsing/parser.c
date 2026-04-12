@@ -317,6 +317,7 @@ static int parseFunctionAssignment(Token *head) {
     freeTokens(head);
     free(rpn->items);
     free(rpn);
+    free(identifier);
 
     return 1;
     

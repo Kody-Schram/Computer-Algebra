@@ -220,6 +220,7 @@ Expression *expressionFromRPN(RPNList *rpn) {
     }
 
     root = expressions.items[0];
+    free(expressions.items);
 
     return root;
 
