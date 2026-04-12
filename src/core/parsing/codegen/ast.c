@@ -220,10 +220,6 @@ Expression *expressionFromRPN(RPNList *rpn) {
     }
 
     root = expressions.items[0];
-    free(expressions.items);
-    
-    Debug(0, "root\n");
-    Debug(1, printExpression(root));
 
     return root;
 

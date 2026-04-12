@@ -17,7 +17,7 @@ static void freeFunction(Function *func) {
 
 static void freeOperation(Operation *op) {
     if (op == nullptr) return;
-    if (op->definition != nullptr) freeFunction(op->definition);
+    freeFunction(op->definition);
     free(op);
 }
 
@@ -141,7 +141,7 @@ static void printLinkedCmpList(FILE *stream, Component *cmp) {
                     fprintf(stream, "%s, ", localCmp->identifier);
                     localCmp = localCmp->next;
                 }
-                fprintf(stream, "%s)", localCmp->identifier);
+                fprintf(stream, "%s) = ", localCmp->identifier);
                 
                 char *str = expressionToString(func->definition);
                 if (str == nullptr) return;
@@ -204,6 +204,7 @@ void freeEnvironment(Environment *env) {
                 cmp = temp;
             }
             free(env->compList);
+            break;
             
         case ENV_HASH:
             printf("Hashing not implemented!.\n");

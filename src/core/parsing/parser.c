@@ -126,6 +126,10 @@ static int parseFunctionCalls(Token **head) {
                 free(rpn->items);
                 free(rpn);
                 if (expr == nullptr) goto parameter_error;
+                
+                // ==================
+                // Simplify parameter
+                // ==================
 
                 paramExprs[nParameters] = expr;
                 nParameters ++;

@@ -80,11 +80,11 @@ static int executeRecur(Expression **ptr, Environment *env) {
             }
 
             // Goes up call stack, if global environment is found, then this is evaluating rather than like binding a new variable/function
-            int evaluating = 0;
+            bool evaluating = false;
             Environment *tempEnv = env;
             while (tempEnv != nullptr) {
                 if (tempEnv == GLOBALCONTEXT->env) { 
-                    evaluating = 1;
+                    evaluating = true;
                     break;
                 }
                 tempEnv = tempEnv->parent;
@@ -92,66 +92,35 @@ static int executeRecur(Expression **ptr, Environment *env) {
 
             if (!evaluating && GLOBALCONTEXT->config->LAZY_CALLS) return 1;
 
-            Environment *localEnv = createEnvironment(ENV_LIST);
-            if (localEnv == nullptr) return 0;
-            if (env != nullptr) localEnv->parent = env;
+            if (env != nullptr) func->env->parent = env;
             
-            // Copy parameter identifiers before freeing function environment
-            Component *parameterCmp = func->env->compList;
-            char **parameterIdentifiers = malloc(sizeof(char *) * func->parameters);
-            if (parameterIdentifiers == nullptr) {
-                perror("Error in executing function call");
-                freeEnvironment(localEnv);
-                return 0;
-            }
-            
-            for (int i = 0; i < func->parameters; i ++) {
-                parameterIdentifiers[i] = strdup(parameterCmp->identifier);
+            // Updates values of parameters within function environment
+            Component *paramCmp = func->env->compList;
+            // Counts backwards due to how linked list insertion of environment works, first parameter will come last
+            for (int i = func->parameters - 1; i >= 0; i --) {
+                freeExpression(paramCmp->value);
                 
-                if (parameterIdentifiers[i] == nullptr) {
-                    perror("Error in executing function call");
-                    freeEnvironment(localEnv);
-                    for (int j = 0; j < i; j ++) {
-                        free(parameterIdentifiers[j]);
-                    }
-                    free(parameterIdentifiers);
+                if (!executeRecur(&call->parameters[i], env)) {
+                    func->env->parent = nullptr;
                     return 0;
                 }
+                
+                paramCmp->value = call->parameters[i];
+                paramCmp = paramCmp->next;
             }
-            
-            // Replace functions local environment with the new values
-            freeEnvironment(func->env);
-            for (int p = 0; p < func->parameters; p ++) {
-                // Updates local environment variable definitions with copies of passed in parameters
-                if (!executeRecur(&call->parameters[p], localEnv) ) {
-                    freeEnvironment(localEnv);
-                    return 0;
-                }
-                if (!bindComponent(localEnv, COMP_VARIABLE, parameterIdentifiers[p], call->parameters[p])) {
-                    freeEnvironment(localEnv);
-                    return 0;
-                }
-
-                // Updates parameters with outer variables
-                if (!executeRecur(&localEnv->compList[p].value, env)) {
-                    freeEnvironment(localEnv);
-                    return 0;
-                }
-            }
-            func->env = localEnv;
 
             switch (func->type) {
                 case DEFINED:
                     Debug(0, "Executing defined function\n");
-                    Debug(1, printEnvironment(localEnv));
+                    Debug(1, printEnvironment(func->env));
                     Expression *exec = deepCopyExpression(func->definition);
                     if (exec == nullptr) return 0;
                     if (!executeRecur(&exec, func->env)) {
-                        freeEnvironment(localEnv);
+                        func->env->parent = nullptr;
                         return 0;
                     }
 
-                    localEnv->parent = nullptr;
+                    func->env->parent = nullptr;
                     call->nParams = 0;
                     freeExpression(expr);
 

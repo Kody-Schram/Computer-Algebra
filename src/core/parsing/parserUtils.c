@@ -135,6 +135,7 @@ Expression *createExpression(Token *token) {
                 return nullptr;
             }
             expr->op = cmp->operation;
+            expr->arity = 2;
             
             // By default starts as binary operation, can be flattened and resized later
             expr->operands = malloc(sizeof(Expression *) * 2);

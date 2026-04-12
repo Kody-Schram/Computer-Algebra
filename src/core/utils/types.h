@@ -36,8 +36,8 @@ enum ExpressionType {
 };
 
 enum OperationType {
-    AXIOMATIC,
-    CUSTOM
+    OP_AXIOMATIC,
+    OP_ABSTRACT
 };
 
 

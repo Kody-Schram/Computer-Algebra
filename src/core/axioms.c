@@ -90,7 +90,7 @@ int initAxioms() {
     addition->associative = 1;
     addition->commutative = 1;
     addition->symbol = '+';
-    addition->type = AXIOMATIC;
+    addition->type = OP_AXIOMATIC;
     addition->definition = createOpFunc(add);
     
     Debug(0, "Binding addition operation\n");
@@ -102,7 +102,7 @@ int initAxioms() {
     multiplication->associative = 1;
     multiplication->commutative = 1;
     multiplication->symbol = '*';
-    multiplication->type = AXIOMATIC;
+    multiplication->type = OP_AXIOMATIC;
     multiplication->definition = createOpFunc(multiply);
     
     Debug(0, "Binding multiplication operation\n");
