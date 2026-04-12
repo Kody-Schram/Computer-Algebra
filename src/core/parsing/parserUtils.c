@@ -118,7 +118,7 @@ Expression *createExpression(Token *token) {
             char *end;
             double value = strtod(token->value, &end);
             
-            if (value == (int) value) {
+            if (value == (long long) value) {
                 expr->type = EXPRESSION_INTEGER;
                 expr->integer = (long long) value;
                 break;

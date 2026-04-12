@@ -1,4 +1,3 @@
-#include <math.h>
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -202,11 +201,11 @@ Expression *expressionFromRPN(RPNList *rpn) {
         if (expr == nullptr) goto cleanup;
 
         if (expr->type == EXPRESSION_OPERATOR) {
-
             if (expressions.entries < 2) {
                 printf("Unexpected error in AST generation.\n");
                 goto cleanup;
             }
+            
             expr->operands[0] = expressions.items[expressions.entries - 1];
             expr->operands[1] = expressions.items[expressions.entries - 2];
 
@@ -222,11 +221,16 @@ Expression *expressionFromRPN(RPNList *rpn) {
 
     root = expressions.items[0];
     free(expressions.items);
+    
+    Debug(0, "root\n");
+    Debug(1, printExpression(root));
 
     return root;
 
     cleanup:
-        freeExpression(root);
+        for (int i = 0; i < expressions.items; i ++) {
+            freeExpression(expressions.items[i]);
+        }
         free(expressions.items);
         return nullptr;
 }

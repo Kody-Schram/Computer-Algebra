@@ -372,6 +372,8 @@ static int parseAssignment(Token *head) {
     // Run expression through simplification step here
     // ===============================================
     
+    Debug(1, printExpression(expr));
+    
     if (!bindComponent(GLOBALCONTEXT->env, COMP_VARIABLE, identifier, expr)) goto error;
 
     freeTokens(head);

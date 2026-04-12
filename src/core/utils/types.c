@@ -246,7 +246,7 @@ static void expressionToStringRecur(Expression *expr, FILE *stream) {
             break;
             
         default:
-            fprintf(stream, "How'd we get here?\n");
+            fprintf(stream, "How'd we get here? %d\n", expr->type);
             break;
     }
 }

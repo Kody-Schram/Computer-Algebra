@@ -108,11 +108,15 @@ int bindComponent(Environment *env, ComponentType type, char *identifier, void *
 
 Component* searchEnvironment(Environment *env, char *identifier) {
     if (identifier == nullptr) return nullptr;
+    //printf("searching environment for '%s'\n", identifier);
+    
     switch (env->type) {
         case ENV_LIST:
+            //("Checking linked list env\n");
             Component *cmp = env->compList;
             while (cmp != nullptr) {
                 if (!strcmp(cmp->identifier, identifier)) return cmp;
+                cmp = cmp->next;
             }
             break;
             
@@ -157,13 +161,8 @@ static void printLinkedCmpList(FILE *stream, Component *cmp) {
                 break;
                 
             case COMP_OPERATION:
-                if (cmp->operation->type == AXIOMATIC) break; // will only print out user defined operations (maybe add setting in config for this)
-                fprintf(stream, "%s(x, y) = ", cmp->identifier);
-                
-                str = expressionToString(cmp->operation->definition->definition);
-                if (str == nullptr) return;
-                fprintf(stream, "%s\n", str);
-                free(str);
+                //if (cmp->operation->type == AXIOMATIC) break; // will only print out user defined operations (maybe add setting in config for this)
+                fprintf(stream, "Op '%s'\n", cmp->identifier);
                 
                 fprintf(stream, "  Associative: %d\n", cmp->operation->associative);
                 fprintf(stream, "  Commutative: %d\n", cmp->operation->commutative);

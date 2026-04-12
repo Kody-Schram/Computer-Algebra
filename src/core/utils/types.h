@@ -78,7 +78,6 @@ struct FunctionCall {
 enum FunctionType {
     BUILTIN,
     DEFINED,
-    TRANSFORM
 };
 
 
@@ -89,8 +88,7 @@ struct Function {
 
     union {
         Expression *definition;
-        double (*builtin) (double);
-        Expression *(*transform) (Expression **args, int nArgs);
+        Expression *(*builtin) (Expression **args, int nArgs);
     };
 };
 

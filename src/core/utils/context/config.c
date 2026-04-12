@@ -426,7 +426,6 @@ Config *loadConfig(char *cpath) {
         return nullptr;
     }
 
-    printf("initting config\n");
     initConfig(config);
 
     FILE *cfile = nullptr;
@@ -460,7 +459,6 @@ Config *loadConfig(char *cpath) {
         }
     }
 
-    printf("parsing\n");
     yaml_parser_t parser;
     yaml_event_t event;
 
@@ -486,7 +484,6 @@ Config *loadConfig(char *cpath) {
         yaml_event_delete(&event);
     }
 
-    printf("done parsing\n");
     yaml_parser_delete(&parser);
 
     if (config->LOG_STREAM != stdout) {

@@ -4,7 +4,9 @@
 #include <math.h>
 
 #include "core/utils/context/context.h"
+#include "core/utils/context/environment.h"
 #include "core/utils/types.h"
+#include "core/axioms.h"
 #include "core/utils/log.h"
 
 #include "core/utils/input.h"
@@ -180,8 +182,15 @@ int main(int argc, char *argv[]) {
         freeContext(GLOBALCONTEXT);
         return 1;
     }
+    
+    if (!initAxioms()) {
+        freeContext(GLOBALCONTEXT);
+        return 1;
+    }
+    
     Debug(0, "Context created.\n");
     Info(1, printConfig(GLOBALCONTEXT->config));
+    Info(1, printEnvironment(GLOBALCONTEXT->env));
 
     if (!runStartup()) {
         freeContext(GLOBALCONTEXT);
