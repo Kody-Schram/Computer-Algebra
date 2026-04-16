@@ -137,6 +137,7 @@ static int consumeEvent(State *state, yaml_event_t *event, Config *config) {
             case YAML_MAPPING_END_EVENT:
                 *state = STATE_SECTION;
                 break;
+                
             case YAML_SCALAR_EVENT:
                 value = (char *) event->data.scalar.value;
                 if (!strcmp(value, "level")) *state = STATE_LOG_LEVEL;
@@ -157,6 +158,7 @@ static int consumeEvent(State *state, yaml_event_t *event, Config *config) {
             case YAML_MAPPING_END_EVENT:
                 *state = STATE_LOG;
                 break;
+                
             case YAML_SCALAR_EVENT:
                 value = (char *) event->data.scalar.value;
 
@@ -185,6 +187,7 @@ static int consumeEvent(State *state, yaml_event_t *event, Config *config) {
             case YAML_MAPPING_END_EVENT:
                 *state = STATE_LOG;
                 break;
+                
             case YAML_SCALAR_EVENT:
                 value = (char *) event->data.scalar.value;
 
@@ -276,7 +279,7 @@ static int consumeEvent(State *state, yaml_event_t *event, Config *config) {
                     case STATE_K_ANS:
                         config->OUTPUT_ID = strdup(value);
                         *state = STATE_KEYWORDS;
-                        return 1;
+                        break;
                         
                     default:
                         return 0;
@@ -322,7 +325,7 @@ static int consumeEvent(State *state, yaml_event_t *event, Config *config) {
                 break;
                 
             default:
-                return 0;
+                break;
                 
         }
         break;
@@ -338,7 +341,6 @@ static int consumeEvent(State *state, yaml_event_t *event, Config *config) {
                 int outputs = atoi(value);
                 config->OUTPUTS = outputs;
                 *state = STATE_RUNTIME;
-                return 1;
 
                 break;
                 
@@ -362,7 +364,6 @@ static int consumeEvent(State *state, yaml_event_t *event, Config *config) {
                 config->PRESERVE_FRACS = b;
                 *state = STATE_RUNTIME;
 
-                return 1;
                 break;
                 
             default:
@@ -385,7 +386,6 @@ static int consumeEvent(State *state, yaml_event_t *event, Config *config) {
                 config->LAZY_CALLS = b;
                 *state = STATE_RUNTIME;
 
-                return 1;
                 break;
                 
             default:
