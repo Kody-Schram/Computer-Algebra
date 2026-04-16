@@ -29,6 +29,9 @@ static Function *createOpFunc(BuiltinResult *(*builtin) (int nArgs, Expression *
     return op;
 }
 
+// ==============================================================================
+// A and B are [1] and [0] respectively intentionally, just a quirk of the system
+// ==============================================================================
 
 BuiltinResult *add(int nArgs, Expression **operands) {
     BuiltinResult *result = malloc(sizeof(BuiltinResult));
@@ -39,8 +42,8 @@ BuiltinResult *add(int nArgs, Expression **operands) {
     result->type = BUILTIN_ERROR;
     result->output = nullptr;
     
-    Expression *a = operands[0];
-    Expression *b = operands[1];
+    Expression *a = operands[1];
+    Expression *b = operands[0];
     
     
     // If not both numbers, return the addition expression again
@@ -80,8 +83,8 @@ BuiltinResult *multiply(int nArgs, Expression **operands) {
     result->type = BUILTIN_ERROR;
     result->output = nullptr;
     
-    Expression *a = operands[0];
-    Expression *b = operands[1];
+    Expression *a = operands[1];
+    Expression *b = operands[0];
     
     
     // If not both numbers, return the addition expression again
@@ -134,8 +137,8 @@ BuiltinResult *exponent(int nArgs, Expression **operands) {
     result->type = BUILTIN_ERROR;
     result->output = nullptr;
     
-    Expression *a = operands[0];
-    Expression *b = operands[1];
+    Expression *a = operands[1];
+    Expression *b = operands[0];
     
     
     // If not both numbers, return the addition expression again
@@ -166,16 +169,47 @@ BuiltinResult *exponent(int nArgs, Expression **operands) {
 }
 
 
+BuiltinResult *divide(int nArgs, Expression **operands) {
+    BuiltinResult *result = malloc(sizeof(BuiltinResult));
+    if (result == nullptr) {
+        perror("Error calling addition builtin");
+        return nullptr;
+    }
+    result->type = BUILTIN_ERROR;
+    result->output = nullptr;
+    
+    if (GLOBALCONTEXT->config->PRESERVE_FRACS) {
+        result->type = BUILTIN_SUCCESS;
+        return result;
+    }
+    
+    Expression *a = operands[1];
+    Expression *b = operands[0];
+    
+    double av = (a->type == EXPRESSION_INTEGER) ? (double) a->integer : a->value;
+    double bv = (b->type == EXPRESSION_INTEGER) ? (double) b->integer : b->value;
+    
+    Expression *output = dummyExpression(EXPRESSION_DOUBLE);
+    if (output == nullptr) return result;
+    output->value = av / bv;
+    
+    result->type = BUILTIN_SUCCESS;
+    result->output = output;
+    return result;
+}
+
+
 int initAxioms() {
     Operation *addition = nullptr;
     Operation *multiplication = nullptr;
     Operation *exponentiation = nullptr;
+    Operation *division = nullptr;
     
     addition = malloc(sizeof(Operation));
     if (addition == nullptr) goto error;
     
-    addition->associative = 1;
-    addition->commutative = 1;
+    addition->associative = true;
+    addition->commutative = true;
     addition->symbol = '+';
     addition->type = OP_AXIOMATIC;
     addition->definition = createOpFunc(add);
@@ -186,8 +220,8 @@ int initAxioms() {
     multiplication = malloc(sizeof(Operation));
     if (multiplication == nullptr) goto error;
     
-    multiplication->associative = 1;
-    multiplication->commutative = 1;
+    multiplication->associative = true;
+    multiplication->commutative = true;
     multiplication->symbol = '*';
     multiplication->type = OP_AXIOMATIC;
     multiplication->definition = createOpFunc(multiply);
@@ -198,15 +232,26 @@ int initAxioms() {
     exponentiation = malloc(sizeof(Operation));
     if (exponentiation == nullptr) goto error;
     
-    exponentiation->associative = 0;
-    exponentiation->commutative = 0;
+    exponentiation->associative = false;
+    exponentiation->commutative = false;
     exponentiation->symbol = '^';
     exponentiation->type = OP_AXIOMATIC;
     exponentiation->definition = createOpFunc(exponent);
     
-    Debug(0, "Binding multiplication operation\n");
+    Debug(0, "Binding exponentiation operation\n");
     if (!bindComponent(GLOBALCONTEXT->env, COMP_OPERATION, "^", exponentiation)) goto error;
     
+    division = malloc(sizeof(Operation));
+    if (division == nullptr) goto error;
+    
+    division->associative = false;
+    division->commutative = false;
+    division->symbol = '/';
+    division->type = OP_AXIOMATIC;
+    division->definition = createOpFunc(divide);
+    
+    Debug(0, "Binding division operation\n");
+    if (!bindComponent(GLOBALCONTEXT->env, COMP_OPERATION, "/", division)) goto error;
     
     return 1;
     
