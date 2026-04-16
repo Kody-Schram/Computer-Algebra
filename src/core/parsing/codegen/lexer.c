@@ -3,7 +3,7 @@
 #include <string.h>
 
 #include "lexer.h"
-#include "core/utils/context/context.h"
+#include "core/context/context.h"
 #include "core/utils/log.h"
 #include "core/parsing/parserUtils.h"
 

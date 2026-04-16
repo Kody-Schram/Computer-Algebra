@@ -4,8 +4,8 @@
 #include <string.h>
 
 #include "tokenizer.h"
-#include "core/utils/context/context.h"
-#include "core/utils/context/environment.h"
+#include "core/context/context.h"
+#include "core/context/environment.h"
 #include "core/utils/log.h"
 #include "core/parsing/parserUtils.h"
 

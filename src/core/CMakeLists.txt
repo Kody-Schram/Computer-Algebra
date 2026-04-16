@@ -7,9 +7,9 @@ add_library(Core STATIC
     utils/log.c
     utils/types.c
     
-    utils/context/config.c
-    utils/context/context.c
-    utils/context/environment.c
+    context/config.c
+    context/context.c
+    context/environment.c
     
     parsing/parser.c
     parsing/parserUtils.c

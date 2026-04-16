@@ -3,8 +3,8 @@
 #include <string.h>
 
 #include "parserUtils.h"
-#include "core/utils/context/context.h"
-#include "core/utils/context/environment.h"
+#include "core/context/context.h"
+#include "core/context/environment.h"
 #include "core/utils/log.h"
 #include "core/utils/types.h"
 

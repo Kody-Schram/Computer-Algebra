@@ -3,8 +3,8 @@
 #include <string.h>
 #include <math.h>
 
-#include "core/utils/context/context.h"
-#include "core/utils/context/environment.h"
+#include "core/context/context.h"
+#include "core/context/environment.h"
 #include "core/utils/types.h"
 #include "core/axioms.h"
 #include "core/utils/log.h"

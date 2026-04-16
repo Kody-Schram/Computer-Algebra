@@ -2,7 +2,7 @@
 #include <stdio.h>
 
 #include "context.h"
-#include "core/utils/context/environment.h"
+#include "core/context/environment.h"
 
 Context *GLOBALCONTEXT = nullptr;
 
