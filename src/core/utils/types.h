@@ -88,7 +88,7 @@ enum BuiltinResultType {
 
 struct BuiltinResult {
     BuiltinResultType type;
-    Expression output;
+    Expression *output;
 };
 
 
