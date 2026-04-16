@@ -1,3 +1,4 @@
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -9,7 +10,7 @@
 #include "core/utils/types.h"
 
 
-static Function *createOpFunc(BuiltinResult *(*builtin) (Expression **args, int nArgs)) {
+static Function *createOpFunc(BuiltinResult *(*builtin) (int nArgs, Expression **exprs)) {
     Function *op = malloc(sizeof(Function));
     if (op == nullptr) return nullptr;
     op->type = BUILTIN;
@@ -29,7 +30,7 @@ static Function *createOpFunc(BuiltinResult *(*builtin) (Expression **args, int 
 }
 
 
-BuiltinResult *add(Expression **args, int nArgs) {
+BuiltinResult *add(int nArgs, Expression **operands) {
     BuiltinResult *result = malloc(sizeof(BuiltinResult));
     if (result == nullptr) {
         perror("Error calling addition builtin");
@@ -38,29 +39,31 @@ BuiltinResult *add(Expression **args, int nArgs) {
     result->type = BUILTIN_ERROR;
     result->output = nullptr;
     
-    if (nArgs != 2) return result;
+    Expression *a = operands[0];
+    Expression *b = operands[1];
+    
     
     // If not both numbers, return the addition expression again
-    if (args[0]->type != EXPRESSION_INTEGER && args[0]->type != EXPRESSION_DOUBLE && 
-        args[1]->type != EXPRESSION_INTEGER && args[1]->type != EXPRESSION_DOUBLE) return nullptr;
+    if (a->type != EXPRESSION_INTEGER && a->type != EXPRESSION_DOUBLE && 
+        b->type != EXPRESSION_INTEGER && b->type != EXPRESSION_DOUBLE) return result;
     
-    if (args[0]->type == EXPRESSION_INTEGER && args[1]->type == EXPRESSION_INTEGER) {
+    if (a->type == EXPRESSION_INTEGER && b->type == EXPRESSION_INTEGER) {
         Expression *output = dummyExpression(EXPRESSION_INTEGER);
         if (output == nullptr) return result;
         
-        output->integer = args[0]->integer + args[1]->integer;
+        output->integer = a->integer + b->integer;
         
         result->type = BUILTIN_SUCCESS;
         result->output = output;
         return result;
     }
     
-    double a = (args[0]->type == EXPRESSION_INTEGER) ? (double) args[0]->integer : args[0]->value;
-    double b = (args[1]->type == EXPRESSION_INTEGER) ? (double) args[1]->integer : args[1]->value;
+    double av = (a->type == EXPRESSION_INTEGER) ? (double) a->integer : a->value;
+    double bv = (b->type == EXPRESSION_INTEGER) ? (double) b->integer : b->value;
     
     Expression *output = dummyExpression(EXPRESSION_DOUBLE);
     if (output == nullptr) return result;
-    output->value = a + b;
+    output->value = av + bv;
     
     result->type = BUILTIN_SUCCESS;
     result->output = output;
@@ -68,38 +71,40 @@ BuiltinResult *add(Expression **args, int nArgs) {
 }
 
 
-BuiltinResult *multiply(Expression **args, int nArgs) {
+BuiltinResult *multiply(int nArgs, Expression **operands) {
     BuiltinResult *result = malloc(sizeof(BuiltinResult));
     if (result == nullptr) {
-        perror("Error calling multiplication builtin");
+        perror("Error calling addition builtin");
         return nullptr;
     }
     result->type = BUILTIN_ERROR;
     result->output = nullptr;
     
-    if (nArgs != 2) return result;
+    Expression *a = operands[0];
+    Expression *b = operands[1];
+    
     
     // If not both numbers, return the addition expression again
-    if (args[0]->type != EXPRESSION_INTEGER && args[0]->type != EXPRESSION_DOUBLE && 
-        args[1]->type != EXPRESSION_INTEGER && args[1]->type != EXPRESSION_DOUBLE) return nullptr;
+    if (a->type != EXPRESSION_INTEGER && a->type != EXPRESSION_DOUBLE && 
+        b->type != EXPRESSION_INTEGER && b->type != EXPRESSION_DOUBLE) return result;
     
-    if (args[0]->type == EXPRESSION_INTEGER && args[1]->type == EXPRESSION_INTEGER) {
+    if (a->type == EXPRESSION_INTEGER && b->type == EXPRESSION_INTEGER) {
         Expression *output = dummyExpression(EXPRESSION_INTEGER);
         if (output == nullptr) return result;
         
-        output->integer = args[0]->integer * args[1]->integer;
+        output->integer = a->integer * b->integer;
         
         result->type = BUILTIN_SUCCESS;
         result->output = output;
         return result;
     }
     
-    double a = (args[0]->type == EXPRESSION_INTEGER) ? (double) args[0]->integer : args[0]->value;
-    double b = (args[1]->type == EXPRESSION_INTEGER) ? (double) args[1]->integer : args[1]->value;
+    double av = (a->type == EXPRESSION_INTEGER) ? (double) a->integer : a->value;
+    double bv = (b->type == EXPRESSION_INTEGER) ? (double) b->integer : b->value;
     
     Expression *output = dummyExpression(EXPRESSION_DOUBLE);
     if (output == nullptr) return result;
-    output->value = a * b;
+    output->value = av * bv;
     
     result->type = BUILTIN_SUCCESS;
     result->output = output;
@@ -120,7 +125,7 @@ long long _powi(long long a, long long e) {
 }
 
 
-BuiltinResult *exponent(Expression **args, int nArgs) {
+BuiltinResult *exponent(int nArgs, Expression **operands) {
     BuiltinResult *result = malloc(sizeof(BuiltinResult));
     if (result == nullptr) {
         perror("Error calling addition builtin");
@@ -129,30 +134,32 @@ BuiltinResult *exponent(Expression **args, int nArgs) {
     result->type = BUILTIN_ERROR;
     result->output = nullptr;
     
-    if (nArgs != 2) return result;
+    Expression *a = operands[0];
+    Expression *b = operands[1];
+    
     
     // If not both numbers, return the addition expression again
-    if (args[0]->type != EXPRESSION_INTEGER && args[0]->type != EXPRESSION_DOUBLE && 
-        args[1]->type != EXPRESSION_INTEGER && args[1]->type != EXPRESSION_DOUBLE) return nullptr;
+    if (a->type != EXPRESSION_INTEGER && a->type != EXPRESSION_DOUBLE && 
+        b->type != EXPRESSION_INTEGER && b->type != EXPRESSION_DOUBLE) return result;
     
-    if (args[0]->type == EXPRESSION_INTEGER && args[1]->type == EXPRESSION_INTEGER) {
+    if (a->type == EXPRESSION_INTEGER && b->type == EXPRESSION_INTEGER) {
         Expression *output = dummyExpression(EXPRESSION_INTEGER);
         if (output == nullptr) return result;
         
-        output->integer = _powi(args[0]->integer, args[1]->integer);
+        output->integer = _powi(a->integer, b->integer);
         
         result->type = BUILTIN_SUCCESS;
         result->output = output;
         return result;
     }
     
-    double a = (args[0]->type == EXPRESSION_INTEGER) ? (double) args[0]->integer : args[0]->value;
-    double b = (args[1]->type == EXPRESSION_INTEGER) ? (double) args[1]->integer : args[1]->value;
+    double av = (a->type == EXPRESSION_INTEGER) ? (double) a->integer : a->value;
+    double bv = (b->type == EXPRESSION_INTEGER) ? (double) b->integer : b->value;
     
     Expression *output = dummyExpression(EXPRESSION_DOUBLE);
     if (output == nullptr) return result;
-    output->value = powf(a, b);
-    
+    output->value = powf(av, bv);
+        
     result->type = BUILTIN_SUCCESS;
     result->output = output;
     return result;
@@ -162,6 +169,7 @@ BuiltinResult *exponent(Expression **args, int nArgs) {
 int initAxioms() {
     Operation *addition = nullptr;
     Operation *multiplication = nullptr;
+    Operation *exponentiation = nullptr;
     
     addition = malloc(sizeof(Operation));
     if (addition == nullptr) goto error;
@@ -187,12 +195,26 @@ int initAxioms() {
     Debug(0, "Binding multiplication operation\n");
     if (!bindComponent(GLOBALCONTEXT->env, COMP_OPERATION, "*", multiplication)) goto error;
     
+    exponentiation = malloc(sizeof(Operation));
+    if (exponentiation == nullptr) goto error;
+    
+    exponentiation->associative = 0;
+    exponentiation->commutative = 0;
+    exponentiation->symbol = '^';
+    exponentiation->type = OP_AXIOMATIC;
+    exponentiation->definition = createOpFunc(exponent);
+    
+    Debug(0, "Binding multiplication operation\n");
+    if (!bindComponent(GLOBALCONTEXT->env, COMP_OPERATION, "^", exponentiation)) goto error;
+    
+    
     return 1;
     
     error:
         perror("Error initializing axioms");
         free(addition);
         free(multiplication);
+        free(exponentiation);
         
         return 0;
 }

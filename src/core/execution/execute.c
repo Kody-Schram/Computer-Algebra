@@ -45,15 +45,61 @@ static int executeRecur(Expression **ptr, Environment *env) {
         }
 
         case EXPRESSION_OPERATOR:
+            if (expr->arity != expr->op->definition->parameters) return 0;
             for (int i = 0; i < expr->arity; i ++) {
                 if (!executeRecur(&(expr->operands[i]), env)) return 0;
             } 
 
             Debug(0, "Running main operator now\n");
             
-            // ==================================================
-            // Handle calling operation funciton from environment
-            // ==================================================
+            switch (expr->op->type) {
+                case OP_AXIOMATIC:
+                    Debug(0, "Executing axiomatic operation\n");
+                    BuiltinResult *result = expr->op->definition->builtin(expr->arity, expr->operands);
+                    if (result == nullptr || result->type == BUILTIN_ERROR) return 0;
+                    
+                    Debug(1, printExpression(result->output));
+                    
+                    freeExpression(expr);
+                    *ptr = result->output;
+                    free(result);
+                    return 1;
+                    
+                case OP_ABSTRACT:
+                    Function *func = expr->op->definition;
+                    // Updates values of parameters within function environment
+                    Component *paramCmp = func->env->compList;
+                    // Counts backwards due to how linked list insertion of environment works, first parameter will come last
+                    for (int i = expr->arity - 1; i >= 0; i --) {
+                        freeExpression(paramCmp->value);
+                        
+                        if (!executeRecur(&expr->operands[i], env)) {
+                            func->env->parent = nullptr;
+                            return 0;
+                        }
+                        
+                        paramCmp->value = expr->operands[i];
+                        expr->operands[i] = nullptr;
+                        paramCmp = paramCmp->next;
+                    }
+                    
+                    expr->call->nParams = 0;
+                    
+                    Expression *exec = deepCopyExpression(func->definition);
+                    if (exec == nullptr) return 0;
+                    if (!executeRecur(&exec, func->env)) {
+                        func->env->parent = nullptr;
+                        return 0;
+                    }
+
+                    func->env->parent = nullptr;
+                    freeExpression(expr);
+
+                    Debug(0, "\nCall result\n");
+                    Debug(1, printExpression(exec));
+                    *ptr = exec;
+                    return 1;
+            }
             
             return 1;
 
@@ -89,8 +135,7 @@ static int executeRecur(Expression **ptr, Environment *env) {
             }
 
             if (!evaluating && GLOBALCONTEXT->config->LAZY_CALLS) return 1;
-
-            if (env != nullptr) func->env->parent = env;
+            func->env->parent = env;
             
             // Updates values of parameters within function environment
             Component *paramCmp = func->env->compList;

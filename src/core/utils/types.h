@@ -99,7 +99,7 @@ struct Function {
 
     union {
         Expression *definition;
-        BuiltinResult *(*builtin) (Expression **args, int nArgs);
+        BuiltinResult *(*builtin) (int nArgs, Expression ** exprs);
     };
 };
 
