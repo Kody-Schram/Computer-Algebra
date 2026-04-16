@@ -53,7 +53,7 @@ runtime:
   # Default is 1
   saveOutputs: 1
 
-  # Determines whether fractions are preserved or evaluated into floating point values
+  # Determines whether fractions are evaluated into floating point values
   # Default is true
   preserveFractions: true
 
@@ -61,8 +61,7 @@ runtime:
   # Default is true
   preserveConstants: true
 
-  # Determines whether some function calls are "lazy"
-  # These lazy calls will be evaluated when executing
+  # Determines whether function calls are "lazy". These lazy calls will be evaluated when executing
   # For example, having a function call within a function definition will preserve the call until a call to that new function is made
   # Otherwise, the call will be replaced with the definition of the other function
   # ```
