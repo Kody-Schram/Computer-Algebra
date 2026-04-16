@@ -80,6 +80,13 @@ Expression *multiply(Expression **args, int nArgs) {
 }
 
 
+Expression *exponent(Expression **args, int nArgs) {
+    if (nArgs != 2) return nullptr;
+    
+    if ()
+}
+
+
 int initAxioms() {
     Operation *addition = nullptr;
     Operation *multiplication = nullptr;

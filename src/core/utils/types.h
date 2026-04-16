@@ -22,6 +22,8 @@ typedef struct Expression Expression;
 
 typedef struct FunctionCall FunctionCall;
 typedef enum FunctionType FunctionType;
+typedef enum BuiltinResultType BuiltinResultType;
+typedef struct BuiltinResult BuiltinResult;
 typedef struct Function Function;
 
 
@@ -79,6 +81,16 @@ enum FunctionType {
     DEFINED,
 };
 
+enum BuiltinResultType {
+    BUILTIN_SUCCESS,
+    BUILTIN_ERROR
+};
+
+struct BuiltinResult {
+    BuiltinResultType type;
+    Expression output;
+};
+
 
 struct Function {
     Environment *env;
@@ -87,7 +99,7 @@ struct Function {
 
     union {
         Expression *definition;
-        Expression *(*builtin) (Expression **args, int nArgs);
+        BuiltinResult *(*builtin) (Expression **args, int nArgs);
     };
 };
 
