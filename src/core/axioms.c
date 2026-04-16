@@ -169,6 +169,47 @@ BuiltinResult *exponent(int nArgs, Expression **operands) {
 }
 
 
+BuiltinResult *subtract(int nArgs, Expression **operands) {
+    BuiltinResult *result = malloc(sizeof(BuiltinResult));
+    if (result == nullptr) {
+        perror("Error calling addition builtin");
+        return nullptr;
+    }
+    result->type = BUILTIN_ERROR;
+    result->output = nullptr;
+    
+    Expression *a = operands[1];
+    Expression *b = operands[0];
+    
+    
+    // If not both numbers, return the addition expression again
+    if (a->type != EXPRESSION_INTEGER && a->type != EXPRESSION_DOUBLE && 
+        b->type != EXPRESSION_INTEGER && b->type != EXPRESSION_DOUBLE) return result;
+    
+    if (a->type == EXPRESSION_INTEGER && b->type == EXPRESSION_INTEGER) {
+        Expression *output = dummyExpression(EXPRESSION_INTEGER);
+        if (output == nullptr) return result;
+        
+        output->integer = a->integer - b->integer;
+        
+        result->type = BUILTIN_SUCCESS;
+        result->output = output;
+        return result;
+    }
+    
+    double av = (a->type == EXPRESSION_INTEGER) ? (double) a->integer : a->value;
+    double bv = (b->type == EXPRESSION_INTEGER) ? (double) b->integer : b->value;
+    
+    Expression *output = dummyExpression(EXPRESSION_DOUBLE);
+    if (output == nullptr) return result;
+    output->value = av - bv;
+    
+    result->type = BUILTIN_SUCCESS;
+    result->output = output;
+    return result;
+}
+
+
 BuiltinResult *divide(int nArgs, Expression **operands) {
     BuiltinResult *result = malloc(sizeof(BuiltinResult));
     if (result == nullptr) {
@@ -203,6 +244,8 @@ int initAxioms() {
     Operation *addition = nullptr;
     Operation *multiplication = nullptr;
     Operation *exponentiation = nullptr;
+    
+    Operation *subtraction = nullptr;
     Operation *division = nullptr;
     
     addition = malloc(sizeof(Operation));
@@ -241,6 +284,23 @@ int initAxioms() {
     Debug(0, "Binding exponentiation operation\n");
     if (!bindComponent(GLOBALCONTEXT->env, COMP_OPERATION, "^", exponentiation)) goto error;
     
+    
+    // =========================================================
+    // These will hopfully later be replaced with using inverses
+    // =========================================================
+    
+    subtraction = malloc(sizeof(Operation));
+    if (subtraction == nullptr) goto error;
+    
+    subtraction->associative = true;
+    subtraction->commutative = false;
+    subtraction->symbol = '-';
+    subtraction->type = OP_AXIOMATIC;
+    subtraction->definition = createOpFunc(subtract);
+    
+    Debug(0, "Binding subtraction operation\n");
+    if (!bindComponent(GLOBALCONTEXT->env, COMP_OPERATION, "-", subtraction)) goto error;
+    
     division = malloc(sizeof(Operation));
     if (division == nullptr) goto error;
     
@@ -260,6 +320,9 @@ int initAxioms() {
         free(addition);
         free(multiplication);
         free(exponentiation);
+        
+        free(subtraction);
+        free(division);
         
         return 0;
 }
