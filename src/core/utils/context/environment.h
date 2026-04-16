@@ -19,7 +19,7 @@ enum ComponentType {
 struct Component {
     ComponentType type;
     char *identifier;
-    
+    // Pack secondary hashing to have super fast comparisions when tokenizing
     Component *next;
 
     union {

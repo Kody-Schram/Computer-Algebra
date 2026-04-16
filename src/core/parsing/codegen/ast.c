@@ -225,7 +225,7 @@ Expression *expressionFromRPN(RPNList *rpn) {
     return root;
 
     cleanup:
-        for (int i = 0; i < expressions.items; i ++) {
+        for (int i = 0; i < expressions.entries; i ++) {
             freeExpression(expressions.items[i]);
         }
         free(expressions.items);
