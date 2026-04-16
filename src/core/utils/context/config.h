@@ -30,14 +30,13 @@ struct KeywordMapping {
 
 struct Config {
     LOG_LEVEL LOG_LEVEL;
-    FILE *LOG_STREAM;
-
-    char *STARTUP;
-
-    KeywordMapping MAPPING[3];
-
-    char *OUTPUT_ID;
     int OUTPUTS;
+    
+    FILE *LOG_STREAM;
+    char *STARTUP;
+    char *OUTPUT_ID;
+    
+    KeywordMapping MAPPING[3];
 
     bool PRESERVE_FRACS;
     bool LAZY_CALLS;
