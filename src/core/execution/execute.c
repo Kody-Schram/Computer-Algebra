@@ -45,10 +45,15 @@ static int executeRecur(Expression **ptr, Environment *env) {
         }
 
         case EXPRESSION_OPERATOR:
+            bool valid = true;
             if (expr->arity != expr->op->definition->parameters) return 0;
             for (int i = 0; i < expr->arity; i ++) {
                 if (!executeRecur(&(expr->operands[i]), env)) return 0;
-            } 
+                if (expr->operands[i]->type != EXPRESSION_DOUBLE && expr->operands[i]->type != EXPRESSION_INTEGER) valid = false;
+            }
+            
+            // Doesnt execute main operation if children aren't numbers, just leaves as symbolic
+            if (!valid) return 1;
 
             Debug(0, "Running main operator now\n");
             
