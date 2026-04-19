@@ -206,8 +206,8 @@ Expression *expressionFromRPN(RPNList *rpn) {
                 goto cleanup;
             }
             
-            expr->operands[0] = expressions.items[expressions.entries - 1];
-            expr->operands[1] = expressions.items[expressions.entries - 2];
+            expr->operands[0] = expressions.items[expressions.entries - 2];
+            expr->operands[1] = expressions.items[expressions.entries - 1];
 
             expressions.entries -= 2;
         }

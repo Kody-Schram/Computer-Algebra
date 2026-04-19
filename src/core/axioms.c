@@ -29,9 +29,6 @@ static Function *createOpFunc(BuiltinResult *(*builtin) (int nArgs, Expression *
     return op;
 }
 
-// ==============================================================================
-// A and B are [1] and [0] respectively intentionally, just a quirk of the system
-// ==============================================================================
 
 BuiltinResult *add(int nArgs, Expression **operands) {
     BuiltinResult *result = malloc(sizeof(BuiltinResult));
@@ -42,8 +39,8 @@ BuiltinResult *add(int nArgs, Expression **operands) {
     result->type = BUILTIN_ERROR;
     result->output = nullptr;
     
-    Expression *a = operands[1];
-    Expression *b = operands[0];
+    Expression *a = operands[0];
+    Expression *b = operands[1];
     
     
     // If not both numbers, return the addition expression again
@@ -83,8 +80,8 @@ BuiltinResult *multiply(int nArgs, Expression **operands) {
     result->type = BUILTIN_ERROR;
     result->output = nullptr;
     
-    Expression *a = operands[1];
-    Expression *b = operands[0];
+    Expression *a = operands[0];
+    Expression *b = operands[1];
     
     
     // If not both numbers, return the addition expression again
@@ -137,8 +134,8 @@ BuiltinResult *exponent(int nArgs, Expression **operands) {
     result->type = BUILTIN_ERROR;
     result->output = nullptr;
     
-    Expression *a = operands[1];
-    Expression *b = operands[0];
+    Expression *a = operands[0];
+    Expression *b = operands[1];
     
     
     // If not both numbers, return the addition expression again
@@ -178,8 +175,8 @@ BuiltinResult *subtract(int nArgs, Expression **operands) {
     result->type = BUILTIN_ERROR;
     result->output = nullptr;
     
-    Expression *a = operands[1];
-    Expression *b = operands[0];
+    Expression *a = operands[0];
+    Expression *b = operands[1];
     
     
     // If not both numbers, return the addition expression again
@@ -224,8 +221,8 @@ BuiltinResult *divide(int nArgs, Expression **operands) {
         return result;
     }
     
-    Expression *a = operands[1];
-    Expression *b = operands[0];
+    Expression *a = operands[0];
+    Expression *b = operands[1];
     
     double av = (a->type == EXPRESSION_INTEGER) ? (double) a->integer : a->value;
     double bv = (b->type == EXPRESSION_INTEGER) ? (double) b->integer : b->value;
