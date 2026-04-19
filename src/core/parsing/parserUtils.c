@@ -9,7 +9,7 @@
 #include "core/utils/types.h"
 
 
-Token *createToken(TokenType type, char *value, int l) {
+Token *createToken(TokenType type, const char *value, int l) {
     // Allocates new token
     Token *token = (Token*) calloc(1, sizeof(Token));
     if (token == nullptr) {
@@ -36,7 +36,7 @@ Token *createToken(TokenType type, char *value, int l) {
 }
 
 
-static void printToken(Token *token, FILE *stream) {
+static void printToken(const Token *token, FILE *stream) {
     const char *type = nullptr;
 
         switch(token->type) {
@@ -79,11 +79,11 @@ static void printToken(Token *token, FILE *stream) {
 }
 
 
-FILE *printTokens(Token *head) {
+FILE *printTokens(const Token *head) {
     FILE *stream = tmpfile();
     if (stream == nullptr) return nullptr;
 
-    Token *cur = head;
+    const Token *cur = head;
 
     fprintf(stream, "\n");
     while (cur != nullptr) {
@@ -96,7 +96,7 @@ FILE *printTokens(Token *head) {
 }
 
 
-Expression *createExpression(Token *token) {
+Expression *createExpression(const Token *token) {
     Expression *expr = calloc(1, sizeof(Expression));
     if (expr == nullptr) {
         perror("Error creating expression");
@@ -148,7 +148,6 @@ Expression *createExpression(Token *token) {
         case TOKEN_FUNC_CALL:
             expr->type = EXPRESSION_FUNCTION_CALL;
             expr->call = token->call;
-            token->call = nullptr;
             break;
             
         default:
@@ -159,7 +158,7 @@ Expression *createExpression(Token *token) {
 }
 
 
-FILE *printRPN(RPNList *list) {
+FILE *printRPN(const RPNList *list) {
     FILE *stream = tmpfile();
     if (stream == nullptr) return nullptr;
 

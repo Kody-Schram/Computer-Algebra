@@ -23,7 +23,7 @@ Expression *dummyExpression(ExpressionType type) {
 }
 
 
-Expression *deepCopyExpression(Expression *expr) {
+Expression *deepCopyExpression(const Expression *expr) {
     if (expr == nullptr) return nullptr;
     
     Expression *new = dummyExpression(expr->type);
@@ -112,7 +112,7 @@ Expression *deepCopyExpression(Expression *expr) {
 }
 
 
-static void printExpressionRec(Expression *expr, int level, FILE *stream) {
+static void printExpressionRec(const Expression *expr, int level, FILE *stream) {
     if (expr == nullptr || stream == nullptr) return;
 
     // Print indentation based on depth
@@ -162,7 +162,7 @@ static void printExpressionRec(Expression *expr, int level, FILE *stream) {
 }
 
 
-FILE *printExpression(Expression *expr) {
+FILE *printExpression(const Expression *expr) {
     FILE *stream = tmpfile();
     if (stream == nullptr) return nullptr;
 
@@ -207,7 +207,7 @@ void freeExpression(Expression *expr) {
 }
 
 
-static void expressionToStringRecur(Expression *expr, FILE *stream) {
+static void expressionToStringRecur(const Expression *expr, FILE *stream) {
     if (expr == nullptr) return;
 
     switch (expr->type) {
@@ -253,7 +253,7 @@ static void expressionToStringRecur(Expression *expr, FILE *stream) {
 }
 
 
-char *expressionToString(Expression *expr) {
+char *expressionToString(const Expression *expr) {
     FILE *stream = tmpfile();
     char *string = nullptr;
     if (expr == nullptr || stream == nullptr) {

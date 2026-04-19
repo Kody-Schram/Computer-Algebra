@@ -17,20 +17,20 @@
  * @param l Length of the string value
  * @return Token* 
  */
-Token *createToken(TokenType type, char *value, int l);
+Token *createToken(TokenType type, const char *value, int l);
 
 /**
  * @brief Prints linked token list in a easy to read format
  * 
  * @param head Head of linked list
  */
-FILE *printTokens(Token *head);
+FILE *printTokens(const Token *head);
 
 
-Expression *createExpression(Token *token);
+Expression *createExpression(const Token *token);
 
 
-FILE *printRPN(RPNList *list);
+FILE *printRPN(const RPNList *list);
 
 /**
  * @brief Frees the memory of old tokens

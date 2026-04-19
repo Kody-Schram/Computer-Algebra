@@ -109,15 +109,15 @@ struct Function {
 Expression *dummyExpression(ExpressionType type);
 
 
-Expression *deepCopyExpression(Expression *expr);
+Expression *deepCopyExpression(const Expression *expr);
 
 
-FILE *printExpression(Expression *expr);
+FILE *printExpression(const Expression *expr);
 
 
 void freeExpression(Expression *expr);
 
 
-char *expressionToString(Expression *expr);
+char *expressionToString(const Expression *expr);
 
 #endif
