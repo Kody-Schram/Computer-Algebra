@@ -63,4 +63,7 @@ void freeEnvironment(Environment *env);
 
 int initOutputVariables(Environment *env);
 
+
+int updateOutputVariables(Environment *env, Expression *output);
+
 #endif
