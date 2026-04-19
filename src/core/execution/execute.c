@@ -143,24 +143,28 @@ static int executeRecur(Expression **ptr, Environment *env) {
             }
 
             if (!evaluating && GLOBALCONTEXT->config->LAZY_CALLS) return 1;
-            func->env->parent = env;
             
-            // Updates values of parameters within function environment
+            Environment *callEnv = createEnvironment(ENV_LIST);
+            if (callEnv == nullptr) return 0;
+            
+            callEnv->parent = env;
+            
             Component *paramCmp = func->env->compList;
-            // Counts backwards due to how linked list insertion of environment works, first parameter will come last
-            for (int i = func->parameters - 1; i >= 0; i --) {
-                freeExpression(paramCmp->value);
-                
+            for (int i = 0; i < func->parameters; i ++) {
                 if (!executeRecur(&call->parameters[i], env)) {
-                    func->env->parent = nullptr;
+                    freeEnvironment(callEnv);
                     return 0;
                 }
                 
-                paramCmp->value = call->parameters[i];
-                call->parameters[i] = nullptr;
+                if (!bindComponent(callEnv, COMP_VARIABLE, paramCmp->identifier, call->parameters[i])) {
+                    freeEnvironment(callEnv);
+                    return 0;
+                }
+                
                 paramCmp = paramCmp->next;
             }
             
+            // Prevents double free of params
             expr->call->nParams = 0;
 
             switch (func->type) {
@@ -169,7 +173,7 @@ static int executeRecur(Expression **ptr, Environment *env) {
                     Debug(1, printEnvironment(func->env));
                     Expression *exec = deepCopyExpression(func->definition);
                     if (exec == nullptr) return 0;
-                    if (!executeRecur(&exec, func->env)) {
+                    if (!executeRecur(&exec, callEnv)) {
                         func->env->parent = nullptr;
                         return 0;
                     }
@@ -181,11 +185,13 @@ static int executeRecur(Expression **ptr, Environment *env) {
                     Debug(0, "\nCall result\n");
                     Debug(1, printExpression(exec));
                     *ptr = exec;
-                    return 1;
-
+                    break;
+ 
                 default:
                     printf("Undefined behavior as of now.\n");
             }
+            
+            freeEnvironment(callEnv);
             
             return 1;
     }

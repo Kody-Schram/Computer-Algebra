@@ -416,11 +416,11 @@ ParserResult parse(char *buffer) {
     if (containsAssignment(head)) {
         if (containsFunctionAssignment(head)) {
             if (!parseFunctionAssignment(head)) return result;
-            goto success;
+            goto assignment_success;
         }
         else if  (!parseAssignment(head)) return result;
         
-        success:
+        assignment_success:
         return (ParserResult) {PARSER_SUCCESS, nullptr};
     }
 
