@@ -120,7 +120,7 @@ static int handleExponentRewrite(Token **cur, Token *prev) {
  * @param prev Previous node in the list
  * @return int Error code
  */
-static int checkInvalidBinop(Token *cur, Token *prev) {
+static int checkInvalidBinop(const Token *cur, const Token *prev) {
     if (cur->type != TOKEN_OPERATOR) return 0;
     if (cur->next == nullptr) {
         printf("Operator must be followed by another token.\n");

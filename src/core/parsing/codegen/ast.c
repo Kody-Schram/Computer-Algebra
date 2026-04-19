@@ -15,7 +15,7 @@ static int DEFAULT_NODE_STACK_SIZE = 10;
  * @param operator 
  * @return int Precedent of operator
  */
-static int getPrecedent(char *operator) {
+static int getPrecedent(const char *operator) {
     int precedent = 0;
 
     // set precedent for '->'
@@ -43,8 +43,8 @@ static int getPrecedent(char *operator) {
  * @param head Start of Token linked list
  * @return int Length of linked list
  */
-static int getLinkedListLength(Token *head) {
-    Token *cur = head;
+static int getLinkedListLength(const Token *head) {
+    const Token *cur = head;
 
     int i = 0;
     while (cur != nullptr) {

@@ -45,7 +45,7 @@ typedef struct {
  * @param c Buffer
  * @return int Length of found operator
  */
-static SymbolReturn getSymbolLength(char *c) {
+static SymbolReturn getSymbolLength(const char *c) {
     SymbolReturn result = {0, TOKEN_OPERATOR};
     if (isalnum(c[0])) return result;
     for (int i = 0; i < N_MAPPINGS; i ++) {
@@ -67,7 +67,7 @@ static SymbolReturn getSymbolLength(char *c) {
  * @param c Buffer
  * @return int Length of found number
  */
-static int getNumber(char *c) {
+static int getNumber(const char *c) {
     int i = 0;
     if (isdigit(c[0]) || c[0] == '.') {
         while (isdigit(c[i]) || c[i] == '.') i ++;
