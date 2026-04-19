@@ -36,6 +36,7 @@ enum ExpressionType {
     EXPRESSION_OPERATOR
 };
 
+
 enum OperationType {
     OP_AXIOMATIC,
     OP_ABSTRACT
