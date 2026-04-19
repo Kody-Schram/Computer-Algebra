@@ -115,9 +115,13 @@ static int parseFunctionCalls(Token **head) {
                     paramExprs = temp;
 
                 }
-
+                
                 // Recursively parses calls
                 if (!parseFunctionCalls(&paramHead)) goto parameter_error;
+                
+                // ===========================================================
+                // Look into ways to reduce recursive calls to these functions
+                // ===========================================================
 
                 // Generates ast for parameter
                 RPNList *rpn = shuntingYard(paramHead);
