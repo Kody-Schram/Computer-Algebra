@@ -49,13 +49,13 @@ struct Environment {
 Environment *createEnvironment(EnvironmentType type);
 
 
-int bindComponent(Environment *env, ComponentType type, char *identifier, void *data);
+int bindComponent(Environment *env, ComponentType type, const char *identifier, const void *data);
 
 
-Component* searchEnvironment(Environment *env, char *identifier);
+Component* searchEnvironment(const Environment *env, const char *identifier);
 
 
-FILE *printEnvironment(Environment *env);
+FILE *printEnvironment(const Environment *env);
 
 
 void freeEnvironment(Environment *env);

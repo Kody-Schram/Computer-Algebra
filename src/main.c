@@ -63,8 +63,9 @@ static int process(char *buffer) {
     if (str != nullptr) printf("%s\n\n", str);
     free(str);
 
-    // Updates output variables
-    if (!updateOutputVariables(GLOBALCONTEXT->env, result.expr)) return 0;
+    if (GLOBALCONTEXT->config->OUTPUTS > 0) {
+        if (!updateOutputVariables(GLOBALCONTEXT->env, result.expr)) return 0;
+    } else freeExpression(result.expr);
 
     return 1;
 }

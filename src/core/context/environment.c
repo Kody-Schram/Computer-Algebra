@@ -60,7 +60,7 @@ Environment *createEnvironment(EnvironmentType type) {
 }
 
 
-int bindComponent(Environment *env, ComponentType type, char *identifier, void *data) {
+int bindComponent(Environment *env, ComponentType type, const char *identifier, const void *data) {
     Component *new = calloc(1, sizeof(Component));
     if (new == nullptr) {
         perror("Error in binding component");
@@ -110,7 +110,7 @@ int bindComponent(Environment *env, ComponentType type, char *identifier, void *
 }
 
 
-Component* searchEnvironment(Environment *env, char *identifier) {
+Component* searchEnvironment(const Environment *env, const char *identifier) {
     if (identifier == nullptr) return nullptr;
     //printf("searching environment for '%s'\n", identifier);
     
@@ -133,7 +133,7 @@ Component* searchEnvironment(Environment *env, char *identifier) {
 }
 
 
-static void printLinkedCmpList(FILE *stream, Component *cmp) {
+static void printLinkedCmpList(FILE *stream, const Component *cmp) {
     while (cmp != nullptr) {
         switch (cmp->type) {
             case COMP_FUNCTION:
@@ -179,7 +179,7 @@ static void printLinkedCmpList(FILE *stream, Component *cmp) {
 }
 
 
-FILE *printEnvironment(Environment *env) {
+FILE *printEnvironment(const Environment *env) {
     FILE *stream = tmpfile();
     if (stream == nullptr || env == nullptr) return nullptr;
     
@@ -261,65 +261,61 @@ int initOutputVariables(Environment *env) {
 
 
 int updateOutputVariables(Environment *env, Expression *output) {
-    if (GLOBALCONTEXT->config->OUTPUTS > 0) {
-        Debug(0, "Updating output variable(s).\n");
-        if (GLOBALCONTEXT->config->OUTPUTS == 1) {
-            Component *cmp = searchEnvironment(GLOBALCONTEXT->env, GLOBALCONTEXT->config->OUTPUT_ID);
-            if (cmp == nullptr) return 0;
+    Debug(0, "Updating output variable(s).\n");
+    if (GLOBALCONTEXT->config->OUTPUTS == 1) {
+        Component *cmp = searchEnvironment(GLOBALCONTEXT->env, GLOBALCONTEXT->config->OUTPUT_ID);
+        if (cmp == nullptr) return 0;
 
-            freeExpression(cmp->value);
-            cmp->value = output;
-            return 1;
-        } else {
-            int size = strlen(GLOBALCONTEXT->config->OUTPUT_ID) + 12;
-            char *str = malloc(size);
-            if (str == nullptr) return 0;
-            snprintf(str, size, "%s_%d", GLOBALCONTEXT->config->OUTPUT_ID, GLOBALCONTEXT->config->OUTPUTS - 1);
+        freeExpression(cmp->value);
+        cmp->value = output;
+        return 1;
+    } else {
+        int size = strlen(GLOBALCONTEXT->config->OUTPUT_ID) + 12;
+        char *str = malloc(size);
+        if (str == nullptr) return 0;
+        snprintf(str, size, "%s_%d", GLOBALCONTEXT->config->OUTPUT_ID, GLOBALCONTEXT->config->OUTPUTS - 1);
 
-            Component *last = searchEnvironment(GLOBALCONTEXT->env, str);
-            if (last == nullptr) {
-                free(str);
-                return 0;
-            }
+        Component *last = searchEnvironment(GLOBALCONTEXT->env, str);
+        if (last == nullptr) {
             free(str);
-            freeExpression(last->value);
+            return 0;
+        }
+        free(str);
+        freeExpression(last->value);
 
-            for (int i = GLOBALCONTEXT->config->OUTPUTS - 2; i >= 0; i --) {
-                size = strlen(GLOBALCONTEXT->config->OUTPUT_ID) + 12;
-                str = malloc(size);
-                if (str == nullptr) return 0;
-                snprintf(str, size, "%s_%d", GLOBALCONTEXT->config->OUTPUT_ID, i);
-
-                Component *cmp = searchEnvironment(GLOBALCONTEXT->env, str);
-                if (cmp == nullptr) {
-                    free(str);
-                    return 0;
-                }
-                free(str);
-
-                last->value = cmp->value;
-                last = cmp;
-            }
-
+        for (int i = GLOBALCONTEXT->config->OUTPUTS - 2; i >= 0; i --) {
             size = strlen(GLOBALCONTEXT->config->OUTPUT_ID) + 12;
             str = malloc(size);
             if (str == nullptr) return 0;
-            snprintf(str, size, "%s_0", GLOBALCONTEXT->config->OUTPUT_ID);
+            snprintf(str, size, "%s_%d", GLOBALCONTEXT->config->OUTPUT_ID, i);
 
-            Component *first = searchEnvironment(GLOBALCONTEXT->env, str);
-            if (first == nullptr) {
+            Component *cmp = searchEnvironment(GLOBALCONTEXT->env, str);
+            if (cmp == nullptr) {
                 free(str);
                 return 0;
             }
             free(str);
 
-            first->value = output;
-
-            return 1;
+            last->value = cmp->value;
+            last = cmp;
         }
 
+        size = strlen(GLOBALCONTEXT->config->OUTPUT_ID) + 12;
+        str = malloc(size);
+        if (str == nullptr) return 0;
+        snprintf(str, size, "%s_0", GLOBALCONTEXT->config->OUTPUT_ID);
+
+        Component *first = searchEnvironment(GLOBALCONTEXT->env, str);
+        if (first == nullptr) {
+            free(str);
+            return 0;
+        }
+        free(str);
+
+        first->value = output;
+
         return 1;
-    } else freeExpression(output);
-    
+    }
+
     return 1;
 }
