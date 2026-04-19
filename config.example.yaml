@@ -10,6 +10,10 @@ log:
   # Set the location for logs to appear
   # Default is the terminal
   location: log.txt
+  
+  # Determines if operations like + and * are printed when running ENV command
+  # Default is false
+  printAxiomaticOperations: false
 
 # Enables the use of scripts to run during startup
 # Can be inline commands or define a file with the startup script

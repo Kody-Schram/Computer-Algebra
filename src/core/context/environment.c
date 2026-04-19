@@ -165,7 +165,7 @@ static void printLinkedCmpList(FILE *stream, Component *cmp) {
                 break;
                 
             case COMP_OPERATION:
-                //if (cmp->operation->type == AXIOMATIC) break; // will only print out user defined operations (maybe add setting in config for this)
+                if (cmp->operation->type == OP_AXIOMATIC && !GLOBALCONTEXT->config->PRINT_AXIOMATIC_OPS) break; // will only print out user defined operations (maybe add setting in config for this)
                 fprintf(stream, "Op '%s'\n", cmp->identifier);
                 
                 fprintf(stream, "  Associative: %d\n", cmp->operation->associative);

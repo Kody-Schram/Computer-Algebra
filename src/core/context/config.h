@@ -40,6 +40,7 @@ struct Config {
 
     bool PRESERVE_FRACS;
     bool LAZY_CALLS;
+    bool PRINT_AXIOMATIC_OPS;
 };
 
 
