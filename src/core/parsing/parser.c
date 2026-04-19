@@ -5,6 +5,7 @@
 #include "parser.h"
 #include "core/context/context.h"
 #include "core/context/environment.h"
+#include "core/parsing/parserTypes.h"
 #include "core/utils/log.h"
 
 #include "core/parsing/codegen/tokenizer.h"
@@ -344,7 +345,7 @@ static int parseAssignment(Token *head) {
     while (cur != nullptr && asgn == nullptr) {
         if (identifier == nullptr) {
             if (cur->type == TOKEN_IDENTIFIER) {
-                identifier = strdup(cur->value);
+                identifier = cur->value;
                 if (identifier == nullptr) {
                     perror("Error parsing variable assignment");
                     goto error;
@@ -399,42 +400,46 @@ static int parseAssignment(Token *head) {
 
 
 ParserResult parse(char *buffer) {
-    ParserResult result = {PARSER_ERROR, nullptr};
     Info(0, "\nParsing: '%s'\n", buffer);
+    
+    ParserResult result = {PARSER_ERROR, nullptr};
+    
     Token *head = nullptr;
+    RPNList *rpn = nullptr;
     Expression *expr = nullptr;
     
     head = tokenize(buffer);
     if (head == nullptr) return result;
 
-    if (!lex(&head)) {
-        freeTokens(head);
-        return result;
-    }
+    if (!lex(&head)) goto error;
 
     if (containsAssignment(head)) {
-        if (!containsFunctionAssignment(head) && !parseAssignment(head)) return result;
-        if (!parseFunctionAssignment(head)) return result;
+        if (containsFunctionAssignment(head)) {
+            if (!parseFunctionAssignment(head)) return result;
+            goto success;
+        }
+        else if  (!parseAssignment(head)) return result;
         
+        success:
         return (ParserResult) {PARSER_SUCCESS, nullptr};
     }
 
-    if (!parseFunctionCalls(&head)) {
-        freeTokens(head);
-        return result;
-    }
+    if (!parseFunctionCalls(&head)) goto error;
 
-    RPNList *RPN = shuntingYard(head);
-    if (RPN == nullptr) {
-        freeTokens(head);
-        return result;
-    }
+    rpn = shuntingYard(head);
+    if (rpn == nullptr) goto error;
 
-    expr = expressionFromRPN(RPN);
+    expr = expressionFromRPN(rpn);
 
-    free(RPN->items);
-    free(RPN);
+    free(rpn->items);
+    free(rpn);
     freeTokens(head);
 
     return (ParserResult) {PARSER_SUCCESS, expr};
+    
+    error:
+        freeTokens(head);
+        if (rpn != nullptr) free(rpn->items);
+        free(rpn);
+        return result;
 }

@@ -52,19 +52,18 @@ static int process(char *buffer) {
 
     ParserResult result = parse(buffer);
     if (result.type == PARSER_ERROR) return 0;
-    if (result.expr != nullptr) {
-        if (!execute(&result.expr)) {
-            freeExpression(result.expr);
-            return 1;
-        }
-    }
-
     if (result.expr == nullptr) return 1;
+
+    if (!execute(&result.expr)) {
+        freeExpression(result.expr);
+        return 1;
+    }
 
     char *str = expressionToString(result.expr);
     if (str != nullptr) printf("%s\n\n", str);
     free(str);
 
+    // Updates output variables
     if (GLOBALCONTEXT->config->OUTPUTS > 0) {
         Debug(0, "Updating output variable(s).\n");
         if (GLOBALCONTEXT->config->OUTPUTS == 1) {
