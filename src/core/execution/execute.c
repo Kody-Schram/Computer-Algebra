@@ -63,7 +63,10 @@ static int executeRecur(Expression **ptr, Environment *env) {
                     BuiltinResult *result = expr->op->definition->builtin(expr->arity, expr->operands);
                     if (result == nullptr || result->type == BUILTIN_ERROR) return 0;
                     
+                    Debug(0, "Output of operation\n");
                     Debug(1, printExpression(result->output));
+                    
+                    if (result->output == nullptr) return 1;
                     
                     freeExpression(expr);
                     *ptr = result->output;
