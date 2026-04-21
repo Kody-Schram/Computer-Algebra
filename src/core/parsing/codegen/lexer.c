@@ -254,7 +254,7 @@ static int handleNegatives(Token *cur, Token *prev) {
 }
 
 
-int handleLocalVariables(Token **ptr, Environment *localEnv) {
+int handleLocalVariables(Token **ptr, char **parameters, int nParameters) {
     Config *config = GLOBALCONTEXT->config;
     Environment *env = GLOBALCONTEXT->env;
 
@@ -265,29 +265,32 @@ int handleLocalVariables(Token **ptr, Environment *localEnv) {
     while (cur != nullptr) {
         if (cur->type == TOKEN_IDENTIFIER) {
             int max = 0;
-            Component *cmp;
+            char *identifier;
             char *id = cur->value;
 
             for (int i = 0; id[i] != '\0'; i ++) {
                 // Adds the end of string char to only select a part of the buffer
                 char temp = id[i + 1];
                 id[i + 1] = '\0';
-                Component *local = searchEnvironment(localEnv, id);
+                char *local = nullptr;
+                for (int i = 0; i < nParameters; i ++) {
+                    if (!strcmp(id, parameters[i])) local = parameters[i];
+                }
                 Component *global = searchEnvironment(env, id);
                 id[i + 1] = temp;
 
                 // Any subsequent iterations will always yeild a larger char size if found, so no check required
                 // If local var is found take it 
                 if (local != nullptr) {
-                    max = strlen(local->identifier);
-                    cmp = local;
+                    max = strlen(local);
+                    identifier = local;
                     continue;
                 }
                 
                 // If global var is found take it
                 if (global != nullptr) {
                     max = strlen(global->identifier);
-                    cmp = global;
+                    identifier = global->identifier;
                     continue;
                 }
 
@@ -296,7 +299,7 @@ int handleLocalVariables(Token **ptr, Environment *localEnv) {
             // If smaller identifer than the current one is found, partition it into two new identifier tokens
             if (max != strlen(cur->value) && max != 0) {
                 // create new tokens to split
-                Token *left = createToken(TOKEN_IDENTIFIER, cmp->identifier, max);
+                Token *left = createToken(TOKEN_IDENTIFIER, identifier, max);
                 if (left == nullptr) {
                     perror("Error handling local variables");
                     return 0;

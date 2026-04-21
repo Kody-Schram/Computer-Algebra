@@ -94,9 +94,9 @@ struct BuiltinResult {
 
 
 struct Function {
-    Environment *env;
     FunctionType type;
-    int parameters;
+    char **parameters;
+    int nParameters;
 
     union {
         Expression *definition;

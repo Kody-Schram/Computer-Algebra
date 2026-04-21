@@ -222,9 +222,9 @@ static int parseFunctionAssignment(Token *head) {
     Debug(0, "Parsing function definition.\n");
     FunctionComponent component = IDENTIFIER;
 
-    Environment *localEnv = createEnvironment(ENV_LIST);
-    if (localEnv == nullptr) goto error;
-    int parameters = 0;
+    char **parameters = malloc(sizeof(char *) * DEFAULT_PARAMETERS_SIZE);
+    if (parameters == nullptr) goto error;
+    int nParameters = 0;
     
     Token *cur = head;
     Token *asgn = nullptr;
@@ -288,7 +288,7 @@ static int parseFunctionAssignment(Token *head) {
     }
 
     // Redoes identifier tokens now that local variables for parameters are established, then redoes lexing
-    if (!handleLocalVariables(&asgn, localEnv)) goto error;
+    if (!handleLocalVariables(&asgn, parameters)) goto error;
     if (!lex(&asgn->next)) goto error;
 
     if (!parseFunctionCalls(&asgn->next)) goto error;
@@ -310,12 +310,11 @@ static int parseFunctionAssignment(Token *head) {
     function = malloc(sizeof(Function));
     if (function == nullptr) goto error;
 
-    function->env = localEnv;
     function->parameters = parameters;
+    function->nParameters = nParameters;
     function->type = DEFINED;
     function->definition = expr;
 
-    Debug(1, printEnvironment(localEnv));
     if (!bindComponent(GLOBALCONTEXT->env, COMP_FUNCTION, identifier, function)) goto error;
 
 
@@ -329,7 +328,10 @@ static int parseFunctionAssignment(Token *head) {
     error:
         freeTokens(head);
         free(identifier);
-        freeEnvironment(localEnv);
+        if (parameters != nullptr) {
+            for (int i = 0; i < nParameters; i ++) free(parameters[i]);
+        }
+        free(parameters);
         if (rpn != nullptr) free(rpn->items);
         free(rpn);
         if (expr != nullptr) freeExpression(expr);
