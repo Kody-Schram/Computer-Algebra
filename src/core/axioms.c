@@ -10,20 +10,11 @@
 
 
 static Function *createOpFunc(BuiltinResult *(*builtin) (int nArgs, Expression **exprs)) {
-    Function *op = malloc(sizeof(Function));
+    Function *op = calloc(1, sizeof(Function));
     if (op == nullptr) return nullptr;
+    op->parameters = malloc(2 * sizeof(char *));
     op->type = BUILTIN;
-    op->parameters = 2;
     op->builtin = builtin;
-    op->env = createEnvironment(ENV_LIST);
-    
-    Expression *a = dummyExpression(EXPRESSION_DOUBLE);
-    Expression *b = dummyExpression(EXPRESSION_DOUBLE);
-    if (a == nullptr || b == nullptr) return nullptr;
-    
-    a->value = 0;
-    b->value = 0;
-    if (!bindComponent(op->env, COMP_VARIABLE, "a", a) || !bindComponent(op->env, COMP_VARIABLE, "b", b)) return nullptr;
     
     return op;
 }

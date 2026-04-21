@@ -46,7 +46,7 @@ static int executeRecur(Expression **ptr, Environment *env) {
 
         case EXPRESSION_OPERATOR:
             bool valid = true;
-            if (expr->arity != expr->op->definition->parameters) return 0;
+            if (expr->arity != expr->op->definition->nParameters) return 0;
             for (int i = 0; i < expr->arity; i ++) {
                 if (!executeRecur(&(expr->operands[i]), env)) return 0;
                 if (expr->operands[i]->type != EXPRESSION_DOUBLE && expr->operands[i]->type != EXPRESSION_INTEGER) valid = false;
@@ -75,32 +75,31 @@ static int executeRecur(Expression **ptr, Environment *env) {
                     
                 case OP_ABSTRACT:
                     Function *func = expr->op->definition;
-                    // Updates values of parameters within function environment
-                    Component *paramCmp = func->env->compList;
-                    // Counts backwards due to how linked list insertion of environment works, first parameter will come last
+                    
+                    Environment *localEnv = createEnvironment(ENV_LIST);
+                    if (localEnv == nullptr) return 0;
+                    
                     for (int i = expr->arity - 1; i >= 0; i --) {
-                        freeExpression(paramCmp->value);
-                        
                         if (!executeRecur(&expr->operands[i], env)) {
-                            func->env->parent = nullptr;
+                            localEnv->parent = nullptr;
                             return 0;
                         }
                         
-                        paramCmp->value = expr->operands[i];
-                        expr->operands[i] = nullptr;
-                        paramCmp = paramCmp->next;
+                        if (!bindComponent(localEnv, COMP_VARIABLE, func->parameters[i], expr->operands[i])) {
+                            freeEnvironment(localEnv);
+                            return 0;
+                        }
                     }
                     
                     expr->call->nParams = 0;
                     
                     Expression *exec = deepCopyExpression(func->definition);
                     if (exec == nullptr) return 0;
-                    if (!executeRecur(&exec, func->env)) {
-                        func->env->parent = nullptr;
+                    if (!executeRecur(&exec, localEnv)) {
+                        freeEnvironment(localEnv);
                         return 0;
                     }
 
-                    func->env->parent = nullptr;
                     freeExpression(expr);
 
                     Debug(0, "\nCall result\n");
@@ -126,8 +125,8 @@ static int executeRecur(Expression **ptr, Environment *env) {
                 return 0;
             }
 
-            if (call->nParams != func->parameters) {
-                printf("Expected %d parameters for '%s', %d parameters were passed.\n", func->parameters, call->identifier, call->nParams);
+            if (call->nParams != func->nParameters) {
+                printf("Expected %d parameters for '%s', %d parameters were passed.\n", func->nParameters, call->identifier, call->nParams);
                 return 0;
             }
 
@@ -149,19 +148,16 @@ static int executeRecur(Expression **ptr, Environment *env) {
             
             callEnv->parent = env;
             
-            Component *paramCmp = func->env->compList;
-            for (int i = 0; i < func->parameters; i ++) {
+            for (int i = 0; i < func->nParameters; i ++) {
                 if (!executeRecur(&call->parameters[i], env)) {
                     freeEnvironment(callEnv);
                     return 0;
                 }
                 
-                if (!bindComponent(callEnv, COMP_VARIABLE, paramCmp->identifier, call->parameters[i])) {
+                if (!bindComponent(callEnv, COMP_VARIABLE, func->parameters[i], call->parameters[i])) {
                     freeEnvironment(callEnv);
                     return 0;
                 }
-                
-                paramCmp = paramCmp->next;
             }
             
             // Prevents double free of params
@@ -170,16 +166,13 @@ static int executeRecur(Expression **ptr, Environment *env) {
             switch (func->type) {
                 case DEFINED:
                     Debug(0, "Executing defined function\n");
-                    Debug(1, printEnvironment(func->env));
                     Expression *exec = deepCopyExpression(func->definition);
                     if (exec == nullptr) return 0;
                     if (!executeRecur(&exec, callEnv)) {
-                        func->env->parent = nullptr;
+                        freeEnvironment(callEnv);
                         return 0;
                     }
-
-                    func->env->parent = nullptr;
-                    call->nParams = 0;
+                    
                     freeExpression(expr);
 
                     Debug(0, "\nCall result\n");
