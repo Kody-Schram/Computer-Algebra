@@ -17,7 +17,4 @@ startup: |
   f()
   j(1)
   j(1,2)
-  
-  .5f(y)
-  3f(x)
   quit

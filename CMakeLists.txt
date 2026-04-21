@@ -11,14 +11,8 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 if(CMAKE_BUILD_TYPE STREQUAL "Develop")
-    add_compile_options(-g3 -O0)
+    add_compile_options(-g -O0)
     message("Making develop build.")
-endif()
-
-# Use for gprof profiling
-if(CMAKE_BUILD_TYPE STREQUAL "Profile")
-    add_compile_options(-pg -O2)
-    add_link_options(-pg)
 endif()
 
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
@@ -29,15 +23,13 @@ endif()
 
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(YAML REQUIRED yaml-0.1)
+link_directories(${YAML_LIBRARY_DIRS})
 
-add_subdirectory(src/core)
-add_subdirectory(src/modules)
-add_executable(${PROJECT_NAME} src/main.c)
+include_directories(include src ${YAML_INCLUDE_DIRS})
 
-target_link_libraries(${PROJECT_NAME}
-    PRIVATE
-    Core
-    Modules
-    ${YAML_LIBRARIES}
-    m
-)
+file(GLOB_RECURSE SOURCES "src/*.c")
+list(REMOVE_ITEM SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/main.c")
+
+add_executable(${PROJECT_NAME} src/main.c ${SOURCES})
+target_link_libraries(${PROJECT_NAME} ${YAML_LIBRARIES} m)
+target_compile_definitions(${PROJECT_NAME} PRIVATE PROJECT_NAME="${PROJECT_NAME}")
