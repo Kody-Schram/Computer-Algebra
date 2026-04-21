@@ -2,9 +2,10 @@
 #include <stdio.h>
 
 #include "ast.h"
-#include "core/utils/context/context.h"
+#include "core/context/context.h"
 #include "core/utils/log.h"
 #include "core/parsing/parserUtils.h"
+#include "core/utils/types.h"
 
 static int DEFAULT_NODE_STACK_SIZE = 10;
 
@@ -14,7 +15,7 @@ static int DEFAULT_NODE_STACK_SIZE = 10;
  * @param operator 
  * @return int Precedent of operator
  */
-static int getPrecedent(char *operator) {
+static int getPrecedent(const char *operator) {
     int precedent = 0;
 
     // set precedent for '->'
@@ -42,8 +43,8 @@ static int getPrecedent(char *operator) {
  * @param head Start of Token linked list
  * @return int Length of linked list
  */
-static int getLinkedListLength(Token *head) {
-    Token *cur = head;
+static int getLinkedListLength(const Token *head) {
+    const Token *cur = head;
 
     int i = 0;
     while (cur != nullptr) {
@@ -183,48 +184,50 @@ RPNList *shuntingYard(Token *head) {
 }
 
 
-ASTNode *astFromRPN(RPNList *rpn) {
+Expression *expressionFromRPN(RPNList *rpn) {
     // Look into block allocation to pack nodes nearby, a very good estimate on the size of the block needed comes from the size of the token list
     Debug(0, "\nGenerating AST.\n");
 
-    Stack nodes = {
+    Stack expressions = {
         DEFAULT_NODE_STACK_SIZE,
         0,
-        malloc(DEFAULT_NODE_STACK_SIZE * sizeof(ASTNode *))
+        malloc(DEFAULT_NODE_STACK_SIZE * sizeof(Expression *))
     };
-    if (nodes.items == nullptr) return nullptr;
-    ASTNode *ast = nullptr;
+    if (expressions.items == nullptr) return nullptr;
+    Expression *root = nullptr;
 
     for (int i = 0; i < rpn->length; i ++) {
-        ASTNode *node = createASTNode(rpn->items[i]);
-        if (node == nullptr) goto cleanup;
+        Expression *expr = createExpression(rpn->items[i]);
+        if (expr == nullptr) goto cleanup;
 
-        if (node->type == NODE_OPERATOR) {
-
-            if (nodes.entries < 2) {
+        if (expr->type == EXPRESSION_OPERATOR) {
+            if (expressions.entries < 2) {
                 printf("Unexpected error in AST generation.\n");
                 goto cleanup;
             }
-            node->right = nodes.items[nodes.entries - 1];
-            node->left = nodes.items[nodes.entries - 2];
+            
+            expr->operands[0] = expressions.items[expressions.entries - 2];
+            expr->operands[1] = expressions.items[expressions.entries - 1];
 
-            nodes.entries -= 2;
+            expressions.entries -= 2;
         }
 
-        nodes.items[nodes.entries] = node;
-        nodes.entries ++;
-        if (nodes.entries >= nodes.size) {
-            if (reallocStack(&nodes)) goto cleanup;
+        expressions.items[expressions.entries] = expr;
+        expressions.entries ++;
+        if (expressions.entries >= expressions.size) {
+            if (reallocStack(&expressions)) goto cleanup;
         }
     }
 
-    ast = nodes.items[0];
-    free(nodes.items);
+    root = expressions.items[0];
+    free(expressions.items);
 
-    return ast;
+    return root;
 
     cleanup:
-        freeAST(ast);
-        free(nodes.items);
+        for (int i = 0; i < expressions.entries; i ++) {
+            freeExpression(expressions.items[i]);
+        }
+        free(expressions.items);
         return nullptr;
 }

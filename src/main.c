@@ -3,14 +3,16 @@
 #include <string.h>
 #include <math.h>
 
-#include "core/utils/context/context.h"
+#include "core/context/context.h"
+#include "core/context/environment.h"
 #include "core/utils/types.h"
+#include "core/axioms.h"
 #include "core/utils/log.h"
 
 #include "core/utils/input.h"
 #include "core/parsing/parser.h"
 
-#include "core/execute.h"
+#include "core/execution/execute.h"
 
 
 static int handleKeywords(char *buffer) {
@@ -44,88 +46,29 @@ static int handleKeywords(char *buffer) {
 
 static int process(char *buffer) {
     Debug(0, "\nProcessing '%s'\n", buffer);
-    int result = handleKeywords(buffer);
-    if (result == -1) return 0;
-    else if (result == 1) return 1;
+    int keyword = handleKeywords(buffer);
+    if (keyword == -1) return 0;
+    else if (keyword == 1) return 1;
 
-    ASTNode *head = parse(buffer);
-    if (head == nullptr) return 0;
-    if (head != nullptr) {
-        if (!execute(&head)) {
-            freeAST(head);
-            return 1;
-        }
+    ParserResult result = parse(buffer);
+    if (result.type == PARSER_ERROR) return 0;
+    if (result.expr == nullptr) return 1;
+
+    if (!execute(&result.expr)) {
+        freeExpression(result.expr);
+        return 1;
     }
 
-    if (head == nullptr) return 1;
-
-    char *str = astToString(head);
+    char *str = expressionToString(result.expr);
     if (str != nullptr) printf("%s\n\n", str);
     free(str);
 
     if (GLOBALCONTEXT->config->OUTPUTS > 0) {
-        Debug(0, "Updating output variable(s).\n");
-        if (GLOBALCONTEXT->config->OUTPUTS == 1) {
-            Component *cmp = searchEnvironment(GLOBALCONTEXT->env, GLOBALCONTEXT->config->OUTPUT_ID);
-            if (cmp == nullptr) return 0;
-
-            freeAST(cmp->value);
-            cmp->value = head;
-            return 1;
-        } else {
-            int size = strlen(GLOBALCONTEXT->config->OUTPUT_ID) + 12;
-            char *str = malloc(size);
-            if (str == nullptr) return 0;
-            snprintf(str, size, "%s_%d", GLOBALCONTEXT->config->OUTPUT_ID, GLOBALCONTEXT->config->OUTPUTS - 1);
-
-            Component *last = searchEnvironment(GLOBALCONTEXT->env, str);
-            if (last == nullptr) {
-                free(str);
-                return 0;
-            }
-            free(str);
-            freeAST(last->value);
-
-            for (int i = GLOBALCONTEXT->config->OUTPUTS - 2; i >= 0; i --) {
-                size = strlen(GLOBALCONTEXT->config->OUTPUT_ID) + 12;
-                str = malloc(size);
-                if (str == nullptr) return 0;
-                snprintf(str, size, "%s_%d", GLOBALCONTEXT->config->OUTPUT_ID, i);
-
-                Component *cmp = searchEnvironment(GLOBALCONTEXT->env, str);
-                if (cmp == nullptr) {
-                    free(str);
-                    return 0;
-                }
-                free(str);
-
-                last->value = cmp->value;
-                last = cmp;
-            }
-
-            size = strlen(GLOBALCONTEXT->config->OUTPUT_ID) + 12;
-            str = malloc(size);
-            if (str == nullptr) return 0;
-            snprintf(str, size, "%s_0", GLOBALCONTEXT->config->OUTPUT_ID);
-
-            Component *first = searchEnvironment(GLOBALCONTEXT->env, str);
-            if (first == nullptr) {
-                free(str);
-                return 0;
-            }
-            free(str);
-
-            first->value = head;
-
-            return 1;
-        }
-
-        return 1;
-    } else freeAST(head);
+        if (!updateOutputVariables(GLOBALCONTEXT->env, result.expr)) return 0;
+    } else freeExpression(result.expr);
 
     return 1;
 }
-
 
 
 static int runStartup() {
@@ -181,8 +124,15 @@ int main(int argc, char *argv[]) {
         freeContext(GLOBALCONTEXT);
         return 1;
     }
+    
+    if (!initAxioms()) {
+        freeContext(GLOBALCONTEXT);
+        return 1;
+    }
+    
     Debug(0, "Context created.\n");
     Info(1, printConfig(GLOBALCONTEXT->config));
+    Info(1, printEnvironment(GLOBALCONTEXT->env));
 
     if (!runStartup()) {
         freeContext(GLOBALCONTEXT);

@@ -17,6 +17,7 @@ typedef enum {
     STATE_LOG,
     STATE_LOG_LEVEL,
     STATE_LOG_LOCATION,
+    STATE_LOG_PRINT_AXIOM_OPS,
 
     STATE_STARTUP,
 
@@ -137,10 +138,12 @@ static int consumeEvent(State *state, yaml_event_t *event, Config *config) {
             case YAML_MAPPING_END_EVENT:
                 *state = STATE_SECTION;
                 break;
+                
             case YAML_SCALAR_EVENT:
                 value = (char *) event->data.scalar.value;
                 if (!strcmp(value, "level")) *state = STATE_LOG_LEVEL;
                 else if (!strcmp(value, "location")) *state = STATE_LOG_LOCATION;
+                else if (!strcmp(value, "printAxiomaticOperations")) *state = STATE_LOG_PRINT_AXIOM_OPS;
                 else {
                     printf("Unexpected scalar: %s\n", value);
                     return 0;
@@ -157,6 +160,7 @@ static int consumeEvent(State *state, yaml_event_t *event, Config *config) {
             case YAML_MAPPING_END_EVENT:
                 *state = STATE_LOG;
                 break;
+                
             case YAML_SCALAR_EVENT:
                 value = (char *) event->data.scalar.value;
 
@@ -185,6 +189,7 @@ static int consumeEvent(State *state, yaml_event_t *event, Config *config) {
             case YAML_MAPPING_END_EVENT:
                 *state = STATE_LOG;
                 break;
+                
             case YAML_SCALAR_EVENT:
                 value = (char *) event->data.scalar.value;
 
@@ -201,6 +206,28 @@ static int consumeEvent(State *state, yaml_event_t *event, Config *config) {
                 printf("Unexpected event %d in state %d.\n", event->type, *state);
                 return 0;
                 
+        }
+        break;
+        
+    case STATE_LOG_PRINT_AXIOM_OPS:
+        switch (event->type) {
+            case YAML_MAPPING_END_EVENT:
+                *state = STATE_LOG;
+                break;
+                
+            case YAML_SCALAR_EVENT:
+                value = (char *) event->data.scalar.value;
+                int b = get_boolean(value);
+                
+                if (b == -1) return 0;
+                config->PRINT_AXIOMATIC_OPS = b;
+                *state = STATE_LOG;
+                
+                break;
+                
+            default:
+                printf("Unexpected event %d in state %d.\n", event->type, *state);
+                return 0;
         }
         break;
 
@@ -276,7 +303,7 @@ static int consumeEvent(State *state, yaml_event_t *event, Config *config) {
                     case STATE_K_ANS:
                         config->OUTPUT_ID = strdup(value);
                         *state = STATE_KEYWORDS;
-                        return 1;
+                        break;
                         
                     default:
                         return 0;
@@ -322,7 +349,7 @@ static int consumeEvent(State *state, yaml_event_t *event, Config *config) {
                 break;
                 
             default:
-                return 0;
+                break;
                 
         }
         break;
@@ -338,7 +365,6 @@ static int consumeEvent(State *state, yaml_event_t *event, Config *config) {
                 int outputs = atoi(value);
                 config->OUTPUTS = outputs;
                 *state = STATE_RUNTIME;
-                return 1;
 
                 break;
                 
@@ -362,7 +388,6 @@ static int consumeEvent(State *state, yaml_event_t *event, Config *config) {
                 config->PRESERVE_FRACS = b;
                 *state = STATE_RUNTIME;
 
-                return 1;
                 break;
                 
             default:
@@ -385,7 +410,6 @@ static int consumeEvent(State *state, yaml_event_t *event, Config *config) {
                 config->LAZY_CALLS = b;
                 *state = STATE_RUNTIME;
 
-                return 1;
                 break;
                 
             default:
@@ -405,6 +429,8 @@ static int consumeEvent(State *state, yaml_event_t *event, Config *config) {
 static void initConfig(Config *config) {
     config->LOG_LEVEL = 0;
     config->LOG_STREAM = stdout;
+    config->PRINT_AXIOMATIC_OPS = false;
+    
     config->STARTUP = nullptr;
 
     config->MAPPING[0] = (KeywordMapping) {.cmd=K_QUIT, .keyword=strdup("quit")};
@@ -426,7 +452,6 @@ Config *loadConfig(char *cpath) {
         return nullptr;
     }
 
-    printf("initting config\n");
     initConfig(config);
 
     FILE *cfile = nullptr;
@@ -460,7 +485,6 @@ Config *loadConfig(char *cpath) {
         }
     }
 
-    printf("parsing\n");
     yaml_parser_t parser;
     yaml_event_t event;
 
@@ -486,7 +510,6 @@ Config *loadConfig(char *cpath) {
         yaml_event_delete(&event);
     }
 
-    printf("done parsing\n");
     yaml_parser_delete(&parser);
 
     if (config->LOG_STREAM != stdout) {

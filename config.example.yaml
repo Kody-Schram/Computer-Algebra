@@ -3,13 +3,17 @@ log:
   # Valid levels are:
   # - None/0
   # - Info/1
-  # - Debug/2 (Debug logs only work on Develop build, Release build nullptrifys debugs for far lower memory usage)
+  # - Debug/2 (Debug logs only work on Develop build, Release build nullifys debugs for far lower memory usage)
   # Default is None
   level: Debug
 
   # Set the location for logs to appear
   # Default is the terminal
   location: log.txt
+  
+  # Determines if operations like + and * are printed when running ENV command
+  # Default is false
+  printAxiomaticOperations: false
 
 # Enables the use of scripts to run during startup
 # Can be inline commands or define a file with the startup script

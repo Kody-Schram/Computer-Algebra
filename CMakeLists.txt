@@ -11,8 +11,14 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 if(CMAKE_BUILD_TYPE STREQUAL "Develop")
-    add_compile_options(-g -Og)
+    add_compile_options(-g3 -O0)
     message("Making develop build.")
+endif()
+
+# Use for gprof profiling
+if(CMAKE_BUILD_TYPE STREQUAL "Profile")
+    add_compile_options(-pg -O2)
+    add_link_options(-pg)
 endif()
 
 if(CMAKE_BUILD_TYPE STREQUAL "Release")

@@ -9,67 +9,70 @@
 
 // Forward declare from environment.h
 typedef struct Environment Environment;
-void freeEnvironment(Environment *env);
 
 typedef enum ComponentType ComponentType;
 typedef struct Component Component;
 typedef struct Environment Environment;
 
 // Forward declaring types
-typedef enum NodeType NodeType;
 typedef enum OperationType OperationType;
-typedef enum NumberType NumberType;
-typedef struct Number Number;
-typedef struct ASTNode ASTNode;
+typedef struct Operation Operation;
+typedef enum ExpressionType ExpressionType;
+typedef struct Expression Expression;
 
 typedef struct FunctionCall FunctionCall;
 typedef enum FunctionType FunctionType;
+typedef enum BuiltinResultType BuiltinResultType;
+typedef struct BuiltinResult BuiltinResult;
 typedef struct Function Function;
 
 
-// ASTNode related definitions
-enum NodeType {
-    NODE_INTEGER,
-    NODE_DOUBLE,
-    NODE_OPERATOR,
-    NODE_VARIABLE,
-    NODE_FUNC_CALL,
-    NODE_ASSIGN_VAR,
-    NODE_ASSIGN_FUNC
+// Expression related definitions
+enum ExpressionType {
+    EXPRESSION_VARIABLE,
+    EXPRESSION_INTEGER,
+    EXPRESSION_DOUBLE,
+    EXPRESSION_FUNCTION_CALL,
+    EXPRESSION_OPERATOR
 };
 
 
 enum OperationType {
-    OP_ADDITION,
-    OP_SUBTRACTION,
-    OP_MULTIPLICATION,
-    OP_DIVISION,
-    OP_EXPONTENTIATION
+    OP_AXIOMATIC,
+    OP_ABSTRACT
 };
 
 
-struct ASTNode {
-    NodeType type;
-    // Look into packing an int in here to support scientific notation
+struct Operation {
+    bool associative;
+    bool commutative;
+    char symbol;
+    OperationType type;
+    Function *definition;
+};
 
+struct Expression {
+    ExpressionType type;
+    
     union {
-        OperationType op;
+        struct {
+            const Operation *op;
+            int arity; // Number of operands
+            struct Expression **operands;
+        };
+        
         char *identifier;
-        double value; // Uses double over as most math.h funcs cast to double, and would leave 12 bytes of wasted space
+        double value;
         long long integer;
-        Function *func;
         FunctionCall *call;
     };
-
-    struct ASTNode *left;
-    struct ASTNode *right;
 };
 
 
 // Function related definitions
 struct FunctionCall {
     char *identifier;
-    ASTNode **parameters;
+    Expression **parameters;
     int nParams;
 };
 
@@ -77,35 +80,44 @@ struct FunctionCall {
 enum FunctionType {
     BUILTIN,
     DEFINED,
-    TRANSFORM
+};
+
+enum BuiltinResultType {
+    BUILTIN_SUCCESS,
+    BUILTIN_ERROR
+};
+
+struct BuiltinResult {
+    BuiltinResultType type;
+    Expression *output;
 };
 
 
 struct Function {
-    Environment *env;
     FunctionType type;
+    char **parameters;
+    int nParameters;
 
     union {
-        ASTNode *definition;
-        double (*builtin) (double);
-        ASTNode *(*transform) (ASTNode **args, int nArgs);
+        Expression *definition;
+        BuiltinResult *(*builtin) (int nArgs, Expression ** exprs);
     };
 };
 
 
 
-ASTNode *dummyASTNode(NodeType type);
+Expression *dummyExpression(ExpressionType type);
 
 
-ASTNode *deepCopyAST(ASTNode *ast);
+Expression *deepCopyExpression(const Expression *expr);
 
 
-FILE *printAST(ASTNode *root);
+FILE *printExpression(const Expression *expr);
 
 
-void freeAST(ASTNode *ast);
+void freeExpression(Expression *expr);
 
 
-char *astToString(ASTNode *ast);
+char *expressionToString(const Expression *expr);
 
 #endif

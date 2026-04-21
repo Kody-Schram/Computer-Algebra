@@ -1,15 +1,19 @@
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "parserUtils.h"
+#include "core/context/context.h"
+#include "core/context/environment.h"
 #include "core/utils/log.h"
+#include "core/utils/types.h"
 
 
-Token *createToken(TokenType type, char *value, int l) {
+Token *createToken(TokenType type, const char *value, int l) {
     // Allocates new token
     Token *token = (Token*) calloc(1, sizeof(Token));
     if (token == nullptr) {
-        printf("Error allocating space for token.");
+        perror("Error creating token");
         return nullptr;
     }
 
@@ -18,7 +22,7 @@ Token *createToken(TokenType type, char *value, int l) {
 
     token->value = malloc(l + 1);
     if (token->value == nullptr) {
-        printf("Error allocating for token value.\n");
+        perror("Error creating token");
         free(token);
         return nullptr;
     } 
@@ -32,7 +36,7 @@ Token *createToken(TokenType type, char *value, int l) {
 }
 
 
-static void printToken(Token *token, FILE *stream) {
+static void printToken(const Token *token, FILE *stream) {
     const char *type = nullptr;
 
         switch(token->type) {
@@ -75,11 +79,11 @@ static void printToken(Token *token, FILE *stream) {
 }
 
 
-FILE *printTokens(Token *head) {
+FILE *printTokens(const Token *head) {
     FILE *stream = tmpfile();
     if (stream == nullptr) return nullptr;
 
-    Token *cur = head;
+    const Token *cur = head;
 
     fprintf(stream, "\n");
     while (cur != nullptr) {
@@ -92,69 +96,69 @@ FILE *printTokens(Token *head) {
 }
 
 
-ASTNode *createASTNode(Token *token) {
-    ASTNode *node = calloc(1, sizeof(ASTNode));
-    if (node == nullptr) {
-        printf("Error allocating for new node.\n");
+Expression *createExpression(const Token *token) {
+    Expression *expr = calloc(1, sizeof(Expression));
+    if (expr == nullptr) {
+        perror("Error creating expression");
         return nullptr;
     }
 
-    switch (token->type)
-    {
-    case TOKEN_IDENTIFIER:
-        node->type = NODE_VARIABLE;
-        node->identifier = strdup(token->value);
-        break;
-    case TOKEN_NUMBER:
-        node->type = NODE_DOUBLE;
-        char *end;
-        double value = strtod(token->value, &end);
-        
-        if (value == (int) value) {
-            node->type = NODE_INTEGER;
-            node->integer = (int) value;
+    switch (token->type) {
+        case TOKEN_IDENTIFIER:
+            expr->type = EXPRESSION_VARIABLE;
+            expr->identifier = strdup(token->value);
+            if (expr->identifier == nullptr) {
+                perror("Error creating expression");
+                return nullptr;
+            }
             break;
-        }
-
-        node->value = value;
-        break;
-    case TOKEN_OPERATOR:
-        node->type = NODE_OPERATOR;
-        char id = token->value[0];
-        switch (id) {
-            case '+':
-                node->op = OP_ADDITION;
+            
+        case TOKEN_NUMBER:
+            expr->type = EXPRESSION_DOUBLE;
+            char *end;
+            double value = strtod(token->value, &end);
+            
+            if (value == (long long) value) {
+                expr->type = EXPRESSION_INTEGER;
+                expr->integer = (long long) value;
                 break;
-            case '-':
-                node->op = OP_SUBTRACTION;
-                break;
-            case '*':
-                node->op = OP_MULTIPLICATION;
-                break;
-            case '/':
-                node->op = OP_DIVISION;
-                break;
-            case '^':
-                node->op = OP_EXPONTENTIATION;
-                break;
-            default:
-                printf("Unknown operator '%c'\n", id);
-        }
-        break;
-    case TOKEN_FUNC_CALL:
-        node->type = NODE_FUNC_CALL;
-        node->call = token->call;
-        token->call = nullptr;
-        break;
-    default:
-        return nullptr;
+            }
+    
+            expr->value = value;
+            break;
+            
+        case TOKEN_OPERATOR:
+            expr->type = EXPRESSION_OPERATOR;
+            Component *cmp = searchEnvironment(GLOBALCONTEXT->env, token->value);
+            if (cmp == nullptr || cmp->type != COMP_OPERATION) {
+                printf("Couldn't locate operation %s in environment.\n", token->value);
+                return nullptr;
+            }
+            expr->op = cmp->operation;
+            expr->arity = 2;
+            
+            // By default starts as binary operation, can be flattened and resized later
+            expr->operands = malloc(sizeof(Expression *) * 2);
+            if (expr->operands == nullptr) {
+                perror("Error creating expression");
+                return nullptr;
+            }
+            break;
+            
+        case TOKEN_FUNC_CALL:
+            expr->type = EXPRESSION_FUNCTION_CALL;
+            expr->call = token->call;
+            break;
+            
+        default:
+            return nullptr;
     }
 
-    return node;
+    return expr;
 }
 
 
-FILE *printRPN(RPNList *list) {
+FILE *printRPN(const RPNList *list) {
     FILE *stream = tmpfile();
     if (stream == nullptr) return nullptr;
 

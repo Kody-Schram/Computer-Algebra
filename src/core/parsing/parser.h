@@ -4,6 +4,21 @@
 #include "core/utils/types.h"
 #include "parserTypes.h"
 
+typedef enum ParserResultType ParserResultType;
+typedef struct ParserResult ParserResult;
+
+
+enum ParserResultType {
+    PARSER_SUCCESS,
+    PARSER_ERROR
+};
+
+
+struct ParserResult {
+    ParserResultType type;
+    Expression *expr;
+};
+
 
 int parseFunction(Token *head);
 
@@ -16,6 +31,6 @@ int parseFunction(Token *head);
  * @param buffer Mathematical string
  * @return Token* 
  */
-ASTNode *parse(char *buffer);
+ParserResult parse(char *buffer);
 
 #endif

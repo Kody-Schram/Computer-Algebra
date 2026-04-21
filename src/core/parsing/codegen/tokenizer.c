@@ -4,7 +4,8 @@
 #include <string.h>
 
 #include "tokenizer.h"
-#include "core/utils/context/context.h"
+#include "core/context/context.h"
+#include "core/context/environment.h"
 #include "core/utils/log.h"
 #include "core/parsing/parserUtils.h"
 
@@ -44,7 +45,7 @@ typedef struct {
  * @param c Buffer
  * @return int Length of found operator
  */
-static SymbolReturn getSymbolLength(char *c) {
+static SymbolReturn getSymbolLength(const char *c) {
     SymbolReturn result = {0, TOKEN_OPERATOR};
     if (isalnum(c[0])) return result;
     for (int i = 0; i < N_MAPPINGS; i ++) {
@@ -66,7 +67,7 @@ static SymbolReturn getSymbolLength(char *c) {
  * @param c Buffer
  * @return int Length of found number
  */
-static int getNumber(char *c) {
+static int getNumber(const char *c) {
     int i = 0;
     if (isdigit(c[0]) || c[0] == '.') {
         while (isdigit(c[i]) || c[i] == '.') i ++;
@@ -189,7 +190,7 @@ Token *tokenize(char *buffer) {
             //if (cRet.cmp != nullptr) printf("largest component found was %s\n", cRet.cmp->identifier);
             end += cRet.len;
 
-            if (cRet.cmp == nullptr || cRet.cmp->type == VARIABLE) type = TOKEN_IDENTIFIER;
+            if (cRet.cmp == nullptr || cRet.cmp->type == COMP_VARIABLE) type = TOKEN_IDENTIFIER;
             else type = TOKEN_FUNC_CALL_PLACEHOLDER;
         }
         

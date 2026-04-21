@@ -1,13 +1,15 @@
 add_library(Core STATIC
-    execute.c
+    axioms.c
+
+    execution/execute.c
     
     utils/input.c
     utils/log.c
     utils/types.c
     
-    utils/context/config.c
-    utils/context/context.c
-    utils/context/environment.c
+    context/config.c
+    context/context.c
+    context/environment.c
     
     parsing/parser.c
     parsing/parserUtils.c

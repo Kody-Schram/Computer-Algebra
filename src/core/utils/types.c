@@ -9,63 +9,70 @@
 static const int DEFUALT_STRING_SIZE = 64;
 
 
-ASTNode *dummyASTNode(NodeType type) {
-    ASTNode *node = calloc(1, sizeof(ASTNode));
+Expression *dummyExpression(ExpressionType type) {
+    Expression *expr = calloc(1, sizeof(Expression));
 
-    if (node == nullptr) {
-        printf("Error allocating for new node.\n");
+    if (expr == nullptr) {
+        perror("Error in creating dummy expression");
         return nullptr;
     }
 
-    node->type = type;
+    expr->type = type;
 
-    return node;
+    return expr;
 }
 
 
-static ASTNode *deepCopyASTRecur(ASTNode *ast) {
-    ASTNode *new = dummyASTNode(ast->type);
-    if (ast == nullptr || new == nullptr) return nullptr;
+Expression *deepCopyExpression(const Expression *expr) {
+    if (expr == nullptr) return nullptr;
+    
+    Expression *new = dummyExpression(expr->type);
+    if (new == nullptr) return nullptr;
 
     switch (new->type) {
-        case NODE_VARIABLE:
-            new->identifier = strdup(ast->identifier);
-            if (new->identifier == nullptr) {
-                printf("Error copying identifier.\n");
-                goto error;
-            }
+        case EXPRESSION_VARIABLE:
+            new->identifier = strdup(expr->identifier);
+            if (new->identifier == nullptr) goto error;
             break;
 
-        case NODE_INTEGER:
-            new->integer = ast->integer;
+        case EXPRESSION_INTEGER:
+            new->integer = expr->integer;
             break;
 
-        case NODE_DOUBLE:
-            new->value = ast->value;
+        case EXPRESSION_DOUBLE:
+            new->value = expr->value;
             break;
         
-        case NODE_OPERATOR:
-            new->op = ast->op;
-            new->left = deepCopyASTRecur(ast->left);
-            new->right = deepCopyASTRecur(ast->right);
+        case EXPRESSION_OPERATOR:
+            new->op = expr->op;
+            new->arity = expr->arity;
+            new->operands = calloc(expr->arity, sizeof(Expression *));
+            if (new->operands == nullptr) goto error;
             
-            if (new->left == nullptr || new->right == nullptr) goto error;
+            for (int i = 0; i < expr->arity; i ++) {
+                new->operands[i] = deepCopyExpression(expr->operands[i]);
+                if (new->operands[i] == nullptr) {
+                    // Frees already copied expressions
+                    for (int j = 0; j < i; j ++) {
+                        freeExpression(new->operands[j]);
+                    }
+                    free(new->operands);
+                    goto error;
+                }
+            }
+            
             break;
 
-        case NODE_FUNC_CALL:
+        case EXPRESSION_FUNCTION_CALL:
             FunctionCall *call = malloc(sizeof(FunctionCall));
-            if (call == nullptr) {
-                printf("Error allocating memory for function call.\n");
-                goto error;
-            }
-            call->identifier = strdup(ast->call->identifier);
-            if (call->identifier == nullptr) {
-                printf("Error copying call identifier.\n");
-                goto error;
-            }
-            call->nParams = ast->call->nParams;
+            if (call == nullptr) goto error;
             
-            call->parameters = malloc(sizeof(ASTNode *) * call->nParams);
+            call->identifier = strdup(expr->call->identifier);
+            if (call->identifier == nullptr) goto error;
+            
+            call->nParams = expr->call->nParams;
+            
+            call->parameters = malloc(sizeof(Expression *) * call->nParams);
             if (call->parameters == nullptr) {
                 free(call->identifier);
                 free(call);
@@ -74,9 +81,13 @@ static ASTNode *deepCopyASTRecur(ASTNode *ast) {
             }
 
             for (int i = 0; i < call->nParams; i ++) {
-                call->parameters[i] = deepCopyAST(ast->call->parameters[i]);
+                call->parameters[i] = deepCopyExpression(expr->call->parameters[i]);
                 if (call->parameters[i] == nullptr) {
                     free(call->identifier);
+                    for (int j = 0; j < i; j ++) {
+                        freeExpression(call->parameters[j]);
+                    }
+                    
                     free(call->parameters);
                     free(call);
 
@@ -95,146 +106,96 @@ static ASTNode *deepCopyASTRecur(ASTNode *ast) {
     return new;
 
     error:
+        perror("Error in copying expression");
         free(new);
         return nullptr;
 }
 
 
-ASTNode *deepCopyAST(ASTNode *ast) {
-    if (ast == nullptr) return nullptr;
-
-    return deepCopyASTRecur(ast);
-}
-
-
-static void printASTRec(ASTNode *node, int level, FILE *stream) {
-    if (node == nullptr || stream == nullptr) return;
+static void printExpressionRec(const Expression *expr, int level, FILE *stream) {
+    if (expr == nullptr || stream == nullptr) return;
 
     // Print indentation based on depth
     for (int i = 0; i < level; i++) fprintf(stream, "  ");
 
-    switch(node->type) {
-        case NODE_INTEGER:
-            fprintf(stream, "<type: INTEGER, value: %lld>\n", node->integer);
+    switch(expr->type) {
+        case EXPRESSION_INTEGER:
+            fprintf(stream, "<type: INTEGER, value: %lld>\n", expr->integer);
             break;
 
-        case NODE_DOUBLE:
-            fprintf(stream, "<type: DOUBLE, value: %g>\n", node->value);
+        case EXPRESSION_DOUBLE:
+            fprintf(stream, "<type: DOUBLE, value: %g>\n", expr->value);
             break;
 
-        case NODE_OPERATOR:
+        case EXPRESSION_OPERATOR:
             char id;
-            switch (node->op) {
-                case OP_ADDITION:
-                    id = '+';
-                    break;
-                case OP_SUBTRACTION:
-                    id = '-';
-                    break;
-                case OP_MULTIPLICATION:
-                    id = '*';
-                    break;
-                case OP_DIVISION:
-                    id = '/';
-                    break;
-                case OP_EXPONTENTIATION:
-                    id = '^';
-                    break;
-                default:
-                    printf("How'd we get here?\n");
-                    id = '?';
+            fprintf(stream, "Operation: %c\n", expr->op->symbol);
+            
+            for (int i = 0; i < expr->arity; i ++) {
+                printExpressionRec(expr->operands[i], level + 1, stream);
             }
-            fprintf(stream, "<type: OPERATOR, symbol: %c>\n", id);
-            printASTRec(node->left, level + 1, stream);
-            printASTRec(node->right, level + 1, stream);
             break;
 
-        case NODE_VARIABLE:
-            fprintf(stream, "<type: VARIABLE, identifier: '%s'>\n", node->identifier);
+        case EXPRESSION_VARIABLE:
+            fprintf(stream, "<type: VARIABLE, identifier: '%s'>\n", expr->identifier);
             break;
 
-        case NODE_FUNC_CALL: 
-            if (node->call == nullptr) {
+        case EXPRESSION_FUNCTION_CALL: 
+            if (expr->call == nullptr) {
                 Debug(0, "Function call was nullptr\n");
                 return;
             }
-            if (node->call->identifier == nullptr) {
+            if (expr->call->identifier == nullptr) {
                 Debug(0, "Call identifer was nullptr\n");
                 return;
             }
-            fprintf(stream, "<type: FUNC_CALL, value: '%s'>\n", node->call->identifier);
+            fprintf(stream, "<type: FUNC_CALL, value: '%s'>\n", expr->call->identifier);
             for (int i = 0; i < level + 1; i++) fprintf(stream, "  ");
 
             fprintf(stream, "Parameters:\n");
-            for (int p = 0; p < node->call->nParams; p ++) printASTRec(node->call->parameters[p], level + 1, stream);
-            break;
-
-        case NODE_ASSIGN_FUNC:
-            fprintf(stream, "<type ASSIGN_FUNC '%s'>\n", node->left->identifier);
-            fprintf(stream, "Definition:\n");
-            printASTRec(node->func->definition, level + 1, stream);
-            break;
-
-        case NODE_ASSIGN_VAR:
-            fprintf(stream, "<type ASSIGN_VAR '%s'>\n", node->left->identifier);
-            fprintf(stream, "Definition:\n");
-            printASTRec(node->right, level + 1, stream);
+            for (int p = 0; p < expr->call->nParams; p ++) printExpressionRec(expr->call->parameters[p], level + 1, stream);
             break;
 
         default:
-            fprintf(stream, "no %d\n", node->type);
+            fprintf(stream, "no %d\n", expr->type);
     }
 }
 
 
-FILE *printAST(ASTNode *root) {
+FILE *printExpression(const Expression *expr) {
     FILE *stream = tmpfile();
     if (stream == nullptr) return nullptr;
 
-    printASTRec(root, 0, stream);
+    printExpressionRec(expr, 0, stream);
     return stream;
 }
 
 
-void freeAST(ASTNode *ast) {
-    if (ast == nullptr) return;
+void freeExpression(Expression *expr) {
+    if (expr == nullptr) return;
+    Debug(0, "Freeing expression\n");
 
-    switch (ast->type) {
-        case NODE_ASSIGN_VAR:
-            if (ast->left != nullptr) free(ast->left->identifier);
-            free(ast->left);
-            freeAST(ast->right);
-            free(ast);
-            break;
-
-        case NODE_ASSIGN_FUNC:
-            if (ast->left != nullptr) free(ast->left->identifier);
-            free(ast->left);
-            if (ast->func != nullptr) {
-                freeEnvironment(ast->func->env);
-                if (ast->func->type == DEFINED) freeAST(ast->func->definition);
-            }
-            free(ast->func);
-            break; 
-
-        case NODE_FUNC_CALL:
-            if (ast->call != nullptr) {
-                free(ast->call->identifier);
-                for (int i = 0; i < ast->call->nParams; i ++) {
-                    freeAST(ast->call->parameters[i]);
+    switch (expr->type) {
+        case EXPRESSION_FUNCTION_CALL:
+            if (expr->call != nullptr) {
+                free(expr->call->identifier);
+                for (int i = 0; i < expr->call->nParams; i ++) {
+                    freeExpression(expr->call->parameters[i]);
                 }
-                free(ast->call->parameters);
+                free(expr->call->parameters);
             }
-            free(ast->call);
+            free(expr->call);
             break;
 
-        case NODE_VARIABLE:
-            free(ast->identifier);
+        case EXPRESSION_VARIABLE:
+            free(expr->identifier);
             break;
 
-        case NODE_OPERATOR:
-            freeAST(ast->left);
-            freeAST(ast->right);
+        case EXPRESSION_OPERATOR:
+            for (int i = 0; i < expr->arity; i ++) {
+                freeExpression(expr->operands[i]);
+            }
+            free(expr->operands);
             break;
             
         default:
@@ -242,90 +203,64 @@ void freeAST(ASTNode *ast) {
         
     }
 
-    free(ast);
+    free(expr);
 }
 
 
-static void astToStringRecur(ASTNode *ast, FILE *stream) {
-    if (ast == nullptr) return;
+static void expressionToStringRecur(const Expression *expr, FILE *stream) {
+    if (expr == nullptr) return;
 
-    switch (ast->type) {
-        case NODE_OPERATOR:
-            if (ast->left != nullptr && ast->left->type == NODE_OPERATOR) {
-                fprintf(stream, "(");
-                astToStringRecur(ast->left, stream);
-                fprintf(stream, ")");
-            } else {
-                astToStringRecur(ast->left, stream);
+    switch (expr->type) {
+        case EXPRESSION_OPERATOR:
+            fprintf(stream, "(");
+            for (int i = 0; i < expr->arity - 1; i ++) {
+                expressionToStringRecur(expr->operands[i], stream);
+                fprintf(stream, " %c ", expr->op->symbol);
             }
 
-            switch (ast->op) {
-                case OP_ADDITION:
-                    fprintf(stream, " + ");
-                    break;
-                case OP_SUBTRACTION:
-                    fprintf(stream, " - ");
-                    break;
-                case OP_MULTIPLICATION:
-                    fprintf(stream, " * ");
-                    break;
-                case OP_DIVISION:
-                    fprintf(stream, " / ");
-                    break;
-                case OP_EXPONTENTIATION:
-                    fprintf(stream, " ^ ");
-                    break;
-                default:
-                    printf("How'd we get here?\n");
-            }
-
-            if (ast->right != nullptr && ast->right->type == NODE_OPERATOR) {
-                fprintf(stream, "(");
-                astToStringRecur(ast->right, stream);
-                fprintf(stream, ")");
-            } else {
-                astToStringRecur(ast->right, stream);
-            }
+            expressionToStringRecur(expr->operands[expr->arity - 1], stream);
+            fprintf(stream, ")");
             break;
 
-        case NODE_DOUBLE:
-            if (ast->value < 0) fprintf(stream, "(%g)", ast->value);
-            else fprintf(stream, "%g", ast->value);
+        case EXPRESSION_DOUBLE:
+            if (expr->value < 0) fprintf(stream, "(%g)", expr->value);
+            else fprintf(stream, "%g", expr->value);
             break;
 
-        case NODE_INTEGER:
-            if (ast->integer < 0) fprintf(stream, "(%lld)", ast->integer);
-            else fprintf(stream, "%lld", ast->integer);
+        case EXPRESSION_INTEGER:
+            if (expr->integer < 0) fprintf(stream, "(%lld)", expr->integer);
+            else fprintf(stream, "%lld", expr->integer);
             break;
 
-        case NODE_VARIABLE:
-            fprintf(stream, "%s", ast->identifier);
+        case EXPRESSION_VARIABLE:
+            fprintf(stream, "%s", expr->identifier);
             break;
 
-        case NODE_FUNC_CALL:
-            fprintf(stream, "%s(", ast->call->identifier);
-            for (int i = 0; i < ast->call->nParams - 1; i ++) {
-                astToStringRecur(ast->call->parameters[i], stream);
+        case EXPRESSION_FUNCTION_CALL:
+            fprintf(stream, "%s(", expr->call->identifier);
+            for (int i = 0; i < expr->call->nParams - 1; i ++) {
+                expressionToStringRecur(expr->call->parameters[i], stream);
                 fprintf(stream, ", ");
             }
-            astToStringRecur(ast->call->parameters[ast->call->nParams - 1], stream);
+            expressionToStringRecur(expr->call->parameters[expr->call->nParams - 1], stream);
             fprintf(stream, ")");
+            break;
             
         default:
-            fprintf(stream, "How'd we get here?\n");
+            fprintf(stream, "How'd we get here? %d\n", expr->type);
             break;
     }
 }
 
 
-char *astToString(ASTNode *ast) {
+char *expressionToString(const Expression *expr) {
     FILE *stream = tmpfile();
     char *string = nullptr;
-    if (ast == nullptr || stream == nullptr) {
+    if (expr == nullptr || stream == nullptr) {
         fclose(stream);
         return string;
     }
-    astToStringRecur(ast, stream);
+    expressionToStringRecur(expr, stream);
     
     long size = ftell(stream);
     if (size < 0) {

@@ -3,6 +3,7 @@
 .vscode
 .zed
 .clangd
+.clang-format
 compile_commands.json
 
 # Program specific
