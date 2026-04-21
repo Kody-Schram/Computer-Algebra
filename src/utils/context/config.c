@@ -1,0 +1,599 @@
+#include <stdio.h>
+#include <yaml.h>
+#include <string.h>
+
+#include "config.h"
+
+
+static const int DEFAULT_MAPPING_SIZE = 5;
+
+typedef enum {
+    STATE_START,
+    STATE_STREAM,
+    STATE_DOCUMENT,
+    STATE_SECTION,
+
+    STATE_LOG,
+    STATE_LOG_LEVEL,
+    STATE_LOG_LOCATION,
+
+    STATE_STARTUP,
+
+    STATE_KEYWORDS,
+    STATE_K_QUIT,
+    STATE_K_ENV,
+    STATE_K_RELOAD,
+    STATE_K_ANS,
+
+    STATE_RUNTIME,
+    STATE_STRICT,
+    STATE_OUTPUTS,
+    STATE_PRESERVE_FRACS,
+    STATE_LAZY_CALLS,
+
+    STATE_STOP
+} State;
+
+
+// Maps strings to correct boolean value
+static int get_boolean(const char *string) {
+    char *t[] = {"y", "Y", "yes", "Yes", "YES", "true", "True", "TRUE", "on", "On", "ON", NULL};
+    char *f[] = {"n", "N", "no", "No", "NO", "false", "False", "FALSE", "off", "Off", "OFF", NULL};
+    char **p;
+
+    // Checks valid values for true
+    for (p = t; *p; p++) {
+        if (strcmp(string, *p) == 0) {
+            return 1;
+        }
+    }
+
+    // Checks valid values for false
+    for (p = f; *p; p++) {
+        if (strcmp(string, *p) == 0) {
+            return 0;
+        }
+    }
+
+    printf("Invalid input '%s' for boolean value.\n", string);
+    return -1;
+}
+
+
+static int consumeEvent(State *state, yaml_event_t *event, Config *config) {
+    char *value;
+
+    switch (*state) {
+    case STATE_START:
+        switch (event->type) {
+            case YAML_STREAM_START_EVENT:
+                *state = STATE_STREAM;
+                break;
+            default:
+                printf("Unexpected event %d in state %d.\n", event->type, *state);
+                return 0;
+            }
+        break;
+
+    case STATE_STREAM:
+        switch (event->type) {
+            case YAML_DOCUMENT_START_EVENT:
+                *state = STATE_DOCUMENT;
+                break;
+            case YAML_STREAM_END_EVENT:
+                *state = STATE_STOP;
+                break;
+        
+            default:
+                printf("Unexpected event %d in state %d.\n", event->type, *state);
+                return 0;
+            }
+        break;
+
+    case STATE_DOCUMENT:
+        switch (event->type) {
+            case YAML_MAPPING_START_EVENT:
+                *state = STATE_SECTION;
+                break;
+            case YAML_DOCUMENT_END_EVENT:
+                *state = STATE_STREAM;
+                break;
+            default:
+                printf("Unexpected event %d in state %d.\n", event->type, *state);
+                return 0;
+        }
+        break;
+
+    case STATE_SECTION:
+        switch (event->type) {
+            case YAML_SCALAR_EVENT:
+                value = (char *) event->data.scalar.value;
+                if (!strcmp(value, "log")) *state = STATE_LOG;
+                else if (!strcmp(value, "startup")) *state = STATE_STARTUP;
+                else if (!strcmp(value, "keywords")) *state = STATE_KEYWORDS;
+                else if (!strcmp(value, "runtime")) *state = STATE_RUNTIME;
+                else {
+                    printf("Unexpected scalar: %s\n", value);
+                    return 0;
+                }
+                break;
+                
+            case YAML_DOCUMENT_END_EVENT:
+                *state = STATE_STREAM;
+                break;
+                
+            case YAML_MAPPING_END_EVENT:
+                *state = STATE_DOCUMENT;
+                break;
+                
+            default:
+                printf("Unexpected event %d in state %d.\n", event->type, *state);
+                return 0;
+        }
+        break;
+
+    case STATE_LOG:
+        switch (event->type) {
+            case YAML_MAPPING_END_EVENT:
+                *state = STATE_SECTION;
+                break;
+            case YAML_SCALAR_EVENT:
+                value = (char *) event->data.scalar.value;
+                if (!strcmp(value, "level")) *state = STATE_LOG_LEVEL;
+                else if (!strcmp(value, "location")) *state = STATE_LOG_LOCATION;
+                else {
+                    printf("Unexpected scalar: %s\n", value);
+                    return 0;
+                }
+                break;
+                
+            default:
+                return 0;
+        }
+        break;
+    
+    case STATE_LOG_LEVEL:
+        switch (event->type) {
+            case YAML_MAPPING_END_EVENT:
+                *state = STATE_LOG;
+                break;
+            case YAML_SCALAR_EVENT:
+                value = (char *) event->data.scalar.value;
+
+                if (!strcmp(value, "None") || !strcmp(value, "0")) {
+                    config->LOG_LEVEL = NONE;
+                } else if (!strcmp(value, "Info") || !strcmp(value, "1")) {
+                    config->LOG_LEVEL = INFO;
+                } else if (!strcmp(value, "Debug") || !strcmp(value, "2")) {
+                    config->LOG_LEVEL = DEBUG;
+                } else {
+                    printf("Unexpected log level: %s.\n", value);
+                    return 0;
+                }
+                *state = STATE_LOG;
+                break;
+                
+            default:
+                printf("Unexpected event %d in state %d.\n", event->type, *state);
+                return 0;
+                
+        }
+        break;
+
+    case STATE_LOG_LOCATION:
+        switch (event->type) {
+            case YAML_MAPPING_END_EVENT:
+                *state = STATE_LOG;
+                break;
+            case YAML_SCALAR_EVENT:
+                value = (char *) event->data.scalar.value;
+
+                FILE *location = fopen(value, "w+");
+                if (location == NULL) {
+                    printf("Error opening log file '%s'. Falling back on stdout.\n", value);
+                    config->LOG_STREAM = stdout;
+                } else config->LOG_STREAM = location;
+
+                *state = STATE_LOG;
+                break;
+                
+            default:
+                printf("Unexpected event %d in state %d.\n", event->type, *state);
+                return 0;
+                
+        }
+        break;
+
+    case STATE_STARTUP:
+        switch (event->type) {
+            case YAML_MAPPING_END_EVENT:
+                *state = STATE_SECTION;
+                break;
+                
+            case YAML_SCALAR_EVENT:
+                config->STARTUP = strdup((char *) event->data.scalar.value);
+                *state = STATE_SECTION;
+                break;
+                
+            default:
+                return 0;
+                
+        }
+        break;
+
+    case STATE_KEYWORDS:
+        switch (event->type) {
+            case YAML_MAPPING_END_EVENT:
+                *state = STATE_SECTION;
+                break;
+
+            case YAML_SCALAR_EVENT:
+                value = (char *) event->data.scalar.value;
+
+                if (!strcmp(value, "QUIT")) *state = STATE_K_QUIT;
+                else if (!strcmp(value, "ENV")) *state = STATE_K_ENV;
+                else if (!strcmp(value, "RELOAD")) *state = STATE_K_RELOAD;
+                else if (!strcmp(value, "ANS")) *state = STATE_K_ANS;
+                else {
+                    printf("Unexpected keyword: %s.\n", value);
+                    return 0;
+                }
+                break;
+                
+            default:
+                return 0;
+                
+        }
+        break;
+
+    case STATE_K_QUIT:
+    case STATE_K_ENV:
+    case STATE_K_RELOAD:
+    case STATE_K_ANS:
+        switch (event->type) {
+            case YAML_MAPPING_END_EVENT:
+                *state = STATE_KEYWORDS;
+                break;
+            
+            case YAML_SCALAR_EVENT:
+                value = (char *) event->data.scalar.value;
+                printf("key word %s\n", value);
+
+                KeywordCMD cmd;
+                switch (*state) {
+                    case STATE_K_QUIT:
+                        cmd = K_QUIT;
+                        break;
+                        
+                    case STATE_K_ENV:
+                        cmd = K_ENV;
+                        break;
+                        
+                    case STATE_K_RELOAD:
+                        cmd = K_RELOAD;
+                        break;
+                        
+                    case STATE_K_ANS:
+                        config->OUTPUT_ID = strdup(value);
+                        *state = STATE_KEYWORDS;
+                        return 1;
+                        
+                    default:
+                        return 0;
+                        
+                }
+
+                // Replaces default setting
+                for (int i = 0; i < sizeof(config->MAPPING) / sizeof(KeywordMapping); i ++) {
+                    if (config->MAPPING[i].cmd == cmd) {
+                        printf("replacing old mapping with '%s'\n", value);
+                        free(config->MAPPING[i].keyword);
+
+                        config->MAPPING[i].keyword = strdup(value);
+                        *state = STATE_KEYWORDS;
+                        return 1;
+                    }
+                }
+                break;
+            
+            default:
+                return 0;
+                
+        }
+        break;
+
+    case STATE_RUNTIME:
+        switch (event->type) {
+            case YAML_MAPPING_END_EVENT:
+                *state = STATE_SECTION;
+                break;
+
+            case YAML_SCALAR_EVENT:
+                value = (char *) event->data.scalar.value;
+
+                if (!strcmp(value, "saveOutputs")) *state = STATE_OUTPUTS;
+                else if (!strcmp(value, "preserveFractions")) *state = STATE_PRESERVE_FRACS;
+                else if (!strcmp(value, "lazyFunctionCalls")) *state = STATE_LAZY_CALLS;
+                else if (!strcmp(value, "strict")) *state = STATE_STRICT;
+                else {
+                    printf("Unexpected keyword: %s.\n", value);
+                    return 0;
+                }
+
+                break;
+                
+            default:
+                return 0;
+                
+        }
+        break;
+
+    case STATE_OUTPUTS:
+        switch (event->type) {
+            case YAML_MAPPING_END_EVENT:
+                *state = STATE_RUNTIME;
+                break;
+
+            case YAML_SCALAR_EVENT:
+                value = (char *) event->data.scalar.value;
+                int outputs = atoi(value);
+                config->OUTPUTS = outputs;
+                *state = STATE_RUNTIME;
+                return 1;
+
+                break;
+                
+            default:
+                return 0;
+                
+        }
+        break;
+
+    case STATE_PRESERVE_FRACS:
+        switch (event->type) {
+            case YAML_MAPPING_END_EVENT:
+                *state = STATE_RUNTIME;
+                break;
+
+            case YAML_SCALAR_EVENT:
+                value = (char *) event->data.scalar.value;
+                int b = get_boolean(value);
+
+                if (b == -1) return 0;
+                config->PRESERVE_FRACS = b;
+                *state = STATE_RUNTIME;
+
+                return 1;
+                break;
+                
+            default:
+                return 0;
+                
+        }
+        break;
+
+    case STATE_LAZY_CALLS:
+        switch (event->type) {
+            case YAML_MAPPING_END_EVENT:
+                *state = STATE_RUNTIME;
+                break;
+
+            case YAML_SCALAR_EVENT:
+                value = (char *) event->data.scalar.value;
+                int b = get_boolean(value);
+
+                if (b == -1) return 0;
+                config->LAZY_CALLS = b;
+                *state = STATE_RUNTIME;
+
+                return 1;
+                break;
+                
+            default:
+                return 0;
+                
+        }
+        break;
+
+    case STATE_STRICT:
+        switch (event->type) {
+            case YAML_MAPPING_END_EVENT:
+                *state = STATE_RUNTIME;
+                break;
+
+            case YAML_SCALAR_EVENT:
+                value = (char *) event->data.scalar.value;
+                int b = get_boolean(value);
+
+                if (b == -1) return 0;
+                config->STRICT = b;
+                *state = STATE_RUNTIME;
+
+                return 1;
+                break;
+                
+            default: 
+                return 0;
+        }
+        break;
+    
+    case STATE_STOP:
+        break;
+    }
+
+    return 1;
+}
+
+
+static void initConfig(Config *config) {
+    config->LOG_LEVEL = 0;
+    config->LOG_STREAM = stdout;
+    config->STARTUP = NULL;
+
+    config->MAPPING[0] = (KeywordMapping) {.cmd=K_QUIT, .keyword=strdup("quit")};
+    config->MAPPING[1] = (KeywordMapping) {.cmd=K_ENV, .keyword=strdup("env")};
+    config->MAPPING[2] = (KeywordMapping) {.cmd=K_RELOAD, .keyword=strdup("reload")};
+
+    config->OUTPUTS = 1;
+    config->OUTPUT_ID = strdup("ans");
+
+    config->STRICT = 0;
+    config->PRESERVE_FRACS = 1;
+    config->LAZY_CALLS = 1;
+}
+
+
+Config *loadConfig(char *cpath) {
+    Config *config = calloc(1, sizeof(Config));
+    if (config == NULL) {
+        fprintf(stdout, "Error allocating for config.\n");
+        return NULL;
+    }
+
+    initConfig(config);
+
+    FILE *cfile = NULL;
+    if (cpath == NULL) {
+        char *paths[] = {
+            "config.yaml",
+            "../config.yaml",
+            "~/.config/" PROJECT_NAME "/config.yaml"
+        };
+        int npaths = sizeof(paths) / sizeof(char *);
+        int path = 0;
+
+        cfile = fopen(paths[path], "rb");
+        while (cfile == NULL) {
+            path ++;
+            if (path < npaths) {
+                cfile = fopen(paths[path], "rb");
+            }
+            else break;
+        }
+
+        if (cfile == NULL) {
+            printf("Error loading config.\n");
+            return config;
+        }
+    } else {
+        cfile = fopen(cpath, "rb");
+        if (cfile == NULL) {
+            printf("Error loading config.\n");
+            return config;
+        }
+    }
+
+    yaml_parser_t parser;
+    yaml_event_t event;
+
+    yaml_parser_initialize(&parser);
+    yaml_parser_set_input_file(&parser, cfile);
+
+    State parserState = STATE_START;
+
+    int done = 0;
+
+    while (!done) {
+        if (!yaml_parser_parse(&parser, &event)) {
+            printf("YAML parser error %s\n", parser.problem);
+            goto cleanup;
+        }
+
+        if (!consumeEvent(&parserState, &event, config)) goto cleanup;
+
+        done = (event.type == YAML_STREAM_END_EVENT);
+        yaml_event_delete(&event);
+    }
+
+    yaml_parser_delete(&parser);
+
+    if (config->LOG_STREAM != stdout) {
+        setvbuf(config->LOG_STREAM, NULL, _IONBF, 0); 
+    }
+
+    fclose(cfile);
+    return config;
+    
+    cleanup:
+        free(config->STARTUP);
+        for (int i = 0; i < sizeof(config->MAPPING) / sizeof(KeywordMapping); i ++) {
+            free(config->MAPPING->keyword);
+        }
+        free(config);
+        yaml_parser_delete(&parser);
+        fclose(cfile);
+
+        return NULL;
+}
+
+
+FILE *printConfig(Config *config) {
+    FILE *stream = tmpfile();
+    if (stream == NULL) return NULL;
+
+    fprintf(stream, "\nConfig\n");
+    char *level;
+    switch(config->LOG_LEVEL) {
+        case NONE:
+            level = "None";
+            break;
+
+        case INFO:
+            level = "Info";
+            break;
+
+        case DEBUG:
+            level = "Debug";
+            break;
+
+        default:
+            level = "GRIFFITH!";
+    }
+    fprintf(stream, "Log Level: %s\n", level);
+    fprintf(stream, "Startup: \n%s\n\n", config->STARTUP);
+
+    for (int i = 0; i < sizeof(config->MAPPING) / sizeof(KeywordMapping); i ++) {
+        switch (config->MAPPING[i].cmd) {
+            case K_QUIT:
+                fprintf(stream, "QUIT: ");
+                break;
+
+            case K_ENV:
+                fprintf(stream, "ENV: ");
+                break;
+
+            case K_RELOAD:
+                fprintf(stream, "RELOAD: ");
+                break;
+            
+            default:
+                fprintf(stream, "Guts....");
+        }
+
+        fprintf(stream, "'%s'\n", config->MAPPING[i].keyword);
+    }
+
+    fprintf(stream, "Outputs: %d\n", config->OUTPUTS);
+    fprintf(stream, "Output: '%s'\n", config->OUTPUT_ID);
+
+    fprintf(stream, "Strict: %d\n", config->STRICT);
+    fprintf(stream, "Preserve Fractions: %d\n", config->PRESERVE_FRACS);
+    fprintf(stream, "Lazy Function Calls: %d\n", config->LAZY_CALLS);
+
+    return stream;
+}
+
+
+void freeConfig(Config *config) {
+    if (config == NULL) return;
+    fclose(config->LOG_STREAM);
+
+    // Frees keyword identifiers
+    for (int i = 0; i < sizeof(config->MAPPING) / sizeof(KeywordMapping); i ++) {
+        free(config->MAPPING[i].keyword);
+    }
+
+    free(config->STARTUP);
+    free(config->OUTPUT_ID);
+    free(config);
+}

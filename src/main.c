@@ -3,16 +3,14 @@
 #include <string.h>
 #include <math.h>
 
-#include "core/context/context.h"
-#include "core/context/environment.h"
-#include "core/utils/types.h"
-#include "core/axioms.h"
-#include "core/utils/log.h"
+#include "utils/context/context.h"
+#include "utils/types.h"
+#include "utils/log.h"
 
-#include "core/utils/input.h"
-#include "core/parsing/parser.h"
+#include "utils/input.h"
+#include "parsing/parser.h"
 
-#include "core/execution/execute.h"
+#include "execute.h"
 
 
 static int handleKeywords(char *buffer) {
@@ -32,8 +30,8 @@ static int handleKeywords(char *buffer) {
                 printf("Reloading config.\n");
 
                 freeConfig(GLOBALCONTEXT->config);
-                GLOBALCONTEXT->config = loadConfig(nullptr);
-                if (GLOBALCONTEXT->config == nullptr) return -1;
+                GLOBALCONTEXT->config = loadConfig(NULL);
+                if (GLOBALCONTEXT->config == NULL) return -1;
 
                 Info(1, printConfig(GLOBALCONTEXT->config));
                 return 1;
@@ -46,50 +44,109 @@ static int handleKeywords(char *buffer) {
 
 static int process(char *buffer) {
     Debug(0, "\nProcessing '%s'\n", buffer);
-    int keyword = handleKeywords(buffer);
-    if (keyword == -1) return 0;
-    else if (keyword == 1) return 1;
+    int result = handleKeywords(buffer);
+    if (result == -1) return 0;
+    else if (result == 1) return 1;
 
-    ParserResult result = parse(buffer);
-    if (result.type == PARSER_ERROR) return 0;
-    if (result.expr == nullptr) return 1;
-
-    if (!execute(&result.expr)) {
-        freeExpression(result.expr);
-        return 1;
+    ASTNode *head = parse(buffer);
+    if (head == NULL && GLOBALCONTEXT->config->STRICT) return 0;
+    if (head != NULL) {
+        if (!execute(&head)) {
+            freeAST(head);
+            if (GLOBALCONTEXT->config->STRICT) return 0;
+            return 1;
+        }
     }
 
-    char *str = expressionToString(result.expr);
-    if (str != nullptr) printf("%s\n\n", str);
+    if (head == NULL) return 1;
+
+    char *str = astToString(head);
+    if (str != NULL) printf("%s\n\n", str);
     free(str);
 
     if (GLOBALCONTEXT->config->OUTPUTS > 0) {
-        if (!updateOutputVariables(GLOBALCONTEXT->env, result.expr)) return 0;
-    } else freeExpression(result.expr);
+        Debug(0, "Updating output variable(s).\n");
+        if (GLOBALCONTEXT->config->OUTPUTS == 1) {
+            Component *cmp = searchEnvironment(GLOBALCONTEXT->env, GLOBALCONTEXT->config->OUTPUT_ID);
+            if (cmp == NULL) return 0;
+
+            freeAST(cmp->value);
+            cmp->value = head;
+            return 1;
+        } else {
+            int size = strlen(GLOBALCONTEXT->config->OUTPUT_ID) + 12;
+            char *str = malloc(size);
+            if (str == NULL) return 0;
+            snprintf(str, size, "%s_%d", GLOBALCONTEXT->config->OUTPUT_ID, GLOBALCONTEXT->config->OUTPUTS - 1);
+
+            Component *last = searchEnvironment(GLOBALCONTEXT->env, str);
+            if (last == NULL) {
+                free(str);
+                return 0;
+            }
+            free(str);
+            freeAST(last->value);
+
+            for (int i = GLOBALCONTEXT->config->OUTPUTS - 2; i >= 0; i --) {
+                size = strlen(GLOBALCONTEXT->config->OUTPUT_ID) + 12;
+                str = malloc(size);
+                if (str == NULL) return 0;
+                snprintf(str, size, "%s_%d", GLOBALCONTEXT->config->OUTPUT_ID, i);
+
+                Component *cmp = searchEnvironment(GLOBALCONTEXT->env, str);
+                if (cmp == NULL) {
+                    free(str);
+                    return 0;
+                }
+                free(str);
+
+                last->value = cmp->value;
+                last = cmp;
+            }
+
+            size = strlen(GLOBALCONTEXT->config->OUTPUT_ID) + 12;
+            str = malloc(size);
+            if (str == NULL) return 0;
+            snprintf(str, size, "%s_0", GLOBALCONTEXT->config->OUTPUT_ID);
+
+            Component *first = searchEnvironment(GLOBALCONTEXT->env, str);
+            if (first == NULL) {
+                free(str);
+                return 0;
+            }
+            free(str);
+
+            first->value = head;
+
+            return 1;
+        }
+
+        return 1;
+    } else freeAST(head);
 
     return 1;
 }
 
 
+
 static int runStartup() {
     // Load startup script
-    if (GLOBALCONTEXT->config->STARTUP != nullptr) {
+    if (GLOBALCONTEXT->config->STARTUP != NULL) {
         Debug(0, "\nRunning Startup Script\n");
         char *line = strtok(GLOBALCONTEXT->config->STARTUP, "\n");
 
-        while (line != nullptr) {
+        while (line != NULL) {
             if (!strcmp(line, "FILE")) {
-                line = strtok(nullptr, "\n");
-                Debug(0, "Running startup script from file: '%s'.\n", line);
-                FILE *file = fopen(line, "r");
-                if (file == nullptr) {
-                    perror("Couldn't load startup script");
+                Debug(0, "Running startup script from file.\n");
+                FILE *file = fopen(strtok(line, "\n"), "r");
+                if (file == NULL) {
+                    printf("Couldn't load startup script.\n");
                     return 0;
                 }
 
                 char buffer[128];
                 while (fgets(buffer, 128, file)) {
-                    printf("S > %s\n", buffer);
+                    printf("S > %s\n", line);
                     if (!process(buffer)) {
                         fclose(file);
                         return 0;
@@ -101,11 +158,11 @@ static int runStartup() {
                 printf("S > %s\n", line);
                 if (!process(line)) return 0;
             }
-            line = strtok(nullptr, "\n");
+            line = strtok(NULL, "\n");
         }
 
         free(GLOBALCONTEXT->config->STARTUP);
-        GLOBALCONTEXT->config->STARTUP = nullptr;
+        GLOBALCONTEXT->config->STARTUP = NULL;
     }
 
     return 1;
@@ -113,26 +170,18 @@ static int runStartup() {
 
 
 int main(int argc, char *argv[]) {
-    char *cpath = nullptr;
+    char *cpath = NULL;
     if (argc > 1) {
         cpath = argv[1];
         printf("Loading config from '%s'\n", cpath);
     }
 
-    printf("Loading context\n");
     if (!initContext(cpath))  {
         freeContext(GLOBALCONTEXT);
         return 1;
     }
-    
-    if (!initAxioms()) {
-        freeContext(GLOBALCONTEXT);
-        return 1;
-    }
-    
     Debug(0, "Context created.\n");
     Info(1, printConfig(GLOBALCONTEXT->config));
-    Info(1, printEnvironment(GLOBALCONTEXT->env));
 
     if (!runStartup()) {
         freeContext(GLOBALCONTEXT);
@@ -140,7 +189,6 @@ int main(int argc, char *argv[]) {
     }
 
     int line = 1;
-    
     // System loop
     while (1) {
         char *input = terminalEntry(line);
