@@ -222,7 +222,8 @@ static int parseFunctionAssignment(Token *head) {
     Debug(0, "Parsing function definition.\n");
     FunctionComponent component = IDENTIFIER;
 
-    char **parameters = malloc(sizeof(char *) * DEFAULT_PARAMETERS_SIZE);
+    int size = DEFAULT_PARAMETERS_SIZE;
+    char **parameters = malloc(sizeof(char *) * size);
     if (parameters == nullptr) goto error;
     int nParameters = 0;
     
@@ -262,19 +263,17 @@ static int parseFunctionAssignment(Token *head) {
                 printf("Invalid token: '%s' within function parameters.\n", cur->value);
                 goto error;
             } else if (cur->type == TOKEN_IDENTIFIER) {
-                Debug(0, "Binding parameter '%s' to local environment.\n", cur->value);
-                Expression *dummy = dummyExpression(EXPRESSION_DOUBLE);
-                if (dummy == nullptr) {
-                    perror("Error in parsing function definition");
-                    goto error;
+                Debug(0, "Adding function parameter '%s'\n", cur->value);
+                if (nParameters >= size) {
+                    size *= 2;
+                    char **temp = realloc(parameters, size);
+                    if (temp == nullptr) goto error;
+                    
+                    parameters = temp;
                 }
-
-                dummy->value = 0;
-                if (!bindComponent(localEnv, COMP_VARIABLE, cur->value, dummy)) {
-                    free(dummy);
-                    goto error;
-                }
-                parameters ++;
+                
+                parameters[nParameters] = strdup(cur->value);
+                nParameters ++;
             }
         }
 
@@ -288,7 +287,7 @@ static int parseFunctionAssignment(Token *head) {
     }
 
     // Redoes identifier tokens now that local variables for parameters are established, then redoes lexing
-    if (!handleLocalVariables(&asgn, parameters)) goto error;
+    if (!handleLocalVariables(&asgn, parameters, nParameters)) goto error;
     if (!lex(&asgn->next)) goto error;
 
     if (!parseFunctionCalls(&asgn->next)) goto error;

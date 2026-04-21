@@ -10,7 +10,10 @@
 
 static void freeFunction(Function *func) {
     if (func == nullptr) return;
-    freeEnvironment(func->env);
+    if (func->parameters != nullptr) {
+        for (int i = 0; i < func->nParameters; i ++) free(func->parameters[i]);
+    }
+    free(func->parameters);
     if (func->type == DEFINED) freeExpression(func->definition);
     free(func);
 } 
@@ -138,14 +141,11 @@ static void printLinkedCmpList(FILE *stream, const Component *cmp) {
         switch (cmp->type) {
             case COMP_FUNCTION:
                 Function *func = cmp->func;
-                Component *localCmp = func->env->compList;
-                if (localCmp == nullptr) return;
                 fprintf(stream, "%s(", cmp->identifier);
-                while (localCmp->next != nullptr) {
-                    fprintf(stream, "%s, ", localCmp->identifier);
-                    localCmp = localCmp->next;
+                for (int i = 0; i < func->nParameters - 1; i ++) {
+                    fprintf(stream, "%s, ", func->parameters[i]);
                 }
-                fprintf(stream, "%s) = ", localCmp->identifier);
+                fprintf(stream, "%s) = ", func->parameters[func->nParameters-1]);
                 
                 char *str = expressionToString(func->definition);
                 if (str == nullptr) return;

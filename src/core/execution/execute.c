@@ -160,6 +160,9 @@ static int executeRecur(Expression **ptr, Environment *env) {
                 }
             }
             
+            Debug(0, "Call env\n");
+            Debug(1, printEnvironment(callEnv));
+            
             // Prevents double free of params
             expr->call->nParams = 0;
 
