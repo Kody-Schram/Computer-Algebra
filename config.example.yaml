@@ -9,7 +9,11 @@ log:
 
   # Set the location for logs to appear
   # Default is the terminal
-  location: "log.txt"
+  location: log.txt
+  
+  # Determines if operations like + and * are printed when running ENV command
+  # Default is false
+  printAxiomaticOperations: false
 
 # Enables the use of scripts to run during startup
 # Can be inline commands or define a file with the startup script
@@ -25,27 +29,22 @@ startup: |
 keywords:
   # Input string to exit the program
   # Default is "quit"
-  QUIT: "quit"
+  QUIT: quit
 
   # Input string to show the environment
   # Default is "env"
-  ENV: "env"
+  ENV: env
 
   # Input string to reload the config
   # Default is "reload"
-  RELOAD: "reload"
+  RELOAD: reload
 
   # Identifier of previous output
   # Default is "ans" 
-  OUTPUT: "ans"
+  OUTPUT: ans
 
 # Enables configuring runtime settings
 runtime:
-  # Determines if program stops for any errors, including syntax errors
-  # Used as flag for debugging
-  # Default is false
-  strict: false
-
   # Defines how many previous outputs are saved
   # For one output, the most recent output is stored under the variable OUTPUT as defined in keywords
   # For more outputs than 1, most recent output is stored under variable OUTPUT_0, and subsequent outputs are OUTPUT_(n-1)

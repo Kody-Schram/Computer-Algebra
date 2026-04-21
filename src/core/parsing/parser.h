@@ -1,0 +1,36 @@
+#ifndef PARSER_H
+#define PARSER_H
+
+#include "core/utils/types.h"
+#include "parserTypes.h"
+
+typedef enum ParserResultType ParserResultType;
+typedef struct ParserResult ParserResult;
+
+
+enum ParserResultType {
+    PARSER_SUCCESS,
+    PARSER_ERROR
+};
+
+
+struct ParserResult {
+    ParserResultType type;
+    Expression *expr;
+};
+
+
+int parseFunction(Token *head);
+
+/**
+ * @brief Handles entire parsing process from string to AST
+ * 
+ * @retval nullptr: Error parsing the string
+ * @retval Token*: Properly parsed the string
+ * 
+ * @param buffer Mathematical string
+ * @return Token* 
+ */
+ParserResult parse(char *buffer);
+
+#endif
