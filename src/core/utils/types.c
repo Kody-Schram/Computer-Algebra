@@ -12,9 +12,9 @@ static const int DEFUALT_STRING_SIZE = 64;
 Expression *dummyExpression(ExpressionType type) {
     Expression *expr = calloc(1, sizeof(Expression));
 
-    if (expr == nullptr) {
+    if (expr == NULL) {
         perror("Error in creating dummy expression");
-        return nullptr;
+        return NULL;
     }
 
     expr->type = type;
@@ -24,15 +24,15 @@ Expression *dummyExpression(ExpressionType type) {
 
 
 Expression *deepCopyExpression(const Expression *expr) {
-    if (expr == nullptr) return nullptr;
+    if (expr == NULL) return NULL;
     
     Expression *new = dummyExpression(expr->type);
-    if (new == nullptr) return nullptr;
+    if (new == NULL) return NULL;
 
     switch (new->type) {
         case EXPRESSION_VARIABLE:
             new->identifier = strdup(expr->identifier);
-            if (new->identifier == nullptr) goto error;
+            if (new->identifier == NULL) goto error;
             break;
 
         case EXPRESSION_INTEGER:
@@ -47,11 +47,11 @@ Expression *deepCopyExpression(const Expression *expr) {
             new->op = expr->op;
             new->arity = expr->arity;
             new->operands = calloc(expr->arity, sizeof(Expression *));
-            if (new->operands == nullptr) goto error;
+            if (new->operands == NULL) goto error;
             
             for (int i = 0; i < expr->arity; i ++) {
                 new->operands[i] = deepCopyExpression(expr->operands[i]);
-                if (new->operands[i] == nullptr) {
+                if (new->operands[i] == NULL) {
                     // Frees already copied expressions
                     for (int j = 0; j < i; j ++) {
                         freeExpression(new->operands[j]);
@@ -65,15 +65,15 @@ Expression *deepCopyExpression(const Expression *expr) {
 
         case EXPRESSION_FUNCTION_CALL:
             FunctionCall *call = malloc(sizeof(FunctionCall));
-            if (call == nullptr) goto error;
+            if (call == NULL) goto error;
             
             call->identifier = strdup(expr->call->identifier);
-            if (call->identifier == nullptr) goto error;
+            if (call->identifier == NULL) goto error;
             
             call->nParams = expr->call->nParams;
             
             call->parameters = malloc(sizeof(Expression *) * call->nParams);
-            if (call->parameters == nullptr) {
+            if (call->parameters == NULL) {
                 free(call->identifier);
                 free(call);
                 
@@ -82,7 +82,7 @@ Expression *deepCopyExpression(const Expression *expr) {
 
             for (int i = 0; i < call->nParams; i ++) {
                 call->parameters[i] = deepCopyExpression(expr->call->parameters[i]);
-                if (call->parameters[i] == nullptr) {
+                if (call->parameters[i] == NULL) {
                     free(call->identifier);
                     for (int j = 0; j < i; j ++) {
                         freeExpression(call->parameters[j]);
@@ -108,12 +108,12 @@ Expression *deepCopyExpression(const Expression *expr) {
     error:
         perror("Error in copying expression");
         free(new);
-        return nullptr;
+        return NULL;
 }
 
 
 static void printExpressionRec(const Expression *expr, int level, FILE *stream) {
-    if (expr == nullptr || stream == nullptr) return;
+    if (expr == NULL || stream == NULL) return;
 
     // Print indentation based on depth
     for (int i = 0; i < level; i++) fprintf(stream, "  ");
@@ -141,12 +141,12 @@ static void printExpressionRec(const Expression *expr, int level, FILE *stream) 
             break;
 
         case EXPRESSION_FUNCTION_CALL: 
-            if (expr->call == nullptr) {
-                Debug(0, "Function call was nullptr\n");
+            if (expr->call == NULL) {
+                Debug(0, "Function call was NULL\n");
                 return;
             }
-            if (expr->call->identifier == nullptr) {
-                Debug(0, "Call identifer was nullptr\n");
+            if (expr->call->identifier == NULL) {
+                Debug(0, "Call identifer was NULL\n");
                 return;
             }
             fprintf(stream, "<type: FUNC_CALL, value: '%s'>\n", expr->call->identifier);
@@ -164,7 +164,7 @@ static void printExpressionRec(const Expression *expr, int level, FILE *stream) 
 
 FILE *printExpression(const Expression *expr) {
     FILE *stream = tmpfile();
-    if (stream == nullptr) return nullptr;
+    if (stream == NULL) return NULL;
 
     printExpressionRec(expr, 0, stream);
     return stream;
@@ -172,12 +172,12 @@ FILE *printExpression(const Expression *expr) {
 
 
 void freeExpression(Expression *expr) {
-    if (expr == nullptr) return;
+    if (expr == NULL) return;
     Debug(0, "Freeing expression\n");
 
     switch (expr->type) {
         case EXPRESSION_FUNCTION_CALL:
-            if (expr->call != nullptr) {
+            if (expr->call != NULL) {
                 free(expr->call->identifier);
                 for (int i = 0; i < expr->call->nParams; i ++) {
                     freeExpression(expr->call->parameters[i]);
@@ -208,7 +208,7 @@ void freeExpression(Expression *expr) {
 
 
 static void expressionToStringRecur(const Expression *expr, FILE *stream) {
-    if (expr == nullptr) return;
+    if (expr == NULL) return;
 
     switch (expr->type) {
         case EXPRESSION_OPERATOR:
@@ -255,8 +255,8 @@ static void expressionToStringRecur(const Expression *expr, FILE *stream) {
 
 char *expressionToString(const Expression *expr) {
     FILE *stream = tmpfile();
-    char *string = nullptr;
-    if (expr == nullptr || stream == nullptr) {
+    char *string = NULL;
+    if (expr == NULL || stream == NULL) {
         fclose(stream);
         return string;
     }
@@ -265,13 +265,13 @@ char *expressionToString(const Expression *expr) {
     long size = ftell(stream);
     if (size < 0) {
         fclose(stream);
-        return nullptr;
+        return NULL;
     }
 
     string = malloc(size + 1);
-    if (string == nullptr) {
+    if (string == NULL) {
         fclose(stream);
-        return nullptr;
+        return NULL;
     }
 
     rewind(stream);

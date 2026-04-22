@@ -24,7 +24,7 @@ typedef enum {
 
 static int containsFunctionAssignment(Token *head) {
     Token *cur = head;
-    while (cur != nullptr) {
+    while (cur != NULL) {
         if (cur->type == TOKEN_MAPPING) {
             Debug(0, "Function mapping found.\n");
             return 1;
@@ -38,7 +38,7 @@ static int containsFunctionAssignment(Token *head) {
 
 static int containsAssignment(Token *head) {
     Token *cur = head;
-    while (cur != nullptr) {
+    while (cur != NULL) {
         if (cur->type == TOKEN_ASSIGNMENT) return 1;
         cur = cur->next;
     }
@@ -49,27 +49,27 @@ static int containsAssignment(Token *head) {
 
 static int parseFunctionCalls(Token **head) {
     Token *cur = *head;
-    Token *funcPrev = nullptr;
+    Token *funcPrev = NULL;
 
-    while (cur != nullptr) {
+    while (cur != NULL) {
         // Recursively parses nested function calls
         if (cur->type == TOKEN_FUNC_CALL_PLACEHOLDER) {
             Debug(0, "Function call: %s found\n", cur->value);
             Token *funcCall = cur;
-            Token *prev = nullptr;
+            Token *prev = NULL;
 
-            Token *callToken = nullptr;
-            FunctionCall *call = nullptr;
+            Token *callToken = NULL;
+            FunctionCall *call = NULL;
 
             // Prepares list of parameters
             int size = DEFAULT_PARAMETERS_SIZE;
             int nParameters = 0;
             Expression **paramExprs = malloc(sizeof(Expression *) * size);
-            if (paramExprs == nullptr) goto error;
+            if (paramExprs == NULL) goto error;
 
             // Selects opening paren to be freed
             Token *opening = cur->next;
-            Token *seperator = nullptr;
+            Token *seperator = NULL;
 
             // skips to start of parameter
             cur = cur->next->next;
@@ -78,14 +78,14 @@ static int parseFunctionCalls(Token **head) {
             free(opening->value);
             free(opening);
 
-            funcCall->next = nullptr;
+            funcCall->next = NULL;
 
             // Loops through function call
-            while (cur != nullptr && cur->type != TOKEN_RIGHT_PAREN) {
+            while (cur != NULL && cur->type != TOKEN_RIGHT_PAREN) {
                 Token *paramHead = cur;
                 int parens = 0;
 
-                if (seperator != nullptr) {
+                if (seperator != NULL) {
                     free(seperator->value);
                     free(seperator);
                 }
@@ -100,7 +100,7 @@ static int parseFunctionCalls(Token **head) {
                 }
 
                 // Cur is now at either ',' or ')', so prev is last token in parameter
-                prev->next = nullptr;
+                prev->next = NULL;
                 seperator = cur;
                 cur = cur->next;
 
@@ -109,7 +109,7 @@ static int parseFunctionCalls(Token **head) {
                     size += DEFAULT_PARAMETERS_SIZE; 
                     Expression **temp = realloc(paramExprs, sizeof(Expression *) * size);
 
-                    if (temp == nullptr) goto parameter_error;
+                    if (temp == NULL) goto parameter_error;
 
                     paramExprs = temp;
 
@@ -124,12 +124,12 @@ static int parseFunctionCalls(Token **head) {
 
                 // Generates ast for parameter
                 RPNList *rpn = shuntingYard(paramHead);
-                if (rpn == nullptr) goto parameter_error;
+                if (rpn == NULL) goto parameter_error;
                 
                 Expression *expr = expressionFromRPN(rpn);
                 free(rpn->items);
                 free(rpn);
-                if (expr == nullptr) goto parameter_error;
+                if (expr == NULL) goto parameter_error;
                 
                 // ==================
                 // Simplify parameter
@@ -143,7 +143,7 @@ static int parseFunctionCalls(Token **head) {
                 continue;
 
                 parameter_error:
-                    if (rpn != nullptr) free(rpn->items);
+                    if (rpn != NULL) free(rpn->items);
                     free(rpn);
                     
                     goto error;
@@ -152,16 +152,16 @@ static int parseFunctionCalls(Token **head) {
             // Creates new function call token
             Debug(0, "Creating new function call token.\n");
             callToken = calloc(1, sizeof(Token));
-            if (callToken == nullptr) goto error;
+            if (callToken == NULL) goto error;
             
             callToken->type = TOKEN_FUNC_CALL;
             callToken->next = seperator->next;
 
             call = malloc(sizeof(FunctionCall));
-            if (call == nullptr) goto error;
+            if (call == NULL) goto error;
             
             call->identifier = strdup(funcCall->value);
-            if (call->identifier == nullptr) goto error;
+            if (call->identifier == NULL) goto error;
             call->nParams = nParameters;
             call->parameters = paramExprs;
 
@@ -170,7 +170,7 @@ static int parseFunctionCalls(Token **head) {
 
             Debug(0, "Replacing old call token with new one.\n");
 
-            if (funcPrev != nullptr) funcPrev->next = callToken;
+            if (funcPrev != NULL) funcPrev->next = callToken;
             else *head = callToken;
 
 
@@ -195,13 +195,13 @@ static int parseFunctionCalls(Token **head) {
                 free(paramExprs);
                 freeTokens(cur);
                 freeTokens(callToken);
-                if (call != nullptr) free(call->identifier);
+                if (call != NULL) free(call->identifier);
                 free(call);
                 
                 return 0;
         }
 
-        if (cur != nullptr) {
+        if (cur != NULL) {
             funcPrev = cur;
             cur = cur->next;
         }
@@ -213,22 +213,22 @@ static int parseFunctionCalls(Token **head) {
 
 
 static int parseFunctionAssignment(Token *head) {
-    char *identifier = nullptr;
-    RPNList *rpn = nullptr;
-    Expression *expr = nullptr;
-    Function *function = nullptr;
+    char *identifier = NULL;
+    RPNList *rpn = NULL;
+    Expression *expr = NULL;
+    Function *function = NULL;
 
     Debug(0, "Parsing function definition.\n");
     FunctionComponent component = IDENTIFIER;
 
     int size = DEFAULT_PARAMETERS_SIZE;
     char **parameters = malloc(sizeof(char *) * size);
-    if (parameters == nullptr) goto error;
+    if (parameters == NULL) goto error;
     int nParameters = 0;
     
     Token *cur = head;
-    Token *asgn = nullptr;
-    while (cur != nullptr && component != BODY) {
+    Token *asgn = NULL;
+    while (cur != NULL && component != BODY) {
         if (component == IDENTIFIER) {
             // Switches to PARAMETERS if ':' is found
             if (cur->type == TOKEN_ASSIGNMENT) {
@@ -238,12 +238,12 @@ static int parseFunctionAssignment(Token *head) {
                 printf("Invalid token: '%s' within function identifier.\n", cur->value);
                 goto error;
             } else {
-                if (identifier != nullptr) {
+                if (identifier != NULL) {
                     printf("Invalid function declaration.\n");
                     goto error;
                 }
                 identifier = strdup(cur->value);
-                if (identifier == nullptr) {
+                if (identifier == NULL) {
                     perror("Error parsing function assignment");
                     goto error;
                 }
@@ -266,7 +266,7 @@ static int parseFunctionAssignment(Token *head) {
                 if (nParameters >= size) {
                     size *= 2;
                     char **temp = realloc(parameters, size);
-                    if (temp == nullptr) goto error;
+                    if (temp == NULL) goto error;
                     
                     parameters = temp;
                 }
@@ -292,11 +292,11 @@ static int parseFunctionAssignment(Token *head) {
     if (!parseFunctionCalls(&asgn->next)) goto error;
 
     rpn = shuntingYard(asgn->next);
-    if (rpn == nullptr) goto error;
+    if (rpn == NULL) goto error;
 
     // Generate ast for body
     expr = expressionFromRPN(rpn);
-    if (expr == nullptr) goto error;
+    if (expr == NULL) goto error;
     
     // ===============================================
     // Run expression through simplification step here
@@ -306,7 +306,7 @@ static int parseFunctionAssignment(Token *head) {
 
     // Add to function table
     function = malloc(sizeof(Function));
-    if (function == nullptr) goto error;
+    if (function == NULL) goto error;
 
     function->parameters = parameters;
     function->nParameters = nParameters;
@@ -326,13 +326,13 @@ static int parseFunctionAssignment(Token *head) {
     error:
         freeTokens(head);
         free(identifier);
-        if (parameters != nullptr) {
+        if (parameters != NULL) {
             for (int i = 0; i < nParameters; i ++) free(parameters[i]);
         }
         free(parameters);
-        if (rpn != nullptr) free(rpn->items);
+        if (rpn != NULL) free(rpn->items);
         free(rpn);
-        if (expr != nullptr) freeExpression(expr);
+        if (expr != NULL) freeExpression(expr);
         free(function);
 
         return 0;
@@ -340,17 +340,17 @@ static int parseFunctionAssignment(Token *head) {
 
 
 static int parseAssignment(Token *head) {
-    char *identifier = nullptr;
-    RPNList *rpn = nullptr;
-    Expression *expr = nullptr;
+    char *identifier = NULL;
+    RPNList *rpn = NULL;
+    Expression *expr = NULL;
 
     Token *cur = head;
-    Token *asgn = nullptr;
-    while (cur != nullptr && asgn == nullptr) {
-        if (identifier == nullptr) {
+    Token *asgn = NULL;
+    while (cur != NULL && asgn == NULL) {
+        if (identifier == NULL) {
             if (cur->type == TOKEN_IDENTIFIER) {
                 identifier = cur->value;
-                if (identifier == nullptr) {
+                if (identifier == NULL) {
                     perror("Error parsing variable assignment");
                     goto error;
                 }
@@ -371,11 +371,11 @@ static int parseAssignment(Token *head) {
     }
 
     rpn = shuntingYard(asgn->next);
-    if (rpn == nullptr) goto error;
+    if (rpn == NULL) goto error;
 
     // Generate ast for body
     expr = expressionFromRPN(rpn);
-    if (expr == nullptr) goto error;
+    if (expr == NULL) goto error;
 
     
     // ===============================================
@@ -395,7 +395,7 @@ static int parseAssignment(Token *head) {
     error:
         free(identifier);
         freeTokens(head);
-        if (rpn != nullptr) free(rpn->items);
+        if (rpn != NULL) free(rpn->items);
         free(rpn);
         freeExpression(expr);
         
@@ -406,14 +406,14 @@ static int parseAssignment(Token *head) {
 ParserResult parse(char *buffer) {
     Info(0, "\nParsing: '%s'\n", buffer);
     
-    ParserResult result = {PARSER_ERROR, nullptr};
+    ParserResult result = {PARSER_ERROR, NULL};
     
-    Token *head = nullptr;
-    RPNList *rpn = nullptr;
-    Expression *expr = nullptr;
+    Token *head = NULL;
+    RPNList *rpn = NULL;
+    Expression *expr = NULL;
     
     head = tokenize(buffer);
-    if (head == nullptr) return result;
+    if (head == NULL) return result;
 
     if (!lex(&head)) goto error;
 
@@ -425,13 +425,13 @@ ParserResult parse(char *buffer) {
         else if  (!parseAssignment(head)) return result;
         
         assignment_success:
-        return (ParserResult) {PARSER_SUCCESS, nullptr};
+        return (ParserResult) {PARSER_SUCCESS, NULL};
     }
 
     if (!parseFunctionCalls(&head)) goto error;
 
     rpn = shuntingYard(head);
-    if (rpn == nullptr) goto error;
+    if (rpn == NULL) goto error;
 
     expr = expressionFromRPN(rpn);
 
@@ -443,7 +443,7 @@ ParserResult parse(char *buffer) {
     
     error:
         freeTokens(head);
-        if (rpn != nullptr) free(rpn->items);
+        if (rpn != NULL) free(rpn->items);
         free(rpn);
         return result;
 }

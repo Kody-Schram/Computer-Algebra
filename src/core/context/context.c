@@ -4,13 +4,13 @@
 #include "context.h"
 #include "core/context/environment.h"
 
-Context *GLOBALCONTEXT = nullptr;
+Context *GLOBALCONTEXT = NULL;
 
 Context *createContext(Config *config, Environment *env) {
     Context *context = calloc(1, sizeof(Context));
-    if (context == nullptr) {
+    if (context == NULL) {
         perror("Error in context");
-        return nullptr;
+        return NULL;
     }
 
     context->config = config;
@@ -20,21 +20,21 @@ Context *createContext(Config *config, Environment *env) {
 }
 
 int initContext(char *cpath) {
-    if (GLOBALCONTEXT != nullptr) return 0;
+    if (GLOBALCONTEXT != NULL) return 0;
 
     printf("loading config\n");
     Config *config = loadConfig(cpath);
     printf("loading env\n");
     Environment *env = createEnvironment(ENV_LIST); // will change to hash map later
 
-    if (config == nullptr || env == nullptr) {
+    if (config == NULL || env == NULL) {
         freeConfig(config);
         freeEnvironment(env);
         return 0;
     }
     
     GLOBALCONTEXT = createContext(config, env);
-    if (GLOBALCONTEXT == nullptr) {
+    if (GLOBALCONTEXT == NULL) {
         freeConfig(config);
         freeEnvironment(env);
         return 0;
@@ -49,7 +49,7 @@ int initContext(char *cpath) {
 }
 
 void freeContext(Context *context) {
-    if (context != nullptr) {
+    if (context != NULL) {
         freeEnvironment(context->env);
         freeConfig(context->config);
     }

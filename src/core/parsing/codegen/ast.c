@@ -46,7 +46,7 @@ static int getLinkedListLength(const Token *head) {
     const Token *cur = head;
 
     int i = 0;
-    while (cur != nullptr) {
+    while (cur != NULL) {
         i ++;
         cur = cur->next;
     }
@@ -66,7 +66,7 @@ static int getLinkedListLength(const Token *head) {
 static int reallocStack(Stack *stack) {
     stack->size *= 2;
     void **temp = realloc(stack->items, stack->size * sizeof(void*));
-    if (temp == nullptr) {
+    if (temp == NULL) {
         printf("Error reallocating space for stack.\n");
         return 1;
     }
@@ -95,11 +95,11 @@ RPNList *shuntingYard(Token *head) {
         malloc(size / 2 * sizeof(Token *))
     };
 
-    RPNList *list = nullptr;
+    RPNList *list = NULL;
 
-    if (output.items == nullptr || operators.items == nullptr) goto error;
+    if (output.items == NULL || operators.items == NULL) goto error;
 
-    while (cur != nullptr) {
+    while (cur != NULL) {
         // Add numbers, identifiers, and function calls to output stack
         if (cur->type == TOKEN_NUMBER || cur->type == TOKEN_IDENTIFIER || cur->type == TOKEN_FUNC_CALL) {
             output.items[output.entries] = cur;
@@ -164,7 +164,7 @@ RPNList *shuntingYard(Token *head) {
     free(operators.items);
 
     list = malloc(sizeof(RPNList));
-    if (list == nullptr) goto error;
+    if (list == NULL) goto error;
 
     list->length = output.entries;
     list->items = (Token**) output.items;
@@ -179,7 +179,7 @@ RPNList *shuntingYard(Token *head) {
         free(operators.items);
         free(list);
 
-        return nullptr;
+        return NULL;
 }
 
 
@@ -192,12 +192,12 @@ Expression *expressionFromRPN(RPNList *rpn) {
         0,
         malloc(DEFAULT_NODE_STACK_SIZE * sizeof(Expression *))
     };
-    if (expressions.items == nullptr) return nullptr;
-    Expression *root = nullptr;
+    if (expressions.items == NULL) return NULL;
+    Expression *root = NULL;
 
     for (int i = 0; i < rpn->length; i ++) {
         Expression *expr = createExpression(rpn->items[i]);
-        if (expr == nullptr) goto cleanup;
+        if (expr == NULL) goto cleanup;
 
         if (expr->type == EXPRESSION_OPERATOR) {
             if (expressions.entries < 2) {
@@ -228,5 +228,5 @@ Expression *expressionFromRPN(RPNList *rpn) {
             freeExpression(expressions.items[i]);
         }
         free(expressions.items);
-        return nullptr;
+        return NULL;
 }

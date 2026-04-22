@@ -85,7 +85,7 @@ static int getNumber(const char *c) {
  */
 static ComponentReturn getComponentLength(char *c) {
     Debug(0, "Checking component.\n");
-    ComponentReturn result = {0, nullptr};
+    ComponentReturn result = {0, NULL};
     // If not valid character type for variable name, automatically skip check
     if (!isalpha(c[0])) return result;
     Environment *env = GLOBALCONTEXT->env;
@@ -101,7 +101,7 @@ static ComponentReturn getComponentLength(char *c) {
         Component *cmp = searchEnvironment(env, c);
         c[length - i] = temp;
 
-        if (cmp != nullptr) {
+        if (cmp != NULL) {
             Debug(0, "found left side component: %s\n", cmp->identifier);
             result.len = length - i;
             result.cmp = cmp;
@@ -117,7 +117,7 @@ static ComponentReturn getComponentLength(char *c) {
         Component *cmp = searchEnvironment(env, c + i);
         c[length] = temp;
 
-        if (cmp != nullptr && result.len < length - i) {
+        if (cmp != NULL && result.len < length - i) {
             Debug(0, "found right side component: %s, %d characters in.\n", cmp->identifier, i);
             result.len = i;
         }
@@ -132,7 +132,7 @@ static ComponentReturn getComponentLength(char *c) {
             Component *cmp = searchEnvironment(env, c + i);
             c[end] = temp;
 
-            if (cmp != nullptr && result.len < end - i) {
+            if (cmp != NULL && result.len < end - i) {
                 Debug(0, "found nested component: %s\n", cmp->identifier);
                 result.len = i;
                 return result;
@@ -150,8 +150,8 @@ Token *tokenize(char *buffer) {
 
     Debug(0, "\nTokenizing '%s'\n", buffer);
 
-    Token *head = nullptr;
-    Token *prev = nullptr;
+    Token *head = NULL;
+    Token *prev = NULL;
 
     int matchLen;
     SymbolReturn ret;
@@ -187,10 +187,10 @@ Token *tokenize(char *buffer) {
         
         // Checks if builtin function and return the length if it is
         else if ((cRet = getComponentLength(buffer + i)).len) {
-            //if (cRet.cmp != nullptr) printf("largest component found was %s\n", cRet.cmp->identifier);
+            //if (cRet.cmp != NULL) printf("largest component found was %s\n", cRet.cmp->identifier);
             end += cRet.len;
 
-            if (cRet.cmp == nullptr || cRet.cmp->type == COMP_VARIABLE) type = TOKEN_IDENTIFIER;
+            if (cRet.cmp == NULL || cRet.cmp->type == COMP_VARIABLE) type = TOKEN_IDENTIFIER;
             else type = TOKEN_FUNC_CALL_PLACEHOLDER;
         }
         
@@ -201,22 +201,22 @@ Token *tokenize(char *buffer) {
             // Prints input with pointer to unknown character
             printf("%s\n", buffer);
             char *pointer = malloc((i + 1) * sizeof(char));
-            if (pointer == nullptr) {
-                return nullptr;
+            if (pointer == NULL) {
+                return NULL;
             }
 
             memset(pointer, ' ', i);
             pointer[i] = '^';
             printf("%s\n", pointer);
 
-            return nullptr;
+            return NULL;
         }
 
         // Prevents ambiguous syntax due to spaces
         if (spaceI != -1) {
             if ((prevT == TOKEN_NUMBER || prevT == TOKEN_IDENTIFIER) && (type == TOKEN_IDENTIFIER || type == TOKEN_NUMBER || type == TOKEN_FUNC_CALL_PLACEHOLDER)) {
                 printf("Spacing lead to ambiguous intent.\n");
-                return nullptr;
+                return NULL;
             }
         }
 
@@ -224,13 +224,13 @@ Token *tokenize(char *buffer) {
         prevT = type;
 
         Token *newToken = createToken(type, buffer + i, end - i);
-        if (newToken == nullptr) {
+        if (newToken == NULL) {
             perror("Error in tokenizer");
-            return nullptr;
+            return NULL;
         }
 
         // Updates linked list
-        if (prev != nullptr) {
+        if (prev != NULL) {
             prev->next = newToken;
         } else {
             head = newToken;

@@ -12,32 +12,32 @@
 Token *createToken(TokenType type, const char *value, int l) {
     // Allocates new token
     Token *token = (Token*) calloc(1, sizeof(Token));
-    if (token == nullptr) {
+    if (token == NULL) {
         perror("Error creating token");
-        return nullptr;
+        return NULL;
     }
 
     // Populates newToken attributes
     token->type = type;
 
     token->value = malloc(l + 1);
-    if (token->value == nullptr) {
+    if (token->value == NULL) {
         perror("Error creating token");
         free(token);
-        return nullptr;
+        return NULL;
     } 
 
     memcpy(token->value, value, l);
     token->value[l] = '\0';
 
-    token->next = nullptr;
+    token->next = NULL;
 
     return token;
 }
 
 
 static void printToken(const Token *token, FILE *stream) {
-    const char *type = nullptr;
+    const char *type = NULL;
 
         switch(token->type) {
             case TOKEN_NUMBER:
@@ -81,12 +81,12 @@ static void printToken(const Token *token, FILE *stream) {
 
 FILE *printTokens(const Token *head) {
     FILE *stream = tmpfile();
-    if (stream == nullptr) return nullptr;
+    if (stream == NULL) return NULL;
 
     const Token *cur = head;
 
     fprintf(stream, "\n");
-    while (cur != nullptr) {
+    while (cur != NULL) {
         printToken(cur, stream);
         cur = cur->next;
     }
@@ -98,18 +98,18 @@ FILE *printTokens(const Token *head) {
 
 Expression *createExpression(const Token *token) {
     Expression *expr = calloc(1, sizeof(Expression));
-    if (expr == nullptr) {
+    if (expr == NULL) {
         perror("Error creating expression");
-        return nullptr;
+        return NULL;
     }
 
     switch (token->type) {
         case TOKEN_IDENTIFIER:
             expr->type = EXPRESSION_VARIABLE;
             expr->identifier = strdup(token->value);
-            if (expr->identifier == nullptr) {
+            if (expr->identifier == NULL) {
                 perror("Error creating expression");
-                return nullptr;
+                return NULL;
             }
             break;
             
@@ -130,18 +130,18 @@ Expression *createExpression(const Token *token) {
         case TOKEN_OPERATOR:
             expr->type = EXPRESSION_OPERATOR;
             Component *cmp = searchEnvironment(GLOBALCONTEXT->env, token->value);
-            if (cmp == nullptr || cmp->type != COMP_OPERATION) {
+            if (cmp == NULL || cmp->type != COMP_OPERATION) {
                 printf("Couldn't locate operation %s in environment.\n", token->value);
-                return nullptr;
+                return NULL;
             }
             expr->op = cmp->operation;
             expr->arity = 2;
             
             // By default starts as binary operation, can be flattened and resized later
             expr->operands = malloc(sizeof(Expression *) * 2);
-            if (expr->operands == nullptr) {
+            if (expr->operands == NULL) {
                 perror("Error creating expression");
-                return nullptr;
+                return NULL;
             }
             break;
             
@@ -151,7 +151,7 @@ Expression *createExpression(const Token *token) {
             break;
             
         default:
-            return nullptr;
+            return NULL;
     }
 
     return expr;
@@ -160,7 +160,7 @@ Expression *createExpression(const Token *token) {
 
 FILE *printRPN(const RPNList *list) {
     FILE *stream = tmpfile();
-    if (stream == nullptr) return nullptr;
+    if (stream == NULL) return NULL;
 
     fprintf(stream, "RPN: ");
 
@@ -178,7 +178,7 @@ void freeTokens(Token *head) {
     Debug(0, "Freeing tokens.\n");
 
     Token* current = head;
-    while (current != nullptr) {
+    while (current != NULL) {
         Token *next = current->next;
         
         if (current->type != TOKEN_FUNC_CALL) {

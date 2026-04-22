@@ -38,8 +38,8 @@ typedef enum {
 
 // Maps strings to correct boolean value
 static int get_boolean(const char *string) {
-    char *t[] = {"y", "Y", "yes", "Yes", "YES", "true", "True", "TRUE", "on", "On", "ON", nullptr};
-    char *f[] = {"n", "N", "no", "No", "NO", "false", "False", "FALSE", "off", "Off", "OFF", nullptr};
+    char *t[] = {"y", "Y", "yes", "Yes", "YES", "true", "True", "TRUE", "on", "On", "ON", NULL};
+    char *f[] = {"n", "N", "no", "No", "NO", "false", "False", "FALSE", "off", "Off", "OFF", NULL};
     char **p;
 
     // Checks valid values for true
@@ -194,7 +194,7 @@ static int consumeEvent(State *state, yaml_event_t *event, Config *config) {
                 value = (char *) event->data.scalar.value;
 
                 FILE *location = fopen(value, "w+");
-                if (location == nullptr) {
+                if (location == NULL) {
                     printf("Error opening log file '%s'. Falling back on stdout.\n", value);
                     config->LOG_STREAM = stdout;
                 } else config->LOG_STREAM = location;
@@ -431,7 +431,7 @@ static void initConfig(Config *config) {
     config->LOG_STREAM = stdout;
     config->PRINT_AXIOMATIC_OPS = false;
     
-    config->STARTUP = nullptr;
+    config->STARTUP = NULL;
 
     config->MAPPING[0] = (KeywordMapping) {.cmd=K_QUIT, .keyword=strdup("quit")};
     config->MAPPING[1] = (KeywordMapping) {.cmd=K_ENV, .keyword=strdup("env")};
@@ -447,15 +447,15 @@ static void initConfig(Config *config) {
 
 Config *loadConfig(char *cpath) {
     Config *config = calloc(1, sizeof(Config));
-    if (config == nullptr) {
+    if (config == NULL) {
         perror("Error in config");
-        return nullptr;
+        return NULL;
     }
 
     initConfig(config);
 
-    FILE *cfile = nullptr;
-    if (cpath == nullptr) {
+    FILE *cfile = NULL;
+    if (cpath == NULL) {
         char *paths[] = {
             "config.yaml",
             "../config.yaml",
@@ -465,7 +465,7 @@ Config *loadConfig(char *cpath) {
         int path = 0;
 
         cfile = fopen(paths[path], "rb");
-        while (cfile == nullptr) {
+        while (cfile == NULL) {
             path ++;
             if (path < npaths) {
                 cfile = fopen(paths[path], "rb");
@@ -473,13 +473,13 @@ Config *loadConfig(char *cpath) {
             else break;
         }
 
-        if (cfile == nullptr) {
+        if (cfile == NULL) {
             perror("Error loading config");
             return config;
         }
     } else {
         cfile = fopen(cpath, "rb");
-        if (cfile == nullptr) {
+        if (cfile == NULL) {
             perror("Error loading config");
             return config;
         }
@@ -513,7 +513,7 @@ Config *loadConfig(char *cpath) {
     yaml_parser_delete(&parser);
 
     if (config->LOG_STREAM != stdout) {
-        setvbuf(config->LOG_STREAM, nullptr, _IONBF, 0); 
+        setvbuf(config->LOG_STREAM, NULL, _IONBF, 0); 
     }
 
     fclose(cfile);
@@ -528,13 +528,13 @@ Config *loadConfig(char *cpath) {
         yaml_parser_delete(&parser);
         fclose(cfile);
 
-        return nullptr;
+        return NULL;
 }
 
 
 FILE *printConfig(Config *config) {
     FILE *stream = tmpfile();
-    if (stream == nullptr) return nullptr;
+    if (stream == NULL) return NULL;
 
     fprintf(stream, "\nConfig\n");
     char *level;
@@ -589,7 +589,7 @@ FILE *printConfig(Config *config) {
 
 
 void freeConfig(Config *config) {
-    if (config == nullptr) return;
+    if (config == NULL) return;
     fclose(config->LOG_STREAM);
 
     // Frees keyword identifiers

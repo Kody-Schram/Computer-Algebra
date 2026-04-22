@@ -11,7 +11,7 @@
 
 static Function *createOpFunc(BuiltinResult *(*builtin) (int nArgs, Expression **exprs)) {
     Function *op = calloc(1, sizeof(Function));
-    if (op == nullptr) return nullptr;
+    if (op == NULL) return NULL;
     op->type = BUILTIN;
     op->builtin = builtin;
 
@@ -21,19 +21,19 @@ static Function *createOpFunc(BuiltinResult *(*builtin) (int nArgs, Expression *
 
 BuiltinResult *add(int nArgs, Expression **operands) {
     BuiltinResult *result = malloc(sizeof(BuiltinResult));
-    if (result == nullptr) {
+    if (result == NULL) {
         perror("Error calling addition builtin");
-        return nullptr;
+        return NULL;
     }
 
     if (nArgs != 2) {
         result->type = BUILTIN_SUCCESS;
-        result->output = nullptr;
+        result->output = NULL;
         return result;
     }
 
     result->type = BUILTIN_ERROR;
-    result->output = nullptr;
+    result->output = NULL;
 
     Expression *a = operands[0];
     Expression *b = operands[1];
@@ -45,7 +45,7 @@ BuiltinResult *add(int nArgs, Expression **operands) {
 
     if (a->type == EXPRESSION_INTEGER && b->type == EXPRESSION_INTEGER) {
         Expression *output = dummyExpression(EXPRESSION_INTEGER);
-        if (output == nullptr) return result;
+        if (output == NULL) return result;
 
         output->integer = a->integer + b->integer;
 
@@ -58,7 +58,7 @@ BuiltinResult *add(int nArgs, Expression **operands) {
     double bv = (b->type == EXPRESSION_INTEGER) ? (double) b->integer : b->value;
 
     Expression *output = dummyExpression(EXPRESSION_DOUBLE);
-    if (output == nullptr) return result;
+    if (output == NULL) return result;
     output->value = av + bv;
 
     result->type = BUILTIN_SUCCESS;
@@ -69,19 +69,19 @@ BuiltinResult *add(int nArgs, Expression **operands) {
 
 BuiltinResult *multiply(int nArgs, Expression **operands) {
     BuiltinResult *result = malloc(sizeof(BuiltinResult));
-    if (result == nullptr) {
+    if (result == NULL) {
         perror("Error calling addition builtin");
-        return nullptr;
+        return NULL;
     }
 
     if (nArgs != 2) {
         result->type = BUILTIN_SUCCESS;
-        result->output = nullptr;
+        result->output = NULL;
         return result;
     }
 
     result->type = BUILTIN_ERROR;
-    result->output = nullptr;
+    result->output = NULL;
 
     Expression *a = operands[0];
     Expression *b = operands[1];
@@ -93,7 +93,7 @@ BuiltinResult *multiply(int nArgs, Expression **operands) {
 
     if (a->type == EXPRESSION_INTEGER && b->type == EXPRESSION_INTEGER) {
         Expression *output = dummyExpression(EXPRESSION_INTEGER);
-        if (output == nullptr) return result;
+        if (output == NULL) return result;
 
         output->integer = a->integer * b->integer;
 
@@ -106,7 +106,7 @@ BuiltinResult *multiply(int nArgs, Expression **operands) {
     double bv = (b->type == EXPRESSION_INTEGER) ? (double) b->integer : b->value;
 
     Expression *output = dummyExpression(EXPRESSION_DOUBLE);
-    if (output == nullptr) return result;
+    if (output == NULL) return result;
     output->value = av * bv;
 
     result->type = BUILTIN_SUCCESS;
@@ -130,19 +130,19 @@ long long _powi(long long a, long long e) {
 
 BuiltinResult *exponent(int nArgs, Expression **operands) {
     BuiltinResult *result = malloc(sizeof(BuiltinResult));
-    if (result == nullptr) {
+    if (result == NULL) {
         perror("Error calling addition builtin");
-        return nullptr;
+        return NULL;
     }
 
     if (nArgs != 2) {
         result->type = BUILTIN_SUCCESS;
-        result->output = nullptr;
+        result->output = NULL;
         return result;
     }
 
     result->type = BUILTIN_ERROR;
-    result->output = nullptr;
+    result->output = NULL;
 
     Expression *a = operands[0];
     Expression *b = operands[1];
@@ -154,7 +154,7 @@ BuiltinResult *exponent(int nArgs, Expression **operands) {
 
     if (a->type == EXPRESSION_INTEGER && b->type == EXPRESSION_INTEGER) {
         Expression *output = dummyExpression(EXPRESSION_INTEGER);
-        if (output == nullptr) return result;
+        if (output == NULL) return result;
 
         output->integer = _powi(a->integer, b->integer);
 
@@ -167,7 +167,7 @@ BuiltinResult *exponent(int nArgs, Expression **operands) {
     double bv = (b->type == EXPRESSION_INTEGER) ? (double) b->integer : b->value;
 
     Expression *output = dummyExpression(EXPRESSION_DOUBLE);
-    if (output == nullptr) return result;
+    if (output == NULL) return result;
     output->value = powf(av, bv);
 
     result->type = BUILTIN_SUCCESS;
@@ -178,19 +178,19 @@ BuiltinResult *exponent(int nArgs, Expression **operands) {
 
 BuiltinResult *subtract(int nArgs, Expression **operands) {
     BuiltinResult *result = malloc(sizeof(BuiltinResult));
-    if (result == nullptr) {
+    if (result == NULL) {
         perror("Error calling addition builtin");
-        return nullptr;
+        return NULL;
     }
 
     if (nArgs != 2) {
         result->type = BUILTIN_SUCCESS;
-        result->output = nullptr;
+        result->output = NULL;
         return result;
     }
 
     result->type = BUILTIN_ERROR;
-    result->output = nullptr;
+    result->output = NULL;
 
     Expression *a = operands[0];
     Expression *b = operands[1];
@@ -202,7 +202,7 @@ BuiltinResult *subtract(int nArgs, Expression **operands) {
 
     if (a->type == EXPRESSION_INTEGER && b->type == EXPRESSION_INTEGER) {
         Expression *output = dummyExpression(EXPRESSION_INTEGER);
-        if (output == nullptr) return result;
+        if (output == NULL) return result;
 
         output->integer = a->integer - b->integer;
 
@@ -215,7 +215,7 @@ BuiltinResult *subtract(int nArgs, Expression **operands) {
     double bv = (b->type == EXPRESSION_INTEGER) ? (double) b->integer : b->value;
 
     Expression *output = dummyExpression(EXPRESSION_DOUBLE);
-    if (output == nullptr) return result;
+    if (output == NULL) return result;
     output->value = av - bv;
 
     result->type = BUILTIN_SUCCESS;
@@ -226,19 +226,19 @@ BuiltinResult *subtract(int nArgs, Expression **operands) {
 
 BuiltinResult *divide(int nArgs, Expression **operands) {
     BuiltinResult *result = malloc(sizeof(BuiltinResult));
-    if (result == nullptr) {
+    if (result == NULL) {
         perror("Error calling addition builtin");
-        return nullptr;
+        return NULL;
     }
 
     if (nArgs != 2) {
         result->type = BUILTIN_SUCCESS;
-        result->output = nullptr;
+        result->output = NULL;
         return result;
     }
 
     result->type = BUILTIN_ERROR;
-    result->output = nullptr;
+    result->output = NULL;
 
     if (GLOBALCONTEXT->config->PRESERVE_FRACS) {
         result->type = BUILTIN_SUCCESS;
@@ -252,7 +252,7 @@ BuiltinResult *divide(int nArgs, Expression **operands) {
     double bv = (b->type == EXPRESSION_INTEGER) ? (double) b->integer : b->value;
 
     Expression *output = dummyExpression(EXPRESSION_DOUBLE);
-    if (output == nullptr) return result;
+    if (output == NULL) return result;
     output->value = av / bv;
 
     result->type = BUILTIN_SUCCESS;
@@ -262,15 +262,15 @@ BuiltinResult *divide(int nArgs, Expression **operands) {
 
 
 int initAxioms() {
-    Operation *addition = nullptr;
-    Operation *multiplication = nullptr;
-    Operation *exponentiation = nullptr;
+    Operation *addition = NULL;
+    Operation *multiplication = NULL;
+    Operation *exponentiation = NULL;
 
-    Operation *subtraction = nullptr;
-    Operation *division = nullptr;
+    Operation *subtraction = NULL;
+    Operation *division = NULL;
 
     addition = malloc(sizeof(Operation));
-    if (addition == nullptr) goto error;
+    if (addition == NULL) goto error;
 
     addition->associative = true;
     addition->commutative = true;
@@ -282,7 +282,7 @@ int initAxioms() {
     if (!bindComponent(GLOBALCONTEXT->env, COMP_OPERATION, "+", addition)) goto error;
 
     multiplication = malloc(sizeof(Operation));
-    if (multiplication == nullptr) goto error;
+    if (multiplication == NULL) goto error;
 
     multiplication->associative = true;
     multiplication->commutative = true;
@@ -294,7 +294,7 @@ int initAxioms() {
     if (!bindComponent(GLOBALCONTEXT->env, COMP_OPERATION, "*", multiplication)) goto error;
 
     exponentiation = malloc(sizeof(Operation));
-    if (exponentiation == nullptr) goto error;
+    if (exponentiation == NULL) goto error;
 
     exponentiation->associative = false;
     exponentiation->commutative = false;
@@ -311,7 +311,7 @@ int initAxioms() {
     // =========================================================
 
     subtraction = malloc(sizeof(Operation));
-    if (subtraction == nullptr) goto error;
+    if (subtraction == NULL) goto error;
 
     subtraction->associative = true;
     subtraction->commutative = false;
@@ -323,7 +323,7 @@ int initAxioms() {
     if (!bindComponent(GLOBALCONTEXT->env, COMP_OPERATION, "-", subtraction)) goto error;
 
     division = malloc(sizeof(Operation));
-    if (division == nullptr) goto error;
+    if (division == NULL) goto error;
 
     division->associative = false;
     division->commutative = false;

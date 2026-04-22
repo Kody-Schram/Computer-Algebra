@@ -9,8 +9,8 @@
 
 
 static void freeFunction(Function *func) {
-    if (func == nullptr) return;
-    if (func->parameters != nullptr) {
+    if (func == NULL) return;
+    if (func->parameters != NULL) {
         for (int i = 0; i < func->nParameters; i ++) free(func->parameters[i]);
     }
     free(func->parameters);
@@ -20,7 +20,7 @@ static void freeFunction(Function *func) {
 
 
 static void freeOperation(Operation *op) {
-    if (op == nullptr) return;
+    if (op == NULL) return;
     freeFunction(op->definition);
     free(op);
 }
@@ -53,7 +53,7 @@ Environment *createEnvironment(EnvironmentType type) {
     switch (type) {
         case ENV_HASH:
             printf("Hash env not implemented yet\n");
-            return nullptr;
+            return NULL;
             
         default:
             break;
@@ -65,14 +65,14 @@ Environment *createEnvironment(EnvironmentType type) {
 
 int bindComponent(Environment *env, ComponentType type, const char *identifier, const void *data) {
     Component *new = calloc(1, sizeof(Component));
-    if (new == nullptr) {
+    if (new == NULL) {
         perror("Error in binding component");
         return 0;
     }
     
     new->type = type;
     new->identifier = strdup(identifier);
-    if (new->identifier == nullptr) {
+    if (new->identifier == NULL) {
         perror("Error binding component");
         freeComponent(new);
         return 0;
@@ -114,14 +114,14 @@ int bindComponent(Environment *env, ComponentType type, const char *identifier, 
 
 
 Component* searchEnvironment(const Environment *env, const char *identifier) {
-    if (identifier == nullptr) return nullptr;
+    if (identifier == NULL) return NULL;
     //printf("searching environment for '%s'\n", identifier);
     
     switch (env->type) {
         case ENV_LIST:
             //("Checking linked list env\n");
             Component *cmp = env->compList;
-            while (cmp != nullptr) {
+            while (cmp != NULL) {
                 if (!strcmp(cmp->identifier, identifier)) return cmp;
                 cmp = cmp->next;
             }
@@ -129,15 +129,15 @@ Component* searchEnvironment(const Environment *env, const char *identifier) {
             
         case ENV_HASH:
             printf("Stop trying bro.\n");
-            return nullptr;
+            return NULL;
     }
 
-    return nullptr;
+    return NULL;
 }
 
 
 static void printLinkedCmpList(FILE *stream, const Component *cmp) {
-    while (cmp != nullptr) {
+    while (cmp != NULL) {
         switch (cmp->type) {
             case COMP_FUNCTION:
                 Function *func = cmp->func;
@@ -148,7 +148,7 @@ static void printLinkedCmpList(FILE *stream, const Component *cmp) {
                 fprintf(stream, "%s) = ", func->parameters[func->nParameters-1]);
                 
                 char *str = expressionToString(func->definition);
-                if (str == nullptr) return;
+                if (str == NULL) return;
                 fprintf(stream, "%s\n", str);
                 free(str);
                 
@@ -158,7 +158,7 @@ static void printLinkedCmpList(FILE *stream, const Component *cmp) {
                 fprintf(stream, "%s = ", cmp->identifier);
                 
                 str = expressionToString(cmp->value);
-                if (str == nullptr) return;
+                if (str == NULL) return;
                 fprintf(stream, "%s\n", str);
                 free(str);
                 
@@ -181,7 +181,7 @@ static void printLinkedCmpList(FILE *stream, const Component *cmp) {
 
 FILE *printEnvironment(const Environment *env) {
     FILE *stream = tmpfile();
-    if (stream == nullptr || env == nullptr) return nullptr;
+    if (stream == NULL || env == NULL) return NULL;
     
     switch (env->type) {
         case ENV_LIST:
@@ -203,7 +203,7 @@ void freeEnvironment(Environment *env) {
     switch (env->type) {
         case ENV_LIST:
             Component *cmp = env->compList;
-            while (cmp != nullptr) {
+            while (cmp != NULL) {
                 Component *temp = cmp->next;
                 freeComponent(cmp);
                 cmp = temp;
@@ -225,7 +225,7 @@ int initOutputVariables(Environment *env) {
     if (outputs > 0) {
         if (outputs == 1) {
             Expression *temp = dummyExpression(EXPRESSION_DOUBLE);
-            if (temp == nullptr) return 0;
+            if (temp == NULL) return 0;
             temp->value = 0;
 
             if (!bindComponent(env, COMP_VARIABLE, GLOBALCONTEXT->config->OUTPUT_ID, temp)) {
@@ -239,11 +239,11 @@ int initOutputVariables(Environment *env) {
             int size = strlen(GLOBALCONTEXT->config->OUTPUT_ID) + 12;
 
             char *str = malloc(size);
-            if (str == nullptr) return 0;
+            if (str == NULL) return 0;
             snprintf(str, size, "%s_%d", GLOBALCONTEXT->config->OUTPUT_ID, i);
 
             Expression *temp = dummyExpression(EXPRESSION_DOUBLE);
-            if (temp == nullptr) return 0;
+            if (temp == NULL) return 0;
             temp->value = 0;
 
             if (!bindComponent(env, COMP_VARIABLE, str, temp)) {
@@ -264,7 +264,7 @@ int updateOutputVariables(Environment *env, Expression *output) {
     Debug(0, "Updating output variable(s).\n");
     if (GLOBALCONTEXT->config->OUTPUTS == 1) {
         Component *cmp = searchEnvironment(GLOBALCONTEXT->env, GLOBALCONTEXT->config->OUTPUT_ID);
-        if (cmp == nullptr) return 0;
+        if (cmp == NULL) return 0;
 
         freeExpression(cmp->value);
         cmp->value = output;
@@ -272,11 +272,11 @@ int updateOutputVariables(Environment *env, Expression *output) {
     } else {
         int size = strlen(GLOBALCONTEXT->config->OUTPUT_ID) + 12;
         char *str = malloc(size);
-        if (str == nullptr) return 0;
+        if (str == NULL) return 0;
         snprintf(str, size, "%s_%d", GLOBALCONTEXT->config->OUTPUT_ID, GLOBALCONTEXT->config->OUTPUTS - 1);
 
         Component *last = searchEnvironment(GLOBALCONTEXT->env, str);
-        if (last == nullptr) {
+        if (last == NULL) {
             free(str);
             return 0;
         }
@@ -286,11 +286,11 @@ int updateOutputVariables(Environment *env, Expression *output) {
         for (int i = GLOBALCONTEXT->config->OUTPUTS - 2; i >= 0; i --) {
             size = strlen(GLOBALCONTEXT->config->OUTPUT_ID) + 12;
             str = malloc(size);
-            if (str == nullptr) return 0;
+            if (str == NULL) return 0;
             snprintf(str, size, "%s_%d", GLOBALCONTEXT->config->OUTPUT_ID, i);
 
             Component *cmp = searchEnvironment(GLOBALCONTEXT->env, str);
-            if (cmp == nullptr) {
+            if (cmp == NULL) {
                 free(str);
                 return 0;
             }
@@ -302,11 +302,11 @@ int updateOutputVariables(Environment *env, Expression *output) {
 
         size = strlen(GLOBALCONTEXT->config->OUTPUT_ID) + 12;
         str = malloc(size);
-        if (str == nullptr) return 0;
+        if (str == NULL) return 0;
         snprintf(str, size, "%s_0", GLOBALCONTEXT->config->OUTPUT_ID);
 
         Component *first = searchEnvironment(GLOBALCONTEXT->env, str);
-        if (first == nullptr) {
+        if (first == NULL) {
             free(str);
             return 0;
         }

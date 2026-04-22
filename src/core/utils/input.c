@@ -6,10 +6,10 @@ const int DEFAULT_INPUT_SIZE = 50;
 char* terminalEntry(int line) {
 
     char* expression = (char *) malloc(DEFAULT_INPUT_SIZE * sizeof(char));
-    if (expression == nullptr) {
+    if (expression == NULL) {
         printf("Cannot allocate space for expression.");
         free(expression);
-        return nullptr;
+        return NULL;
     }
     
     printf("%d > ", line);
@@ -23,11 +23,11 @@ char* terminalEntry(int line) {
         if (length >= size - 1) {
             size *= 2;
             char* temp = realloc(expression, size);
-            if (temp == nullptr) {
+            if (temp == NULL) {
                 printf("Cannot allocate more space for expression.");
                 free(temp);
 
-                return nullptr;
+                return NULL;
             }
 
             expression = temp;

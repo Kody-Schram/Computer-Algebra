@@ -32,8 +32,8 @@ static int handleKeywords(char *buffer) {
                 printf("Reloading config.\n");
 
                 freeConfig(GLOBALCONTEXT->config);
-                GLOBALCONTEXT->config = loadConfig(nullptr);
-                if (GLOBALCONTEXT->config == nullptr) return -1;
+                GLOBALCONTEXT->config = loadConfig(NULL);
+                if (GLOBALCONTEXT->config == NULL) return -1;
 
                 Info(1, printConfig(GLOBALCONTEXT->config));
                 return 1;
@@ -52,7 +52,7 @@ static int process(char *buffer) {
 
     ParserResult result = parse(buffer);
     if (result.type == PARSER_ERROR) return 0;
-    if (result.expr == nullptr) return 1;
+    if (result.expr == NULL) return 1;
 
     if (!execute(&result.expr)) {
         freeExpression(result.expr);
@@ -60,7 +60,7 @@ static int process(char *buffer) {
     }
 
     char *str = expressionToString(result.expr);
-    if (str != nullptr) printf("%s\n\n", str);
+    if (str != NULL) printf("%s\n\n", str);
     free(str);
 
     if (GLOBALCONTEXT->config->OUTPUTS > 0) {
@@ -73,16 +73,16 @@ static int process(char *buffer) {
 
 static int runStartup() {
     // Load startup script
-    if (GLOBALCONTEXT->config->STARTUP != nullptr) {
+    if (GLOBALCONTEXT->config->STARTUP != NULL) {
         Debug(0, "\nRunning Startup Script\n");
         char *line = strtok(GLOBALCONTEXT->config->STARTUP, "\n");
 
-        while (line != nullptr) {
+        while (line != NULL) {
             if (!strcmp(line, "FILE")) {
-                line = strtok(nullptr, "\n");
+                line = strtok(NULL, "\n");
                 Debug(0, "Running startup script from file: '%s'.\n", line);
                 FILE *file = fopen(line, "r");
-                if (file == nullptr) {
+                if (file == NULL) {
                     perror("Couldn't load startup script");
                     return 0;
                 }
@@ -101,11 +101,11 @@ static int runStartup() {
                 printf("S > %s\n", line);
                 if (!process(line)) return 0;
             }
-            line = strtok(nullptr, "\n");
+            line = strtok(NULL, "\n");
         }
 
         free(GLOBALCONTEXT->config->STARTUP);
-        GLOBALCONTEXT->config->STARTUP = nullptr;
+        GLOBALCONTEXT->config->STARTUP = NULL;
     }
 
     return 1;
@@ -113,7 +113,7 @@ static int runStartup() {
 
 
 int main(int argc, char *argv[]) {
-    char *cpath = nullptr;
+    char *cpath = NULL;
     if (argc > 1) {
         cpath = argv[1];
         printf("Loading config from '%s'\n", cpath);
