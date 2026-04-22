@@ -5,14 +5,13 @@
 #include "parser.h"
 #include "core/context/context.h"
 #include "core/context/environment.h"
-#include "core/parsing/parserTypes.h"
 #include "core/utils/log.h"
 
 #include "core/parsing/codegen/tokenizer.h"
 #include "core/parsing/codegen/lexer.h"
 #include "core/parsing/codegen/ast.h"
-#include "core/utils/types.h"
-#include "parserUtils.h"
+#include "core/parsing/parser_utils.h"
+
 
 static const int DEFAULT_PARAMETERS_SIZE = 3;
 

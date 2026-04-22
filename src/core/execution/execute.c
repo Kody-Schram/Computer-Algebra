@@ -9,8 +9,8 @@
 
 
 static int executeRecur(Expression **ptr, Environment *env) {
+    if (ptr == nullptr || *ptr == nullptr) return 0;
     Expression *expr = *ptr;
-    if (expr == nullptr) return 0;
 
     Debug(0, "Recursively executing\n");
     Debug(1, printExpression(expr));

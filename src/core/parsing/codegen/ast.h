@@ -2,7 +2,7 @@
 #define AST_H
 
 #include "core/utils/types.h"
-#include "core/parsing/parserTypes.h"
+#include "core/parsing/parser_types.h"
 
 
 /**

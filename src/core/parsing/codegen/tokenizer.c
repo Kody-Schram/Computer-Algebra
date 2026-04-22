@@ -7,7 +7,7 @@
 #include "core/context/context.h"
 #include "core/context/environment.h"
 #include "core/utils/log.h"
-#include "core/parsing/parserUtils.h"
+#include "core/parsing/parser_utils.h"
 
 typedef struct  {
     char *op;

@@ -12,7 +12,7 @@ add_library(Core STATIC
     context/environment.c
     
     parsing/parser.c
-    parsing/parserUtils.c
+    parsing/parser_utils.c
     
     parsing/codegen/ast.c
     parsing/codegen/lexer.c

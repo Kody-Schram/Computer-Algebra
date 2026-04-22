@@ -4,7 +4,7 @@
 #include <stdio.h>
 
 #include "core/utils/types.h"
-#include "parserTypes.h"
+#include "parser_types.h"
 
 /**
  * @brief Creates a Token object

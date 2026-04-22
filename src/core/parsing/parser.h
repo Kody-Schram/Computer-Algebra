@@ -2,7 +2,7 @@
 #define PARSER_H
 
 #include "core/utils/types.h"
-#include "parserTypes.h"
+#include "parser_types.h"
 
 typedef enum ParserResultType ParserResultType;
 typedef struct ParserResult ParserResult;

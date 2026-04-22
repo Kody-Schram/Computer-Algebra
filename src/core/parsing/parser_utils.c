@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "parserUtils.h"
+#include "parser_utils.h"
 #include "core/context/context.h"
 #include "core/context/environment.h"
 #include "core/utils/log.h"
