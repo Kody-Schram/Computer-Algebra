@@ -9,9 +9,10 @@
 #include "core/utils/types.h"
 
 
-static Function *createOpFunc(BuiltinResult *(*builtin) (int nArgs, Expression **exprs)) {
+static Function *createBinOpFunc(BuiltinResult *(*builtin) (int nArgs, Expression **exprs)) {
     Function *op = calloc(1, sizeof(Function));
     if (op == NULL) return NULL;
+    op->nParameters = 2;
     op->type = BUILTIN;
     op->builtin = builtin;
 
@@ -26,18 +27,11 @@ BuiltinResult *add(int nArgs, Expression **operands) {
         return NULL;
     }
 
-    if (nArgs != 2) {
-        result->type = BUILTIN_SUCCESS;
-        result->output = NULL;
-        return result;
-    }
-
     result->type = BUILTIN_ERROR;
     result->output = NULL;
 
     Expression *a = operands[0];
     Expression *b = operands[1];
-
 
     // If not both numbers, return the addition expression again
     if (a->type != EXPRESSION_INTEGER && a->type != EXPRESSION_DOUBLE &&
@@ -74,18 +68,11 @@ BuiltinResult *multiply(int nArgs, Expression **operands) {
         return NULL;
     }
 
-    if (nArgs != 2) {
-        result->type = BUILTIN_SUCCESS;
-        result->output = NULL;
-        return result;
-    }
-
     result->type = BUILTIN_ERROR;
     result->output = NULL;
 
     Expression *a = operands[0];
     Expression *b = operands[1];
-
 
     // If not both numbers, return the addition expression again
     if (a->type != EXPRESSION_INTEGER && a->type != EXPRESSION_DOUBLE &&
@@ -135,18 +122,11 @@ BuiltinResult *exponent(int nArgs, Expression **operands) {
         return NULL;
     }
 
-    if (nArgs != 2) {
-        result->type = BUILTIN_SUCCESS;
-        result->output = NULL;
-        return result;
-    }
-
     result->type = BUILTIN_ERROR;
     result->output = NULL;
 
     Expression *a = operands[0];
     Expression *b = operands[1];
-
 
     // If not both numbers, return the addition expression again
     if (a->type != EXPRESSION_INTEGER && a->type != EXPRESSION_DOUBLE &&
@@ -183,18 +163,12 @@ BuiltinResult *subtract(int nArgs, Expression **operands) {
         return NULL;
     }
 
-    if (nArgs != 2) {
-        result->type = BUILTIN_SUCCESS;
-        result->output = NULL;
-        return result;
-    }
 
     result->type = BUILTIN_ERROR;
     result->output = NULL;
 
     Expression *a = operands[0];
     Expression *b = operands[1];
-
 
     // If not both numbers, return the addition expression again
     if (a->type != EXPRESSION_INTEGER && a->type != EXPRESSION_DOUBLE &&
@@ -229,12 +203,6 @@ BuiltinResult *divide(int nArgs, Expression **operands) {
     if (result == NULL) {
         perror("Error calling addition builtin");
         return NULL;
-    }
-
-    if (nArgs != 2) {
-        result->type = BUILTIN_SUCCESS;
-        result->output = NULL;
-        return result;
     }
 
     result->type = BUILTIN_ERROR;
@@ -276,7 +244,7 @@ int initAxioms() {
     addition->commutative = true;
     addition->symbol = '+';
     addition->type = OP_AXIOMATIC;
-    addition->definition = createOpFunc(add);
+    addition->definition = createBinOpFunc(add);
 
     Debug(0, "Binding addition operation\n");
     if (!bindComponent(GLOBALCONTEXT->env, COMP_OPERATION, "+", addition)) goto error;
@@ -288,7 +256,7 @@ int initAxioms() {
     multiplication->commutative = true;
     multiplication->symbol = '*';
     multiplication->type = OP_AXIOMATIC;
-    multiplication->definition = createOpFunc(multiply);
+    multiplication->definition = createBinOpFunc(multiply);
 
     Debug(0, "Binding multiplication operation\n");
     if (!bindComponent(GLOBALCONTEXT->env, COMP_OPERATION, "*", multiplication)) goto error;
@@ -300,7 +268,7 @@ int initAxioms() {
     exponentiation->commutative = false;
     exponentiation->symbol = '^';
     exponentiation->type = OP_AXIOMATIC;
-    exponentiation->definition = createOpFunc(exponent);
+    exponentiation->definition = createBinOpFunc(exponent);
 
     Debug(0, "Binding exponentiation operation\n");
     if (!bindComponent(GLOBALCONTEXT->env, COMP_OPERATION, "^", exponentiation)) goto error;
@@ -317,7 +285,7 @@ int initAxioms() {
     subtraction->commutative = false;
     subtraction->symbol = '-';
     subtraction->type = OP_AXIOMATIC;
-    subtraction->definition = createOpFunc(subtract);
+    subtraction->definition = createBinOpFunc(subtract);
 
     Debug(0, "Binding subtraction operation\n");
     if (!bindComponent(GLOBALCONTEXT->env, COMP_OPERATION, "-", subtraction)) goto error;
@@ -329,7 +297,7 @@ int initAxioms() {
     division->commutative = false;
     division->symbol = '/';
     division->type = OP_AXIOMATIC;
-    division->definition = createOpFunc(divide);
+    division->definition = createBinOpFunc(divide);
 
     Debug(0, "Binding division operation\n");
     if (!bindComponent(GLOBALCONTEXT->env, COMP_OPERATION, "/", division)) goto error;
