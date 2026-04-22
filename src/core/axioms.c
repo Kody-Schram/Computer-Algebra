@@ -12,7 +12,6 @@
 static Function *createOpFunc(BuiltinResult *(*builtin) (int nArgs, Expression **exprs)) {
     Function *op = calloc(1, sizeof(Function));
     if (op == nullptr) return nullptr;
-    op->parameters = malloc(2 * sizeof(char *));
     op->type = BUILTIN;
     op->builtin = builtin;
     
@@ -26,6 +25,13 @@ BuiltinResult *add(int nArgs, Expression **operands) {
         perror("Error calling addition builtin");
         return nullptr;
     }
+    
+    if (nArgs != 2) {
+        result->type = BUILTIN_SUCCESS;
+        result->output = nullptr;
+        return result;
+    }
+    
     result->type = BUILTIN_ERROR;
     result->output = nullptr;
     
@@ -67,6 +73,13 @@ BuiltinResult *multiply(int nArgs, Expression **operands) {
         perror("Error calling addition builtin");
         return nullptr;
     }
+    
+    if (nArgs != 2) {
+        result->type = BUILTIN_SUCCESS;
+        result->output = nullptr;
+        return result;
+    }
+    
     result->type = BUILTIN_ERROR;
     result->output = nullptr;
     
@@ -121,6 +134,13 @@ BuiltinResult *exponent(int nArgs, Expression **operands) {
         perror("Error calling addition builtin");
         return nullptr;
     }
+    
+    if (nArgs != 2) {
+        result->type = BUILTIN_SUCCESS;
+        result->output = nullptr;
+        return result;
+    }
+    
     result->type = BUILTIN_ERROR;
     result->output = nullptr;
     
@@ -162,6 +182,13 @@ BuiltinResult *subtract(int nArgs, Expression **operands) {
         perror("Error calling addition builtin");
         return nullptr;
     }
+    
+    if (nArgs != 2) {
+        result->type = BUILTIN_SUCCESS;
+        result->output = nullptr;
+        return result;
+    }
+    
     result->type = BUILTIN_ERROR;
     result->output = nullptr;
     
@@ -203,6 +230,13 @@ BuiltinResult *divide(int nArgs, Expression **operands) {
         perror("Error calling addition builtin");
         return nullptr;
     }
+    
+    if (nArgs != 2) {
+        result->type = BUILTIN_SUCCESS;
+        result->output = nullptr;
+        return result;
+    }
+    
     result->type = BUILTIN_ERROR;
     result->output = nullptr;
     
