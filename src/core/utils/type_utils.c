@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "types.h"
+#include "type_utils.h"
 #include "core/utils/log.h"
 
 
@@ -282,3 +282,14 @@ char *expressionToString(const Expression *expr) {
     fclose(stream);
     return string;
 }
+
+
+void freeFunction(Function *func) {
+    if (func == NULL) return;
+    if (func->parameters != NULL) {
+        for (int i = 0; i < func->nParameters; i ++) free(func->parameters[i]);
+    }
+    free(func->parameters);
+    if (func->type == DEFINED) freeExpression(func->definition);
+    free(func);
+} 

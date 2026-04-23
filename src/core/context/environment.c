@@ -6,17 +6,7 @@
 #include "context.h"
 #include "core/utils/log.h"
 #include "core/utils/types.h" 
-
-
-static void freeFunction(Function *func) {
-    if (func == NULL) return;
-    if (func->parameters != NULL) {
-        for (int i = 0; i < func->nParameters; i ++) free(func->parameters[i]);
-    }
-    free(func->parameters);
-    if (func->type == DEFINED) freeExpression(func->definition);
-    free(func);
-} 
+#include "core/utils/type_utils.h"
 
 
 static void freeOperation(Operation *op) {

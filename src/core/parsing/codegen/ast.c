@@ -5,6 +5,7 @@
 #include "core/context/context.h"
 #include "core/utils/log.h"
 #include "core/parsing/parser_utils.h"
+#include "core/utils/type_utils.h"
 
 #define DEFAULT_NODE_STACK_SIZE 10
 

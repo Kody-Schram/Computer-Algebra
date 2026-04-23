@@ -1,5 +1,5 @@
 #include "algebra.h"
-#include "core/utils/types.h"
+#include "core/utils/type_utils.h"
 
 long long _gcd(long long a, long long b) {
     long long temp;

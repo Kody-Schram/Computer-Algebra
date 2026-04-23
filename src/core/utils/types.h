@@ -5,10 +5,6 @@
     #define PROJECT_NAME "project"
 #endif
 
-#include <stdio.h>
-
-// Forward declare from environment.h
-typedef struct Environment Environment;
 
 typedef enum ComponentType ComponentType;
 typedef struct Component Component;
@@ -103,20 +99,5 @@ struct Function {
         BuiltinResult *(*builtin) (int nArgs, Expression ** exprs);
     };
 };
-
-
-Expression *dummyExpression(ExpressionType type);
-
-
-Expression *deepCopyExpression(const Expression *expr);
-
-
-FILE *printExpression(const Expression *expr);
-
-
-void freeExpression(Expression *expr);
-
-
-char *expressionToString(const Expression *expr);
 
 #endif

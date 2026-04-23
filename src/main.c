@@ -8,7 +8,7 @@
 #include "core/utils/log.h"
 #include "core/utils/input.h"
 
-#include "core/utils/types.h"
+#include "core/utils/type_utils.h"
 #include "core/axioms.h"
 
 #include "core/parsing/parser.h"
@@ -130,6 +130,7 @@ int main(int argc, char *argv[]) {
         freeContext(GLOBALCONTEXT);
         return 1;
     }
+    
     Debug(0, "Project name: " PROJECT_NAME "\n");
     
     if (!initAxioms()) {

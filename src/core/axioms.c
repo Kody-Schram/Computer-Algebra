@@ -7,6 +7,7 @@
 #include "core/context/environment.h"
 #include "core/utils/log.h"
 #include "core/utils/types.h"
+#include "core/utils/type_utils.h"
 
 
 static Function *createBinOpFunc(BuiltinResult *(*builtin) (int nArgs, Expression **exprs)) {

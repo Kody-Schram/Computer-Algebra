@@ -4,7 +4,6 @@
 #include <string.h>
 
 #include "config.h"
-#include "core/utils/types.h"
 
 
 typedef enum {
