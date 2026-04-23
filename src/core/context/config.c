@@ -6,8 +6,6 @@
 #include "core/utils/types.h"
 
 
-static const int DEFAULT_MAPPING_SIZE = 5;
-
 typedef enum {
     STATE_START,
     STATE_STREAM,

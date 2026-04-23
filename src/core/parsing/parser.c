@@ -13,7 +13,7 @@
 #include "core/parsing/parser_utils.h"
 
 
-static const int DEFAULT_PARAMETERS_SIZE = 3;
+#define DEFAULT_PARAMETERS_SIZE 3
 
 typedef enum {
     IDENTIFIER,

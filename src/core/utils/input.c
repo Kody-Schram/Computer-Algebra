@@ -1,11 +1,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-const int DEFAULT_INPUT_SIZE = 50;
+#define DEFAULT_INPUT_SIZE 50
 
 char* terminalEntry(int line) {
 
-    char* expression = (char *) malloc(DEFAULT_INPUT_SIZE * sizeof(char));
+    int size = DEFAULT_INPUT_SIZE;
+    int length = 0;
+    char* expression = (char *) malloc(size * sizeof(char));
     if (expression == NULL) {
         printf("Cannot allocate space for expression.");
         free(expression);
@@ -14,9 +16,6 @@ char* terminalEntry(int line) {
     
     printf("%d > ", line);
     fflush(stdout);
-
-    int size = DEFAULT_INPUT_SIZE;
-    int length = 0;
 
     char c;
     while ((c = getchar()) != '\n' && c!= EOF) {

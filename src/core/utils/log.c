@@ -4,7 +4,7 @@
 #include "log.h"
 #include "core/context/context.h"
 
-static const int DEFAULT_BUFFER = 128;
+#define DEFAULT_BUFFER 128
 
 
 void printStream(FILE *stream) {

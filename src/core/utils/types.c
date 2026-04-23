@@ -6,7 +6,7 @@
 #include "core/utils/log.h"
 
 
-static const int DEFUALT_STRING_SIZE = 64;
+#define DEFUALT_STRING_SIZE 64
 
 
 Expression *dummyExpression(ExpressionType type) {
