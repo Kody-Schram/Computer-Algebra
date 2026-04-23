@@ -1,9 +1,4 @@
 add_library(Core STATIC
-    axioms.c
-
-    execution/simplify.c
-    execution/execute.c
-    
     utils/input.c
     utils/log.c
     utils/type_utils.c
@@ -19,6 +14,11 @@ add_library(Core STATIC
     parsing/codegen/ast.c
     parsing/codegen/lexer.c
     parsing/codegen/tokenizer.c
+    
+    execution/simplify.c
+    execution/execute.c
+    
+    primitives/operations.c
 )
 
 target_link_libraries(Core PRIVATE ${YAML_LIBRARIES})

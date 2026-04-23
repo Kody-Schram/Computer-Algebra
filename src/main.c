@@ -9,7 +9,7 @@
 #include "core/utils/input.h"
 
 #include "core/utils/type_utils.h"
-#include "core/axioms.h"
+#include "core/primitives/operations.h"
 
 #include "core/parsing/parser.h"
 #include "core/execution/simplify.h"
@@ -133,7 +133,7 @@ int main(int argc, char *argv[]) {
     
     Debug(0, "Project name: " PROJECT_NAME "\n");
     
-    if (!initAxioms()) {
+    if (!initPrimitiveOperations()) {
         freeContext(GLOBALCONTEXT);
         return 1;
     }
