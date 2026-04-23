@@ -95,8 +95,8 @@ struct BuiltinResult {
 
 struct Function {
     FunctionType type;
-    char **parameters;
     int nParameters;
+    char **parameters;
 
     union {
         Expression *definition;

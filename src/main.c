@@ -130,6 +130,7 @@ int main(int argc, char *argv[]) {
         freeContext(GLOBALCONTEXT);
         return 1;
     }
+    Debug(0, "Project name: " PROJECT_NAME "\n");
     
     if (!initAxioms()) {
         freeContext(GLOBALCONTEXT);

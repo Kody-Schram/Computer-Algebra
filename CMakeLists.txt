@@ -4,6 +4,7 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 
 project(algebra C)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+add_compile_definitions(PROJECT_NAME="${PROJECT_NAME}")
 
 if(NOT CMAKE_BUILD_TYPE) 
     message("No build type specified, defaulting to release.")

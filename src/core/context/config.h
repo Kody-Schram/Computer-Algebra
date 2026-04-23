@@ -32,6 +32,8 @@ struct Config {
     LOG_LEVEL LOG_LEVEL;
     int OUTPUTS;
     
+    char *CONFIG_FILE_PATH;
+    
     FILE *LOG_STREAM;
     char *STARTUP;
     char *OUTPUT_ID;

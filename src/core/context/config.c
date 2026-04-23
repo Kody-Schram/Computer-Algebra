@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <yaml.h>
 #include <string.h>
 
@@ -425,6 +426,8 @@ static int consumeEvent(State *state, yaml_event_t *event, Config *config) {
 
 
 static void initConfig(Config *config) {
+    config->CONFIG_FILE_PATH = NULL;
+    
     config->LOG_LEVEL = 0;
     config->LOG_STREAM = stdout;
     config->PRINT_AXIOMATIC_OPS = false;
@@ -454,33 +457,46 @@ Config *loadConfig(char *cpath) {
 
     FILE *cfile = NULL;
     if (cpath == NULL) {
+        printf("projectname: %s\n", PROJECT_NAME);
+        
+        char default_path[128];
+        const char *home = getenv("HOME");
+        if (home == NULL) home = ".";
+        
+        sprintf(default_path, "%s/.config/%s/config.yaml", home, PROJECT_NAME);
+        
         char *paths[] = {
+            strdup(default_path),
             "config.yaml",
-            "../config.yaml",
-            "~/.config/" PROJECT_NAME "/config.yaml"
+            "../config.yaml"
         };
         int npaths = sizeof(paths) / sizeof(char *);
         int path = 0;
 
-        cfile = fopen(paths[path], "rb");
-        while (cfile == NULL) {
-            path ++;
-            if (path < npaths) {
-                cfile = fopen(paths[path], "rb");
+        while (cfile == NULL && path < npaths) {
+            printf("trying to load from %s\n", paths[path]);
+            cfile = fopen(paths[path], "rb");
+            if (cfile == NULL) {
+                path ++;
+                continue;
             }
-            else break;
+            
+            config->CONFIG_FILE_PATH = paths[path];
         }
 
         if (cfile == NULL) {
             perror("Error loading config");
-            return config;
+            freeConfig(config);
+            return NULL;
         }
     } else {
         cfile = fopen(cpath, "rb");
         if (cfile == NULL) {
             perror("Error loading config");
-            return config;
+            freeConfig(config);
+            return NULL;
         }
+        config->CONFIG_FILE_PATH = cpath;
     }
 
     yaml_parser_t parser;
@@ -534,7 +550,7 @@ FILE *printConfig(Config *config) {
     FILE *stream = tmpfile();
     if (stream == NULL) return NULL;
 
-    fprintf(stream, "\nConfig\n");
+    fprintf(stream, "\nConfig: '%s'\n", config->CONFIG_FILE_PATH);
     char *level;
     switch(config->LOG_LEVEL) {
         case NONE:
@@ -588,6 +604,7 @@ FILE *printConfig(Config *config) {
 
 void freeConfig(Config *config) {
     if (config == NULL) return;
+    free(config->CONFIG_FILE_PATH);
     fclose(config->LOG_STREAM);
 
     // Frees keyword identifiers

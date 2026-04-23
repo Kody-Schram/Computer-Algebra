@@ -22,9 +22,7 @@ Context *createContext(Config *config, Environment *env) {
 int initContext(char *cpath) {
     if (GLOBALCONTEXT != NULL) return 0;
 
-    printf("loading config\n");
     Config *config = loadConfig(cpath);
-    printf("loading env\n");
     Environment *env = createEnvironment(ENV_LIST); // will change to hash map later
 
     if (config == NULL || env == NULL) {
