@@ -47,7 +47,7 @@ static int executeRecur(Expression **ptr, Environment *env) {
 
         case EXPRESSION_OPERATOR:
             bool valid = true;
-            if (expr->arity != expr->op->definition->nParameters) return 0;
+            if (expr->arity != expr->op->definition->nParameters) return 1;
             for (int i = 0; i < expr->arity; i ++) {
                 if (!executeRecur(&(expr->operands[i]), env)) return 0;
                 if (expr->operands[i]->type != EXPRESSION_DOUBLE && expr->operands[i]->type != EXPRESSION_INTEGER) valid = false;

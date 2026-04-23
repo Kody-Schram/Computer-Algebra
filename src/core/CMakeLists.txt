@@ -1,6 +1,7 @@
 add_library(Core STATIC
     axioms.c
 
+    execution/simplify.c
     execution/execute.c
     
     utils/input.c

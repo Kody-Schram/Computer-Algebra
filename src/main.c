@@ -5,13 +5,14 @@
 
 #include "core/context/context.h"
 #include "core/context/environment.h"
+#include "core/utils/log.h"
+#include "core/utils/input.h"
+
 #include "core/utils/types.h"
 #include "core/axioms.h"
-#include "core/utils/log.h"
 
-#include "core/utils/input.h"
 #include "core/parsing/parser.h"
-
+#include "core/execution/simplify.h"
 #include "core/execution/execute.h"
 
 
@@ -53,6 +54,11 @@ static int process(char *buffer) {
     ParserResult result = parse(buffer);
     if (result.type == PARSER_ERROR) return 0;
     if (result.expr == NULL) return 1;
+    
+    if (!simplify(&result.expr)) {
+        freeExpression(result.expr);
+        return 1;
+    }
 
     if (!execute(&result.expr)) {
         freeExpression(result.expr);
