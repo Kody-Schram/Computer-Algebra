@@ -89,7 +89,7 @@ struct Function {
 
     union {
         Expression *definition;
-        BuiltinResult *(*builtin) (int nArgs, Expression ** exprs);
+        BuiltinResult (*builtin) (int nArgs, Expression ** exprs);
     };
 };
 

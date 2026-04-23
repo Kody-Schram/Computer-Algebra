@@ -1,4 +1,3 @@
-#include <stdlib.h>
 #include <stdio.h>
 
 #include "execute.h"
@@ -59,17 +58,16 @@ static int executeRecur(Expression **ptr, Environment *env) {
 
             Debug(0, "Running main operator now\n");
             
-            BuiltinResult *result = expr->op->definition->builtin(expr->arity, expr->operands);
-            if (result == NULL || result->type == BUILTIN_ERROR) return 0;
+            BuiltinResult result = expr->op->definition->builtin(expr->arity, expr->operands);
+            if (result.type == BUILTIN_ERROR) return 0;
             
             Debug(0, "Output of operation\n");
-            Debug(1, printExpression(result->output));
+            Debug(1, printExpression(result.output));
             
-            if (result->output == NULL) return 1;
+            if (result.output == NULL) return 1;
             
             freeExpression(expr);
-            *ptr = result->output;
-            free(result);
+            *ptr = result.output;
             return 1;
                     
             return 1;

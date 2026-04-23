@@ -8,7 +8,8 @@
 #include "core/context/environment.h"
 #include "core/utils/type_utils.h"
 
-static Function *createBinOpFunc(BuiltinResult *(*builtin) (int nArgs, Expression **exprs)) {
+
+static Function *createBinOpFunc(BuiltinResult (*builtin) (int nArgs, Expression **exprs)) {
     Function *op = calloc(1, sizeof(Function));
     if (op == NULL) return NULL;
     op->nParameters = 2;
@@ -19,15 +20,8 @@ static Function *createBinOpFunc(BuiltinResult *(*builtin) (int nArgs, Expressio
 }
 
 
-BuiltinResult *add(int nArgs, Expression **operands) {
-    BuiltinResult *result = malloc(sizeof(BuiltinResult));
-    if (result == NULL) {
-        perror("Error calling addition builtin");
-        return NULL;
-    }
-
-    result->type = BUILTIN_ERROR;
-    result->output = NULL;
+BuiltinResult add(int nArgs, Expression **operands) {
+    BuiltinResult result = {.type = BUILTIN_ERROR, NULL};
 
     Expression *a = operands[0];
     Expression *b = operands[1];
@@ -42,8 +36,8 @@ BuiltinResult *add(int nArgs, Expression **operands) {
 
         output->integer = a->integer + b->integer;
 
-        result->type = BUILTIN_SUCCESS;
-        result->output = output;
+        result.type = BUILTIN_SUCCESS;
+        result.output = output;
         return result;
     }
 
@@ -54,21 +48,14 @@ BuiltinResult *add(int nArgs, Expression **operands) {
     if (output == NULL) return result;
     output->value = av + bv;
 
-    result->type = BUILTIN_SUCCESS;
-    result->output = output;
+    result.type = BUILTIN_SUCCESS;
+    result.output = output;
     return result;
 }
 
 
-BuiltinResult *multiply(int nArgs, Expression **operands) {
-    BuiltinResult *result = malloc(sizeof(BuiltinResult));
-    if (result == NULL) {
-        perror("Error calling addition builtin");
-        return NULL;
-    }
-
-    result->type = BUILTIN_ERROR;
-    result->output = NULL;
+BuiltinResult multiply(int nArgs, Expression **operands) {
+    BuiltinResult result = {.type = BUILTIN_ERROR, NULL};
 
     Expression *a = operands[0];
     Expression *b = operands[1];
@@ -83,8 +70,8 @@ BuiltinResult *multiply(int nArgs, Expression **operands) {
 
         output->integer = a->integer * b->integer;
 
-        result->type = BUILTIN_SUCCESS;
-        result->output = output;
+        result.type = BUILTIN_SUCCESS;
+        result.output = output;
         return result;
     }
 
@@ -95,8 +82,8 @@ BuiltinResult *multiply(int nArgs, Expression **operands) {
     if (output == NULL) return result;
     output->value = av * bv;
 
-    result->type = BUILTIN_SUCCESS;
-    result->output = output;
+    result.type = BUILTIN_SUCCESS;
+    result.output = output;
     return result;
 }
 
@@ -114,15 +101,8 @@ static long long _powi(long long a, long long e) {
 }
 
 
-BuiltinResult *exponent(int nArgs, Expression **operands) {
-    BuiltinResult *result = malloc(sizeof(BuiltinResult));
-    if (result == NULL) {
-        perror("Error calling addition builtin");
-        return NULL;
-    }
-
-    result->type = BUILTIN_ERROR;
-    result->output = NULL;
+BuiltinResult exponent(int nArgs, Expression **operands) {
+    BuiltinResult result = {.type = BUILTIN_ERROR, NULL};
 
     Expression *a = operands[0];
     Expression *b = operands[1];
@@ -137,8 +117,8 @@ BuiltinResult *exponent(int nArgs, Expression **operands) {
 
         output->integer = _powi(a->integer, b->integer);
 
-        result->type = BUILTIN_SUCCESS;
-        result->output = output;
+        result.type = BUILTIN_SUCCESS;
+        result.output = output;
         return result;
     }
 
@@ -149,24 +129,17 @@ BuiltinResult *exponent(int nArgs, Expression **operands) {
     if (output == NULL) return result;
     output->value = powf(av, bv);
 
-    result->type = BUILTIN_SUCCESS;
-    result->output = output;
+    result.type = BUILTIN_SUCCESS;
+    result.output = output;
     return result;
 }
 
 
-BuiltinResult *divide(int nArgs, Expression **operands) {
-    BuiltinResult *result = malloc(sizeof(BuiltinResult));
-    if (result == NULL) {
-        perror("Error calling addition builtin");
-        return NULL;
-    }
-
-    result->type = BUILTIN_ERROR;
-    result->output = NULL;
+BuiltinResult divide(int nArgs, Expression **operands) {
+    BuiltinResult result = {.type = BUILTIN_ERROR, NULL};
 
     if (GLOBALCONTEXT->config->PRESERVE_FRACS) {
-        result->type = BUILTIN_SUCCESS;
+        result.type = BUILTIN_SUCCESS;
         return result;
     }
 
@@ -180,8 +153,8 @@ BuiltinResult *divide(int nArgs, Expression **operands) {
     if (output == NULL) return result;
     output->value = av / bv;
 
-    result->type = BUILTIN_SUCCESS;
-    result->output = output;
+    result.type = BUILTIN_SUCCESS;
+    result.output = output;
     return result;
 }
 
