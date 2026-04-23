@@ -6,7 +6,7 @@
 #include "core/context/context.h"
 #include "core/context/environment.h"
 #include "core/utils/log.h"
-#include "core/utils/types.h"
+#include "core/primitives/types.h"
 
 
 Token *createToken(TokenType type, const char *value, int l) {

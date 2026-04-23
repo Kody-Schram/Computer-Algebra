@@ -6,7 +6,7 @@
 #include "core/context/context.h"
 #include "core/context/environment.h"
 #include "core/utils/log.h"
-#include "core/utils/types.h"
+#include "core/primitives/types.h"
 #include "core/utils/type_utils.h"
 
 
@@ -244,7 +244,6 @@ int initAxioms() {
     addition->associative = true;
     addition->commutative = true;
     addition->symbol = '+';
-    addition->type = OP_AXIOMATIC;
     addition->definition = createBinOpFunc(add);
 
     Debug(0, "Binding addition operation\n");
@@ -256,7 +255,6 @@ int initAxioms() {
     multiplication->associative = true;
     multiplication->commutative = true;
     multiplication->symbol = '*';
-    multiplication->type = OP_AXIOMATIC;
     multiplication->definition = createBinOpFunc(multiply);
 
     Debug(0, "Binding multiplication operation\n");
@@ -268,7 +266,6 @@ int initAxioms() {
     exponentiation->associative = false;
     exponentiation->commutative = false;
     exponentiation->symbol = '^';
-    exponentiation->type = OP_AXIOMATIC;
     exponentiation->definition = createBinOpFunc(exponent);
 
     Debug(0, "Binding exponentiation operation\n");
@@ -285,7 +282,6 @@ int initAxioms() {
     subtraction->associative = true;
     subtraction->commutative = false;
     subtraction->symbol = '-';
-    subtraction->type = OP_AXIOMATIC;
     subtraction->definition = createBinOpFunc(subtract);
 
     Debug(0, "Binding subtraction operation\n");
@@ -297,7 +293,6 @@ int initAxioms() {
     division->associative = false;
     division->commutative = false;
     division->symbol = '/';
-    division->type = OP_AXIOMATIC;
     division->definition = createBinOpFunc(divide);
 
     Debug(0, "Binding division operation\n");

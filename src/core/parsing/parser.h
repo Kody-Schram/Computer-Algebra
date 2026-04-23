@@ -1,7 +1,7 @@
 #ifndef PARSER_H
 #define PARSER_H
 
-#include "core/utils/types.h"
+#include "core/primitives/types.h"
 #include "parser_types.h"
 
 typedef enum ParserResultType ParserResultType;

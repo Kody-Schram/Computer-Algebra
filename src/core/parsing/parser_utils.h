@@ -3,7 +3,7 @@
 
 #include <stdio.h>
 
-#include "core/utils/types.h"
+#include "core/primitives/types.h"
 #include "parser_types.h"
 
 /**

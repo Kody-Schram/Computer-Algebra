@@ -1,7 +1,7 @@
 #ifndef AST_H
 #define AST_H
 
-#include "core/utils/types.h"
+#include "core/primitives/types.h"
 #include "core/parsing/parser_types.h"
 
 

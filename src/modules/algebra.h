@@ -1,7 +1,7 @@
 #ifndef ALGEBRA_H
 #define ALGEBRA_H
 
-#include "core/utils/types.h"
+#include "core/primitives/types.h"
 
 
 long long _gcd(long long a, long long b);

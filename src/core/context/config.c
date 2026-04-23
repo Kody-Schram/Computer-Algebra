@@ -15,7 +15,7 @@ typedef enum {
     STATE_LOG,
     STATE_LOG_LEVEL,
     STATE_LOG_LOCATION,
-    STATE_LOG_PRINT_AXIOM_OPS,
+    STATE_LOG_PRINT_OPS,
 
     STATE_STARTUP,
 
@@ -141,7 +141,7 @@ static int consumeEvent(State *state, yaml_event_t *event, Config *config) {
                 value = (char *) event->data.scalar.value;
                 if (!strcmp(value, "level")) *state = STATE_LOG_LEVEL;
                 else if (!strcmp(value, "location")) *state = STATE_LOG_LOCATION;
-                else if (!strcmp(value, "printAxiomaticOperations")) *state = STATE_LOG_PRINT_AXIOM_OPS;
+                else if (!strcmp(value, "printAxiomaticOperations")) *state = STATE_LOG_PRINT_OPS;
                 else {
                     printf("Unexpected scalar: %s\n", value);
                     return 0;
@@ -207,7 +207,7 @@ static int consumeEvent(State *state, yaml_event_t *event, Config *config) {
         }
         break;
         
-    case STATE_LOG_PRINT_AXIOM_OPS:
+    case STATE_LOG_PRINT_OPS:
         switch (event->type) {
             case YAML_MAPPING_END_EVENT:
                 *state = STATE_LOG;
@@ -218,7 +218,7 @@ static int consumeEvent(State *state, yaml_event_t *event, Config *config) {
                 int b = get_boolean(value);
                 
                 if (b == -1) return 0;
-                config->PRINT_AXIOMATIC_OPS = b;
+                config->PRINT_OPS = b;
                 *state = STATE_LOG;
                 
                 break;
@@ -429,7 +429,7 @@ static void initConfig(Config *config) {
     
     config->LOG_LEVEL = 0;
     config->LOG_STREAM = stdout;
-    config->PRINT_AXIOMATIC_OPS = false;
+    config->PRINT_OPS = false;
     
     config->STARTUP = NULL;
 

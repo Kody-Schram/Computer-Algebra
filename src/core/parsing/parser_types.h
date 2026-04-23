@@ -1,7 +1,7 @@
 #ifndef PARSERTYPES_H
 #define PARSERTYPES_H
 
-#include "core/utils/types.h"
+#include "core/primitives/types.h"
 
 // Forward declaring types
 typedef enum TokenType TokenType;

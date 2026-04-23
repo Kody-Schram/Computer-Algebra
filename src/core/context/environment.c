@@ -5,7 +5,7 @@
 #include "environment.h"
 #include "context.h"
 #include "core/utils/log.h"
-#include "core/utils/types.h" 
+#include "core/primitives/types.h" 
 #include "core/utils/type_utils.h"
 
 
@@ -155,7 +155,7 @@ static void printLinkedCmpList(FILE *stream, const Component *cmp) {
                 break;
                 
             case COMP_OPERATION:
-                if (cmp->operation->type == OP_AXIOMATIC && !GLOBALCONTEXT->config->PRINT_AXIOMATIC_OPS) break; // will only print out user defined operations (maybe add setting in config for this)
+                if (!GLOBALCONTEXT->config->PRINT_OPS) break; // will only print out user defined operations (maybe add setting in config for this)
                 fprintf(stream, "Op '%s'\n", cmp->identifier);
                 
                 fprintf(stream, "  Associative: %d\n", cmp->operation->associative);

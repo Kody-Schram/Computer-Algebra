@@ -5,7 +5,7 @@
 #include "core/context/context.h"
 #include "core/context/environment.h"
 #include "core/utils/log.h"
-#include "core/utils/types.h"
+#include "core/primitives/types.h"
 #include "core/utils/type_utils.h"
 
 
@@ -59,57 +59,19 @@ static int executeRecur(Expression **ptr, Environment *env) {
 
             Debug(0, "Running main operator now\n");
             
-            switch (expr->op->type) {
-                case OP_AXIOMATIC:
-                    Debug(0, "Executing axiomatic operation\n");
-                    BuiltinResult *result = expr->op->definition->builtin(expr->arity, expr->operands);
-                    if (result == NULL || result->type == BUILTIN_ERROR) return 0;
-                    
-                    Debug(0, "Output of operation\n");
-                    Debug(1, printExpression(result->output));
-                    
-                    if (result->output == NULL) return 1;
-                    
-                    freeExpression(expr);
-                    *ptr = result->output;
-                    free(result);
-                    return 1;
-                    
-                case OP_ABSTRACT:
-                    Function *func = expr->op->definition;
-                    
-                    Environment *localEnv = createEnvironment(ENV_LIST);
-                    if (localEnv == NULL) return 0;
-                    
-                    for (int i = expr->arity - 1; i >= 0; i --) {
-                        if (!executeRecur(&expr->operands[i], env)) {
-                            localEnv->parent = NULL;
-                            return 0;
-                        }
-                        
-                        if (!bindComponent(localEnv, COMP_VARIABLE, func->parameters[i], expr->operands[i])) {
-                            freeEnvironment(localEnv);
-                            return 0;
-                        }
-                    }
-                    
-                    expr->call->nParams = 0;
-                    
-                    Expression *exec = deepCopyExpression(func->definition);
-                    if (exec == NULL) return 0;
-                    if (!executeRecur(&exec, localEnv)) {
-                        freeEnvironment(localEnv);
-                        return 0;
-                    }
-
-                    freeExpression(expr);
-
-                    Debug(0, "\nCall result\n");
-                    Debug(1, printExpression(exec));
-                    *ptr = exec;
-                    return 1;
-            }
+            BuiltinResult *result = expr->op->definition->builtin(expr->arity, expr->operands);
+            if (result == NULL || result->type == BUILTIN_ERROR) return 0;
             
+            Debug(0, "Output of operation\n");
+            Debug(1, printExpression(result->output));
+            
+            if (result->output == NULL) return 1;
+            
+            freeExpression(expr);
+            *ptr = result->output;
+            free(result);
+            return 1;
+                    
             return 1;
 
         case EXPRESSION_FUNCTION_CALL:
