@@ -159,6 +159,31 @@ BuiltinResult divide(int nArgs, Expression **operands) {
 }
 
 
+BuiltinResult negate(int nArgs, Expression **operands) {
+    BuiltinResult result = {.type = BUILTIN_ERROR, .output = NULL};
+    
+    if (operands[0]->type == EXPRESSION_INTEGER) {
+        Expression *output = dummyExpression(EXPRESSION_INTEGER);
+        if (output == NULL) return result;
+        
+        output->integer = -1 * operands[0]->integer;
+        
+        result.type = BUILTIN_SUCCESS;
+        result.output = output;
+        return result;
+    }
+    
+    Expression *output = dummyExpression(EXPRESSION_DOUBLE);
+    if (output == NULL) return result;
+    
+    output->value = -1 * operands[0]->value;
+    
+    result.type = BUILTIN_SUCCESS;
+    result.output = output;
+    return result;
+}
+
+
 int registerOperation(Operation *op) {
     char *id = malloc(sizeof(char) * 2);
     if (id == NULL) {
@@ -181,6 +206,7 @@ int initPrimitiveOperations() {
     Operation *exponentiation = NULL;
     
     Operation *division = NULL;
+    Operation *negation = NULL;
     
     
     addition = malloc(sizeof(Operation));
@@ -216,6 +242,7 @@ int initPrimitiveOperations() {
     if (!registerOperation(exponentiation)) return 0;
     
     
+    
     division = malloc(sizeof(Operation));
     if (division == NULL) goto error;
 
@@ -227,6 +254,20 @@ int initPrimitiveOperations() {
     if (!registerOperation(division)) return 0;
     
     
+    Function *negateFunc = calloc(1, sizeof(Function));
+    if (negateFunc == NULL) return NULL;
+    negateFunc->nParameters = 2;
+    negateFunc->type = BUILTIN;
+    negateFunc->builtin = negate;
+    
+    negation = malloc(sizeof(Operation));
+    if (negation == NULL) goto error;
+    
+    negation->associative = false;
+    negation->commutative = false;
+    negation->symbol = '-';
+    negation->definition = negateFunc;
+    
     return 1;
     
     error:
@@ -236,6 +277,7 @@ int initPrimitiveOperations() {
         free(exponentiation);
         
         free(division);
+        free(negation);
 
         return 0;
 }
