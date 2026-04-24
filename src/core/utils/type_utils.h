@@ -22,4 +22,7 @@ char *expressionToString(const Expression *expr);
 
 void freeFunction(Function *func);
 
+
+void freeOperation(Operation *op);
+
 #endif

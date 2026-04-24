@@ -293,3 +293,12 @@ void freeFunction(Function *func) {
     if (func->type == DEFINED) freeExpression(func->definition);
     free(func);
 } 
+
+void freeOperation(Operation *op) {
+    if (op == NULL) return;
+    for (int i = 0; i < op->nDefs; i ++) {
+        freeFunction(op->definitions[i]);
+    }
+    free(op->definitions);
+    free(op);
+}
