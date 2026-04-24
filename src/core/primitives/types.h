@@ -74,6 +74,7 @@ enum FunctionType {
 
 enum BuiltinResultType {
     BUILTIN_SUCCESS,
+    BUILTIN_NEUTRAL,
     BUILTIN_ERROR
 };
 

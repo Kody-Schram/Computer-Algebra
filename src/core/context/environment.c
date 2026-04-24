@@ -9,13 +9,6 @@
 #include "core/utils/type_utils.h"
 
 
-static void freeOperation(Operation *op) {
-    if (op == NULL) return;
-    freeFunction(op->definition);
-    free(op);
-}
-
-
 static void freeComponent(Component *cmp) {
     switch (cmp->type) {
         case COMP_FUNCTION:

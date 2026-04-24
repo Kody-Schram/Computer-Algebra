@@ -9,7 +9,7 @@
 #include "core/utils/type_utils.h"
 
 
-static Function *createBinOpFunc(BuiltinResult (*builtin) (int nArgs, Expression **exprs)) {
+static Function *createBinOpFunc(BuiltinResult (*builtin) (unsigned int nArgs, Expression **exprs)) {
     Function *op = calloc(1, sizeof(Function));
     if (op == NULL) return NULL;
     op->nParameters = 2;
@@ -20,7 +20,7 @@ static Function *createBinOpFunc(BuiltinResult (*builtin) (int nArgs, Expression
 }
 
 
-BuiltinResult add(int nArgs, Expression **operands) {
+BuiltinResult add(unsigned int nArgs, Expression **operands) {
     BuiltinResult result = {.type = BUILTIN_ERROR, NULL};
 
     Expression *a = operands[0];
@@ -54,7 +54,7 @@ BuiltinResult add(int nArgs, Expression **operands) {
 }
 
 
-BuiltinResult multiply(int nArgs, Expression **operands) {
+BuiltinResult multiply(unsigned int nArgs, Expression **operands) {
     BuiltinResult result = {.type = BUILTIN_ERROR, NULL};
 
     Expression *a = operands[0];
@@ -101,7 +101,7 @@ static long long _powi(long long a, long long e) {
 }
 
 
-BuiltinResult exponent(int nArgs, Expression **operands) {
+BuiltinResult exponent(unsigned int nArgs, Expression **operands) {
     BuiltinResult result = {.type = BUILTIN_ERROR, NULL};
 
     Expression *a = operands[0];
@@ -135,7 +135,7 @@ BuiltinResult exponent(int nArgs, Expression **operands) {
 }
 
 
-BuiltinResult divide(int nArgs, Expression **operands) {
+BuiltinResult divide(unsigned int nArgs, Expression **operands) {
     BuiltinResult result = {.type = BUILTIN_ERROR, NULL};
 
     if (GLOBALCONTEXT->config->PRESERVE_FRACS) {
@@ -159,7 +159,7 @@ BuiltinResult divide(int nArgs, Expression **operands) {
 }
 
 
-BuiltinResult negate(int nArgs, Expression **operands) {
+BuiltinResult negate(unsigned int nArgs, Expression **operands) {
     BuiltinResult result = {.type = BUILTIN_ERROR, .output = NULL};
     
     if (operands[0]->type == EXPRESSION_INTEGER) {
@@ -215,7 +215,14 @@ int initPrimitiveOperations() {
     addition->associative = true;
     addition->commutative = true;
     addition->symbol = '+';
-    addition->definition = createBinOpFunc(add);
+    addition->definitions = malloc(sizeof(Function *));
+    if (addition->definitions == NULL) {
+        free(addition);
+        goto error;
+    }
+    
+    addition->definitions[0] = createBinOpFunc(add);
+    addition->nDefs = 1;
     
     if (!registerOperation(addition)) return 0;
     
@@ -226,7 +233,14 @@ int initPrimitiveOperations() {
     multiplication->associative = true;
     multiplication->commutative = true;
     multiplication->symbol = '*';
-    multiplication->definition = createBinOpFunc(multiply);
+    multiplication->definitions = malloc(sizeof(Function *));
+    if (multiplication->definitions == NULL) {
+        free(multiplication);
+        goto error;
+    }
+    
+    multiplication->definitions[0] = createBinOpFunc(multiply);
+    multiplication->nDefs = 1;
     
     if (!registerOperation(multiplication)) return 0;
     
@@ -237,7 +251,14 @@ int initPrimitiveOperations() {
     exponentiation->associative = false;
     exponentiation->commutative = false;
     exponentiation->symbol = '^';
-    exponentiation->definition = createBinOpFunc(exponent);
+    exponentiation->definitions = malloc(sizeof(Function *));
+    if (exponentiation->definitions == NULL) {
+        free(exponentiation);
+        goto error;
+    }
+    
+    exponentiation->definitions[0] = createBinOpFunc(exponent);
+    exponentiation->nDefs = 1;
     
     if (!registerOperation(exponentiation)) return 0;
     
@@ -249,7 +270,14 @@ int initPrimitiveOperations() {
     division->associative = false;
     division->commutative = false;
     division->symbol = '/';
-    division->definition = createBinOpFunc(divide);
+    division->definitions = malloc(sizeof(Function *));
+    if (division->definitions == NULL) {
+        free(division);
+        goto error;
+    }
+    
+    division->definitions[0] = createBinOpFunc(divide);
+    division->nDefs = 1;
     
     if (!registerOperation(division)) return 0;
     
@@ -266,18 +294,18 @@ int initPrimitiveOperations() {
     negation->associative = false;
     negation->commutative = false;
     negation->symbol = '-';
-    negation->definition = negateFunc;
+    negation->definitions = malloc(sizeof(Function *));
+    if (negation->definitions == NULL) {
+        free(negation);
+        goto error;
+    }
+
+    negation->definitions[0] = negateFunc;
+    negation->nDefs = 1;
     
     return 1;
     
     error:
         perror("Error initializing axioms");
-        free(addition);
-        free(multiplication);
-        free(exponentiation);
-        
-        free(division);
-        free(negation);
-
         return 0;
 }
