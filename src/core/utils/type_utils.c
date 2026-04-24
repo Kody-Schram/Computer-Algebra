@@ -45,11 +45,11 @@ Expression *deepCopyExpression(const Expression *expr) {
         
         case EXPRESSION_OPERATOR:
             new->op = expr->op;
-            new->arity = expr->arity;
-            new->operands = calloc(expr->arity, sizeof(Expression *));
+            new->nOperands = expr->nOperands;
+            new->operands = calloc(expr->nOperands, sizeof(Expression *));
             if (new->operands == NULL) goto error;
             
-            for (int i = 0; i < expr->arity; i ++) {
+            for (int i = 0; i < expr->nOperands; i ++) {
                 new->operands[i] = deepCopyExpression(expr->operands[i]);
                 if (new->operands[i] == NULL) {
                     // Frees already copied expressions
@@ -131,7 +131,7 @@ static void printExpressionRec(const Expression *expr, int level, FILE *stream) 
             char id;
             fprintf(stream, "Operation: %c\n", expr->op->symbol);
             
-            for (int i = 0; i < expr->arity; i ++) {
+            for (int i = 0; i < expr->nOperands; i ++) {
                 printExpressionRec(expr->operands[i], level + 1, stream);
             }
             break;
@@ -192,7 +192,7 @@ void freeExpression(Expression *expr) {
             break;
 
         case EXPRESSION_OPERATOR:
-            for (int i = 0; i < expr->arity; i ++) {
+            for (int i = 0; i < expr->nOperands; i ++) {
                 freeExpression(expr->operands[i]);
             }
             free(expr->operands);
@@ -213,12 +213,12 @@ static void expressionToStringRecur(const Expression *expr, FILE *stream) {
     switch (expr->type) {
         case EXPRESSION_OPERATOR:
             fprintf(stream, "(");
-            for (int i = 0; i < expr->arity - 1; i ++) {
+            for (int i = 0; i < expr->nOperands - 1; i ++) {
                 expressionToStringRecur(expr->operands[i], stream);
                 fprintf(stream, " %c ", expr->op->symbol);
             }
 
-            expressionToStringRecur(expr->operands[expr->arity - 1], stream);
+            expressionToStringRecur(expr->operands[expr->nOperands - 1], stream);
             fprintf(stream, ")");
             break;
 

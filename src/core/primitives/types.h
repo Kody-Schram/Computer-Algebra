@@ -36,7 +36,7 @@ enum ExpressionType {
 struct Operation {
     bool associative;
     bool commutative;
-    unsigned int arity;
+    unsigned int arity; // Number of required operands
     char symbol;
     
     Function **definitions;
@@ -49,7 +49,7 @@ struct Expression {
     union {
         struct {
             const Operation *op;
-            unsigned int arity; // Number of operands
+            unsigned int nOperands;
             struct Expression **operands;
         };
 

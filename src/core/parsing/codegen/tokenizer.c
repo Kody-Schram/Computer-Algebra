@@ -7,19 +7,16 @@
 #include "core/context/context.h"
 #include "core/context/environment.h"
 #include "core/utils/log.h"
+
+#include "core/parsing/parser_types.h"
 #include "core/parsing/parser_utils.h"
 
 typedef struct  {
     char *op;
     TokenType type;
-} OperatorMapping;
+} DelimiterMapping;
 
-static const OperatorMapping DEFAULT_MAPPING[] = {
-    {"+", TOKEN_OPERATOR},
-    {"-", TOKEN_OPERATOR},
-    {"*", TOKEN_OPERATOR},
-    {"/", TOKEN_OPERATOR},
-    {"^", TOKEN_OPERATOR},
+static const DelimiterMapping DEFAULT_MAPPING[] = {
     {":", TOKEN_ASSIGNMENT},
     {"(", TOKEN_LEFT_PAREN},
     {")", TOKEN_RIGHT_PAREN},
@@ -27,27 +24,22 @@ static const OperatorMapping DEFAULT_MAPPING[] = {
     {"->", TOKEN_MAPPING}
 };
 
-static const int N_MAPPINGS = 10;
+static const int N_MAPPINGS = 5;
 
 typedef struct {
     int len;
     TokenType type;
-} SymbolReturn;
+} DelimiterReturn;
 
 typedef struct {
     int len;
     Component *cmp;
 } ComponentReturn;
 
-/**
- * @brief Gets the length of an operator
- * 
- * @param c Buffer
- * @return int Length of found operator
- */
-static SymbolReturn getSymbolLength(const char *c) {
-    SymbolReturn result = {0, TOKEN_OPERATOR};
+static DelimiterReturn getDelimiter(const char *c) {
+    DelimiterReturn result = {.type = TOKEN_SEPARATOR, .len=0};
     if (isalnum(c[0])) return result;
+    
     for (int i = 0; i < N_MAPPINGS; i ++) {
         int len = strlen(DEFAULT_MAPPING[i].op);
         if (!strncmp(c, DEFAULT_MAPPING[i].op, len)) {
@@ -57,7 +49,7 @@ static SymbolReturn getSymbolLength(const char *c) {
             result.type = DEFAULT_MAPPING[i].type;
         }
     }
-
+    
     return result;
 }
 
@@ -76,6 +68,23 @@ static int getNumber(const char *c) {
     return i;
 }
 
+
+static ComponentReturn getOperatorComponent(const char *c) {
+    Debug(0, "Getting operator component, '%c'\n", (char) c[0]);
+    ComponentReturn result = {.len = 0, .cmp = NULL};
+    if (isalnum(c[0])) return result;
+    
+    Debug(0, "getting cmp\n");
+    
+    Component *cmp = searchEnvironmentOperator(GLOBALCONTEXT->env, (char) c[0]);
+    if (cmp == NULL) return result;
+    
+    result.len = 1;
+    result.cmp = cmp;
+    return result;
+}
+
+
 /**
  * @brief Get the length of identifiers by checking against the environment registry
  * 
@@ -83,9 +92,10 @@ static int getNumber(const char *c) {
  * @param env Environment
  * @return int Length of largest component found or length of contiuguous valid identifier characters
  */
-static ComponentReturn getComponentLength(char *c) {
+static ComponentReturn getComponent(char *c) {
     Debug(0, "Checking component.\n");
     ComponentReturn result = {0, NULL};
+    
     // If not valid character type for variable name, automatically skip check
     if (!isalpha(c[0])) return result;
     Environment *env = GLOBALCONTEXT->env;
@@ -154,8 +164,8 @@ Token *tokenize(char *buffer) {
     Token *prev = NULL;
 
     int matchLen;
-    SymbolReturn ret;
-    ComponentReturn cRet;
+    DelimiterReturn delim;
+    ComponentReturn cmp;
 
     int spaceI = -1;
     TokenType prevT = -1;
@@ -172,25 +182,30 @@ Token *tokenize(char *buffer) {
             i++;
             continue;
         }
-
-        // Checks if operator and returns the length if it is
-        else if ((ret = getSymbolLength(buffer + i)).len) {
-            end += ret.len;
-            type = ret.type;
-        }
-
+        
         // Number can start with a - for a negative number (not implemented yet)
         else if ((matchLen = getNumber(buffer + i))) {
             end += matchLen;
             type = TOKEN_NUMBER;
         }
+
+        // Checks if operator and returns the length if it is
+        else if ((delim = getDelimiter(buffer + i)).len) {
+            end += delim.len;
+            type = delim.type;
+        }
+        
+        else if ((cmp = getOperatorComponent(buffer + i)).len) {
+            end += cmp.len;
+            type = TOKEN_OPERATOR;
+        }
         
         // Checks if builtin function and return the length if it is
-        else if ((cRet = getComponentLength(buffer + i)).len) {
+        else if ((cmp = getComponent(buffer + i)).len) {
             //if (cRet.cmp != NULL) printf("largest component found was %s\n", cRet.cmp->identifier);
-            end += cRet.len;
+            end += cmp.len;
 
-            if (cRet.cmp == NULL || cRet.cmp->type == COMP_VARIABLE) type = TOKEN_IDENTIFIER;
+            if (cmp.cmp == NULL || cmp.cmp->type == COMP_VARIABLE) type = TOKEN_IDENTIFIER;
             else type = TOKEN_FUNC_CALL_PLACEHOLDER;
         }
         
@@ -228,6 +243,7 @@ Token *tokenize(char *buffer) {
             perror("Error in tokenizer");
             return NULL;
         }
+        if (newToken->type == TOKEN_OPERATOR) newToken->op = cmp.cmp->operation;
 
         // Updates linked list
         if (prev != NULL) {

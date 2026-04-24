@@ -96,7 +96,7 @@ int bindComponent(Environment *env, ComponentType type, const char *identifier, 
 }
 
 
-Component* searchEnvironment(const Environment *env, const char *identifier) {
+Component *searchEnvironment(const Environment *env, const char *identifier) {
     if (identifier == NULL) return NULL;
     //printf("searching environment for '%s'\n", identifier);
     
@@ -108,13 +108,35 @@ Component* searchEnvironment(const Environment *env, const char *identifier) {
                 if (!strcmp(cmp->identifier, identifier)) return cmp;
                 cmp = cmp->next;
             }
-            break;
+            
+            return NULL;
             
         case ENV_HASH:
             printf("Stop trying bro.\n");
             return NULL;
     }
 
+    return NULL;
+}
+
+
+Component *searchEnvironmentOperator(const Environment *env, const char symbol) {
+    switch (env->type) {
+        case ENV_LIST:
+            Component *cmp = env->compList;
+            
+            while (cmp != NULL) {
+                if (cmp->type == COMP_OPERATION && cmp->identifier[0] == symbol) return cmp;
+                cmp = cmp->next;
+            }
+            
+            return NULL;
+            
+        case ENV_HASH:
+            printf("op searching hash isnt implemented yet");
+            break;
+    }
+    
     return NULL;
 }
 

@@ -3,10 +3,10 @@
 #include <string.h>
 
 #include "parser_utils.h"
-#include "core/context/context.h"
-#include "core/context/environment.h"
+#include "core/parsing/parser_types.h"
 #include "core/utils/log.h"
 #include "core/primitives/types.h"
+#include "core/utils/type_utils.h"
 
 
 Token *createToken(TokenType type, const char *value, int l) {
@@ -72,6 +72,9 @@ static void printToken(const Token *token, FILE *stream) {
             fprintf(stream, "<type: %s>\n", type);
             //printf("<type: %s>\n", type);
         }
+        else if (token->type == TOKEN_OPERATOR) {
+            fprintf(stream, "<type: %s, symbol: '%c'>\n", type, token->op->symbol);
+        }
         else {
             fprintf(stream, "<type: %s, value: '%s'>\n", type, token->value);
             //printf(stream, "<type: %s, value: '%s'>\n", type, token->value);
@@ -98,19 +101,13 @@ FILE *printTokens(const Token *head) {
 
 Expression *createExpression(const Token *token) {
     Expression *expr = calloc(1, sizeof(Expression));
-    if (expr == NULL) {
-        perror("Error creating expression");
-        return NULL;
-    }
+    if (expr == NULL) goto error;
 
     switch (token->type) {
         case TOKEN_IDENTIFIER:
             expr->type = EXPRESSION_VARIABLE;
             expr->identifier = strdup(token->value);
-            if (expr->identifier == NULL) {
-                perror("Error creating expression");
-                return NULL;
-            }
+            if (expr->identifier == NULL) goto error;
             break;
             
         case TOKEN_NUMBER:
@@ -129,20 +126,11 @@ Expression *createExpression(const Token *token) {
             
         case TOKEN_OPERATOR:
             expr->type = EXPRESSION_OPERATOR;
-            Component *cmp = searchEnvironment(GLOBALCONTEXT->env, token->value);
-            if (cmp == NULL || cmp->type != COMP_OPERATION) {
-                printf("Couldn't locate operation %s in environment.\n", token->value);
-                return NULL;
-            }
-            expr->op = cmp->operation;
-            expr->arity = 2;
+            expr->op = token->op;
+            expr->nOperands = expr->op->arity;
             
-            // By default starts as binary operation, can be flattened and resized later
-            expr->operands = malloc(sizeof(Expression *) * 2);
-            if (expr->operands == NULL) {
-                perror("Error creating expression");
-                return NULL;
-            }
+            expr->operands = malloc(sizeof(Expression *) * expr->nOperands);
+            if (expr->operands == NULL) goto error;
             break;
             
         case TOKEN_FUNC_CALL:
@@ -155,6 +143,11 @@ Expression *createExpression(const Token *token) {
     }
 
     return expr;
+    
+    error:
+        perror("Error creating expression");
+        freeExpression(expr);
+        return NULL;
 }
 
 
@@ -181,7 +174,7 @@ void freeTokens(Token *head) {
     while (current != NULL) {
         Token *next = current->next;
         
-        if (current->type != TOKEN_FUNC_CALL) {
+        if (current->type != TOKEN_FUNC_CALL && current->type != TOKEN_OPERATOR) {
             Debug(0, "Freeing '%s'\n", current->value);
             free(current->value);
         }

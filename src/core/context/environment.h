@@ -53,7 +53,10 @@ Environment *createEnvironment(EnvironmentType type);
 int bindComponent(Environment *env, ComponentType type, const char *identifier, const void *data);
 
 
-Component* searchEnvironment(const Environment *env, const char *identifier);
+Component *searchEnvironment(const Environment *env, const char *identifier);
+
+
+Component *searchEnvironmentOperator(const Environment *env, const char symbol);
 
 
 FILE *printEnvironment(const Environment *env);

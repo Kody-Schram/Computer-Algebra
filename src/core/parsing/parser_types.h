@@ -31,6 +31,7 @@ struct Token {
     union {
         char *value;
         FunctionCall *call;
+        Operation *op;
     };
 
     struct Token *next;
