@@ -36,7 +36,9 @@ enum ExpressionType {
 struct Operation {
     bool associative;
     bool commutative;
+    unsigned int arity;
     char symbol;
+    
     Function **definitions;
     unsigned int nDefs;
 };

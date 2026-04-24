@@ -6,6 +6,7 @@
 #include "operations.h"
 #include "core/context/context.h"
 #include "core/context/environment.h"
+#include "core/primitives/types.h"
 #include "core/utils/type_utils.h"
 
 
@@ -21,7 +22,7 @@ static Function *createBinOpFunc(BuiltinResult (*builtin) (unsigned int nArgs, E
 
 
 BuiltinResult add(unsigned int nArgs, Expression **operands) {
-    BuiltinResult result = {.type = BUILTIN_ERROR, NULL};
+    BuiltinResult result = {.type = BUILTIN_NEUTRAL, NULL};
 
     Expression *a = operands[0];
     Expression *b = operands[1];
@@ -32,7 +33,7 @@ BuiltinResult add(unsigned int nArgs, Expression **operands) {
 
     if (a->type == EXPRESSION_INTEGER && b->type == EXPRESSION_INTEGER) {
         Expression *output = dummyExpression(EXPRESSION_INTEGER);
-        if (output == NULL) return result;
+        if (output == NULL) goto error;
 
         output->integer = a->integer + b->integer;
 
@@ -45,17 +46,21 @@ BuiltinResult add(unsigned int nArgs, Expression **operands) {
     double bv = (b->type == EXPRESSION_INTEGER) ? (double) b->integer : b->value;
 
     Expression *output = dummyExpression(EXPRESSION_DOUBLE);
-    if (output == NULL) return result;
+    if (output == NULL) goto error;
     output->value = av + bv;
 
     result.type = BUILTIN_SUCCESS;
     result.output = output;
     return result;
+    
+    error:
+        result.type = BUILTIN_ERROR;
+        return result;
 }
 
 
 BuiltinResult multiply(unsigned int nArgs, Expression **operands) {
-    BuiltinResult result = {.type = BUILTIN_ERROR, NULL};
+    BuiltinResult result = {.type = BUILTIN_NEUTRAL, NULL};
 
     Expression *a = operands[0];
     Expression *b = operands[1];
@@ -66,7 +71,7 @@ BuiltinResult multiply(unsigned int nArgs, Expression **operands) {
 
     if (a->type == EXPRESSION_INTEGER && b->type == EXPRESSION_INTEGER) {
         Expression *output = dummyExpression(EXPRESSION_INTEGER);
-        if (output == NULL) return result;
+        if (output == NULL) goto error;
 
         output->integer = a->integer * b->integer;
 
@@ -79,12 +84,16 @@ BuiltinResult multiply(unsigned int nArgs, Expression **operands) {
     double bv = (b->type == EXPRESSION_INTEGER) ? (double) b->integer : b->value;
 
     Expression *output = dummyExpression(EXPRESSION_DOUBLE);
-    if (output == NULL) return result;
+    if (output == NULL) goto error;
     output->value = av * bv;
 
     result.type = BUILTIN_SUCCESS;
     result.output = output;
     return result;
+    
+    error:
+        result.type = BUILTIN_ERROR;
+        return result;
 }
 
 
@@ -102,7 +111,7 @@ static long long _powi(long long a, long long e) {
 
 
 BuiltinResult exponent(unsigned int nArgs, Expression **operands) {
-    BuiltinResult result = {.type = BUILTIN_ERROR, NULL};
+    BuiltinResult result = {.type = BUILTIN_NEUTRAL, NULL};
 
     Expression *a = operands[0];
     Expression *b = operands[1];
@@ -113,7 +122,7 @@ BuiltinResult exponent(unsigned int nArgs, Expression **operands) {
 
     if (a->type == EXPRESSION_INTEGER && b->type == EXPRESSION_INTEGER) {
         Expression *output = dummyExpression(EXPRESSION_INTEGER);
-        if (output == NULL) return result;
+        if (output == NULL) goto error;
 
         output->integer = _powi(a->integer, b->integer);
 
@@ -126,20 +135,24 @@ BuiltinResult exponent(unsigned int nArgs, Expression **operands) {
     double bv = (b->type == EXPRESSION_INTEGER) ? (double) b->integer : b->value;
 
     Expression *output = dummyExpression(EXPRESSION_DOUBLE);
-    if (output == NULL) return result;
+    if (output == NULL) goto error;
     output->value = powf(av, bv);
 
     result.type = BUILTIN_SUCCESS;
     result.output = output;
     return result;
+    
+    error:
+        result.type = BUILTIN_ERROR;
+        return result;
 }
 
 
 BuiltinResult divide(unsigned int nArgs, Expression **operands) {
-    BuiltinResult result = {.type = BUILTIN_ERROR, NULL};
+    BuiltinResult result = {.type = BUILTIN_NEUTRAL, NULL};
 
     if (GLOBALCONTEXT->config->PRESERVE_FRACS) {
-        result.type = BUILTIN_SUCCESS;
+        result.type = BUILTIN_NEUTRAL;
         return result;
     }
 
@@ -150,21 +163,25 @@ BuiltinResult divide(unsigned int nArgs, Expression **operands) {
     double bv = (b->type == EXPRESSION_INTEGER) ? (double) b->integer : b->value;
 
     Expression *output = dummyExpression(EXPRESSION_DOUBLE);
-    if (output == NULL) return result;
+    if (output == NULL) goto error;
     output->value = av / bv;
 
     result.type = BUILTIN_SUCCESS;
     result.output = output;
     return result;
+    
+    error:
+        result.type = BUILTIN_ERROR;
+        return result;
 }
 
 
 BuiltinResult negate(unsigned int nArgs, Expression **operands) {
-    BuiltinResult result = {.type = BUILTIN_ERROR, .output = NULL};
+    BuiltinResult result = {.type = BUILTIN_NEUTRAL, .output = NULL};
     
     if (operands[0]->type == EXPRESSION_INTEGER) {
         Expression *output = dummyExpression(EXPRESSION_INTEGER);
-        if (output == NULL) return result;
+        if (output == NULL) goto error;
         
         output->integer = -1 * operands[0]->integer;
         
@@ -174,13 +191,17 @@ BuiltinResult negate(unsigned int nArgs, Expression **operands) {
     }
     
     Expression *output = dummyExpression(EXPRESSION_DOUBLE);
-    if (output == NULL) return result;
+    if (output == NULL) goto error;
     
     output->value = -1 * operands[0]->value;
     
     result.type = BUILTIN_SUCCESS;
     result.output = output;
     return result;
+    
+    error:
+        result.type = BUILTIN_ERROR;
+        return result;
 }
 
 
@@ -215,6 +236,7 @@ int initPrimitiveOperations() {
     addition->associative = true;
     addition->commutative = true;
     addition->symbol = '+';
+    addition->arity = 2;
     addition->definitions = malloc(sizeof(Function *));
     if (addition->definitions == NULL) {
         free(addition);
@@ -233,6 +255,7 @@ int initPrimitiveOperations() {
     multiplication->associative = true;
     multiplication->commutative = true;
     multiplication->symbol = '*';
+    multiplication->arity = 2;
     multiplication->definitions = malloc(sizeof(Function *));
     if (multiplication->definitions == NULL) {
         free(multiplication);
@@ -251,6 +274,7 @@ int initPrimitiveOperations() {
     exponentiation->associative = false;
     exponentiation->commutative = false;
     exponentiation->symbol = '^';
+    exponentiation->arity = 2;
     exponentiation->definitions = malloc(sizeof(Function *));
     if (exponentiation->definitions == NULL) {
         free(exponentiation);
@@ -270,6 +294,7 @@ int initPrimitiveOperations() {
     division->associative = false;
     division->commutative = false;
     division->symbol = '/';
+    division->arity = 2;
     division->definitions = malloc(sizeof(Function *));
     if (division->definitions == NULL) {
         free(division);
@@ -294,6 +319,7 @@ int initPrimitiveOperations() {
     negation->associative = false;
     negation->commutative = false;
     negation->symbol = '-';
+    negation->arity = 2;
     negation->definitions = malloc(sizeof(Function *));
     if (negation->definitions == NULL) {
         free(negation);

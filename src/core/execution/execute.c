@@ -46,29 +46,29 @@ static int executeRecur(Expression **ptr, Environment *env) {
         }
 
         case EXPRESSION_OPERATOR:
-            bool valid = true;
-            if (expr->arity != expr->op->definition->nParameters) return 1;
+            if (expr->arity != expr->op->arity) return 1; // Unexpected number of operands, leave symbolic
+            
             for (int i = 0; i < expr->arity; i ++) {
                 if (!executeRecur(&(expr->operands[i]), env)) return 0;
-                if (expr->operands[i]->type != EXPRESSION_DOUBLE && expr->operands[i]->type != EXPRESSION_INTEGER) valid = false;
             }
-            
-            // Doesnt execute main operation if children aren't numbers, just leaves as symbolic
-            if (!valid) return 1;
-
-            Debug(0, "Running main operator now\n");
-            
-            BuiltinResult result = expr->op->definition->builtin(expr->arity, expr->operands);
-            if (result.type == BUILTIN_ERROR) return 0;
-            
-            Debug(0, "Output of operation\n");
-            Debug(1, printExpression(result.output));
-            
-            if (result.output == NULL) return 1;
-            
-            freeExpression(expr);
-            *ptr = result.output;
-            return 1;
+        
+            for (int i = 0; i < expr->op->nDefs; i ++) {
+                Function *func = expr->op->definitions[i];
+                Debug(0, "Running main operator now\n");
+                
+                BuiltinResult result = func->builtin(expr->arity, expr->operands);
+                if (result.type == BUILTIN_ERROR) return 0;
+                if (result.type == BUILTIN_NEUTRAL) continue; // keeps running until one of the definitions evaluates or errors
+                
+                Debug(0, "Output of operation\n");
+                Debug(1, printExpression(result.output));
+                
+                if (result.output == NULL) return 1;
+                
+                freeExpression(expr);
+                *ptr = result.output;
+                return 1;
+            }
                     
             return 1;
 
