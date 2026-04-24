@@ -37,19 +37,20 @@ struct Operation {
     bool associative;
     bool commutative;
     char symbol;
-    Function *definition;
+    Function **definitions;
+    unsigned int nDefs;
 };
 
 struct Expression {
     ExpressionType type;
-    
+
     union {
         struct {
             const Operation *op;
-            int arity; // Number of operands
+            unsigned int arity; // Number of operands
             struct Expression **operands;
         };
-        
+
         char *identifier;
         double value;
         long long integer;
@@ -62,7 +63,7 @@ struct Expression {
 struct FunctionCall {
     char *identifier;
     Expression **parameters;
-    int nParams;
+    unsigned int nParams;
 };
 
 
@@ -84,12 +85,12 @@ struct BuiltinResult {
 
 struct Function {
     FunctionType type;
-    int nParameters;
+    unsigned int nParameters;
     char **parameters;
 
     union {
         Expression *definition;
-        BuiltinResult (*builtin) (int nArgs, Expression ** exprs);
+        BuiltinResult (*builtin) (unsigned int nArgs, Expression ** exprs);
     };
 };
 
