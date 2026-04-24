@@ -329,6 +329,8 @@ int initPrimitiveOperations() {
     negation->definitions[0] = negateFunc;
     negation->nDefs = 1;
     
+    if (!registerOperation(negation)) return 0;
+    
     return 1;
     
     error:

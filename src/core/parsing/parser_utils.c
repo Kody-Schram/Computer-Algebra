@@ -20,15 +20,17 @@ Token *createToken(TokenType type, const char *value, int l) {
     // Populates newToken attributes
     token->type = type;
 
-    token->value = malloc(l + 1);
-    if (token->value == NULL) {
-        perror("Error creating token");
-        free(token);
-        return NULL;
-    } 
-
-    memcpy(token->value, value, l);
-    token->value[l] = '\0';
+    if (type != TOKEN_OPERATOR) {
+        token->value = malloc(l + 1);
+        if (token->value == NULL) {
+            perror("Error creating token");
+            free(token);
+            return NULL;
+        } 
+    
+        memcpy(token->value, value, l);
+        token->value[l] = '\0';
+    }
 
     token->next = NULL;
 
@@ -158,7 +160,8 @@ FILE *printRPN(const RPNList *list) {
     fprintf(stream, "RPN: ");
 
     for (int i = 0; i < list->length; i ++) {
-        if (list->items[i]->type != TOKEN_FUNC_CALL) fprintf(stream, "%s ", list->items[i]->value);
+        if (list->items[i]->type != TOKEN_FUNC_CALL && list->items[i]->type != TOKEN_OPERATOR) fprintf(stream, "%s ", list->items[i]->value);
+        else if (list->items[i]->type == TOKEN_OPERATOR) fprintf(stream, "%c ", list->items[i]->op->symbol);
         else fprintf(stream, "%s ", list->items[i]->call->identifier);
     }
 
