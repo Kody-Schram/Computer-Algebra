@@ -6,6 +6,9 @@
 #include "core/primitives/types.h"
 #include "parser_types.h"
 
+
+Token *createTokenOperator(const Operation *op);
+
 /**
  * @brief Creates a Token object
  * 

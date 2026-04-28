@@ -47,6 +47,8 @@ static int executeRecur(Expression **ptr, Environment *env) {
 
         case EXPRESSION_OPERATOR:
             if (expr->nOperands != expr->op->arity) return 1; // Unexpected number of operands, leave symbolic
+            Debug(0, "\nOperands %d\n", expr->nOperands);
+            Debug(1, printExpression(expr));
             
             for (int i = 0; i < expr->nOperands; i ++) {
                 if (!executeRecur(&(expr->operands[i]), env)) return 0;

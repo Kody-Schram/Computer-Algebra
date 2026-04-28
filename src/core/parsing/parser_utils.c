@@ -3,24 +3,43 @@
 #include <string.h>
 
 #include "parser_utils.h"
+#include "core/context/context.h"
+#include "core/context/environment.h"
 #include "core/parsing/parser_types.h"
 #include "core/utils/log.h"
 #include "core/primitives/types.h"
 #include "core/utils/type_utils.h"
 
 
-Token *createToken(TokenType type, const char *value, int l) {
-    // Allocates new token
-    Token *token = (Token*) calloc(1, sizeof(Token));
+Token *createTokenOperator(const Operation *op) {
+    Debug(0, "running dedicated operator creation func\n");
+    Token *token = calloc(1, sizeof(Token));
     if (token == NULL) {
         perror("Error creating token");
         return NULL;
     }
+    
+    token->type = TOKEN_OPERATOR;
+    token->next = NULL;
+	token->op = op;
+    
+	Debug(0, "returning new operator token\n");
+    return token;
+}
 
-    // Populates newToken attributes
-    token->type = type;
 
+Token *createToken(TokenType type, const char *value, int l) {
     if (type != TOKEN_OPERATOR) {
+        // Allocates new token
+        Token *token = (Token*) calloc(1, sizeof(Token));
+        if (token == NULL) {
+            perror("Error creating token");
+            return NULL;
+        }
+    
+        // Populates newToken attributes
+        token->type = type;
+        
         token->value = malloc(l + 1);
         if (token->value == NULL) {
             perror("Error creating token");
@@ -30,11 +49,19 @@ Token *createToken(TokenType type, const char *value, int l) {
     
         memcpy(token->value, value, l);
         token->value[l] = '\0';
+        token->next = NULL;
+        
+        return token;
+    } else {
+        Debug(0, "Creating operator token, %c\n", value[0]);
+        Component *cmp = searchEnvironmentOperator(GLOBALCONTEXT->env, value[0]);
+        if (cmp == NULL) {
+            return NULL;
+        }
+
+        return createTokenOperator(cmp->operation);
+        
     }
-
-    token->next = NULL;
-
-    return token;
 }
 
 
@@ -181,7 +208,7 @@ void freeTokens(Token *head) {
             Debug(0, "Freeing '%s'\n", current->value);
             free(current->value);
         }
-        else Debug(0, "Freeing function call\n");
+        else Debug(0, "Freeing function call or operator\n");
 
         free(current);
         current = next;

@@ -4,6 +4,8 @@
 
 #include "lexer.h"
 #include "core/context/context.h"
+#include "core/context/environment.h"
+#include "core/parsing/parser_types.h"
 #include "core/utils/log.h"
 #include "core/parsing/parser_utils.h"
 
@@ -87,7 +89,7 @@ static int handleImplicitMul(Token *cur, Token *prev) {
  * @return int 
  */
 static int handleExponentRewrite(Token **cur, Token *prev) {
-    if ((*cur)->value[0] != '*' || !((*cur)->next == NULL && (*cur)->next->value[0] != '*')) return 0;
+    if ((*cur)->op->symbol != '*' || !((*cur)->next == NULL && (*cur)->next->op->symbol != '*')) return 0;
     Debug(0, "Rewriting exponent\n");
 
     Token *exponent = createToken(TOKEN_OPERATOR, "^", 1);
@@ -216,41 +218,38 @@ static int handleFunctionParens(Token **cur) {
 /**
  * @brief Handles negatives
  * 
- * @retval -1: Error, new tokens couldn't be created
- * @retval 0: No negative to handle
- * @retval 1: Negative handled
+ * @retval 0: Error
+ * @retval 1: Success
  * 
  * @param ptr Pointer to the pointer to the current Token
  * @param prev Pointer to the previous Token
  * @return int Error code
  */
-static int handleNegatives(Token *cur, Token *prev) {
-    // Determines if a '-' is in place
-    if (cur->type != TOKEN_OPERATOR && strcmp(cur->value, "-")) return 0;
+static int handleNegative(Token *cur, Token *prev) {
+	if (cur->type != TOKEN_OPERATOR || cur->op->symbol != '-' || prev == NULL) return 1;
+	if (prev->type != TOKEN_LEFT_PAREN && prev->type != TOKEN_OPERATOR && prev->type != TOKEN_ASSIGNMENT) return 1; // is subtraction
 
-    // Outlines cases for following negative handling
-    // (ie determines this is a negative and not a subtraction)
-    if (cur->next == NULL || (cur->next->type != TOKEN_IDENTIFIER && cur->next->type != TOKEN_NUMBER && cur->next->type != TOKEN_FUNC_CALL_PLACEHOLDER)) return 0;
-    if (prev != NULL && prev->type != TOKEN_OPERATOR && prev->type != TOKEN_LEFT_PAREN && prev->type != TOKEN_SEPARATOR) return 0;
+	Token *negative = NULL;
+	Token *mult = NULL;
 
-    Debug(0, "Creating -1 and multiplication tokens.\n");
-    Token *mult = createToken(TOKEN_OPERATOR, "*", 1);
-    if (mult == NULL) {
-        perror("Error handling negative");
-        return -1;
-    }
+	negative = createToken(TOKEN_NUMBER, "-1", 2);
+	if (negative == NULL) goto error;
 
-    cur->type = TOKEN_NUMBER;
-    free(cur->value);
-    cur->value = strdup("-1");
+	mult = createToken(TOKEN_OPERATOR, "*", 1);
+	if (mult == NULL) goto error;
 
-    Token *number = cur->next;
+	negative->next = mult;
+	mult->next = cur;
+	prev->next = negative;
 
-    // Modifies Token list to include new Tokens
-    cur->next = mult;
-    mult->next = number;
-    
-    return 1;
+	return 1;
+
+	error:
+		perror("Error handling negative");
+		freeTokens(negative);
+		freeTokens(mult);
+
+		return 0;
 }
 
 
@@ -345,7 +344,8 @@ int lex(Token** head) {
     int openParenthesis = 0;
 
     while (*ptr != NULL) {
-        if (handleNegatives(*ptr, prev) == -1) return 0;
+        if (handleNegative(*ptr, prev) == -1) return 0;
+		Debug(1, printTokens(*head));
         if (handleImplicitMul(*ptr, prev) == -1) return 0;
         if (handleExponentRewrite(ptr, prev) == -1) return 0;
         if (checkInvalidBinop(*ptr, prev) == -1) return 0;

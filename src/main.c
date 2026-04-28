@@ -73,7 +73,7 @@ static int process(char *buffer) {
         if (!updateOutputVariables(GLOBALCONTEXT->env, result.expr)) return 0;
     } else freeExpression(result.expr);
 
-    return 1;
+	return 1;
 }
 
 

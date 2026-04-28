@@ -36,6 +36,7 @@ typedef struct {
     Component *cmp;
 } ComponentReturn;
 
+
 static DelimiterReturn getDelimiter(const char *c) {
     DelimiterReturn result = {.type = TOKEN_SEPARATOR, .len=0};
     if (isalnum(c[0])) return result;
@@ -61,9 +62,10 @@ static DelimiterReturn getDelimiter(const char *c) {
  */
 static int getNumber(const char *c) {
     int i = 0;
-    if (isdigit(c[0]) || c[0] == '.') {
-        while (isdigit(c[i]) || c[i] == '.') i ++;
-    }
+    if (!isdigit(c[0]) && c[0] != '.') return 0;
+	
+	i = 1;
+	while (isdigit(c[i]) || c[i] == '.') i ++;
 
     return i;
 }
@@ -189,7 +191,7 @@ Token *tokenize(char *buffer) {
             type = TOKEN_NUMBER;
         }
 
-        // Checks if operator and returns the length if it is
+        // Checks if operator
         else if ((delim = getDelimiter(buffer + i)).len) {
             end += delim.len;
             type = delim.type;
@@ -230,7 +232,7 @@ Token *tokenize(char *buffer) {
         // Prevents ambiguous syntax due to spaces
         if (spaceI != -1) {
             if ((prevT == TOKEN_NUMBER || prevT == TOKEN_IDENTIFIER) && (type == TOKEN_IDENTIFIER || type == TOKEN_NUMBER || type == TOKEN_FUNC_CALL_PLACEHOLDER)) {
-                printf("Spacing lead to ambiguous intent.\n");
+                printf("Spacing leads to ambiguous intent.\n");
                 return NULL;
             }
         }
@@ -238,25 +240,31 @@ Token *tokenize(char *buffer) {
         spaceI = -1;
         prevT = type;
 
-        Token *newToken = createToken(type, buffer + i, end - i);
-        if (newToken == NULL) {
+        Token *newToken;
+		if (type == TOKEN_OPERATOR) newToken = createTokenOperator(cmp.cmp->operation);
+		else newToken = createToken(type, buffer + i, end - i);
+
+		Debug(0, "type = %d\n", newToken->type);
+		if (newToken == NULL) {
             perror("Error in tokenizer");
             return NULL;
         }
-        if (newToken->type == TOKEN_OPERATOR) newToken->op = cmp.cmp->operation;
 
+		Debug(0, "updating list\n");
         // Updates linked list
         if (prev != NULL) {
             prev->next = newToken;
         } else {
+			Debug(0, "setting head token\n");
             head = newToken;
         }
         prev = newToken;
 
         i = end;
+		Debug(1, printTokens(head));
 
     }
-
+	Debug(0, "finished tokenizing\n");
     Debug(1, printTokens(head));
     
     return head;

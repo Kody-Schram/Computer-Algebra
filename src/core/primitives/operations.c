@@ -59,6 +59,44 @@ BuiltinResult add(unsigned int nArgs, Expression **operands) {
 }
 
 
+BuiltinResult subtract(unsigned int nArgs, Expression **operands) {
+    BuiltinResult result = {.type = BUILTIN_NEUTRAL, NULL};
+
+    Expression *a = operands[0];
+    Expression *b = operands[1];
+
+    // If not both numbers, return the addition expression again
+    if (a->type != EXPRESSION_INTEGER && a->type != EXPRESSION_DOUBLE &&
+        b->type != EXPRESSION_INTEGER && b->type != EXPRESSION_DOUBLE) return result;
+
+    if (a->type == EXPRESSION_INTEGER && b->type == EXPRESSION_INTEGER) {
+        Expression *output = dummyExpression(EXPRESSION_INTEGER);
+        if (output == NULL) goto error;
+
+        output->integer = a->integer - b->integer;
+
+        result.type = BUILTIN_SUCCESS;
+        result.output = output;
+        return result;
+    }
+
+    double av = (a->type == EXPRESSION_INTEGER) ? (double) a->integer : a->value;
+    double bv = (b->type == EXPRESSION_INTEGER) ? (double) b->integer : b->value;
+
+    Expression *output = dummyExpression(EXPRESSION_DOUBLE);
+    if (output == NULL) goto error;
+    output->value = av - bv;
+
+    result.type = BUILTIN_SUCCESS;
+    result.output = output;
+    return result;
+    
+    error:
+        result.type = BUILTIN_ERROR;
+        return result;
+}
+
+
 BuiltinResult multiply(unsigned int nArgs, Expression **operands) {
     BuiltinResult result = {.type = BUILTIN_NEUTRAL, NULL};
 
@@ -227,7 +265,7 @@ int initPrimitiveOperations() {
     Operation *exponentiation = NULL;
     
     Operation *division = NULL;
-    Operation *negation = NULL;
+    Operation *subtraction = NULL;
     
     
     addition = malloc(sizeof(Operation));
@@ -307,29 +345,23 @@ int initPrimitiveOperations() {
     if (!registerOperation(division)) return 0;
     
     
-    Function *negateFunc = calloc(1, sizeof(Function));
-    if (negateFunc == NULL) return NULL;
-    negateFunc->nParameters = 2;
-    negateFunc->type = BUILTIN;
-    negateFunc->builtin = negate;
+    subtraction = malloc(sizeof(Operation));
+    if (subtraction == NULL) goto error;
     
-    negation = malloc(sizeof(Operation));
-    if (negation == NULL) goto error;
-    
-    negation->associative = false;
-    negation->commutative = false;
-    negation->symbol = '-';
-    negation->arity = 2;
-    negation->definitions = malloc(sizeof(Function *));
-    if (negation->definitions == NULL) {
-        free(negation);
+    subtraction->associative = false;
+    subtraction->commutative = false;
+    subtraction->symbol = '-';
+    subtraction->arity = 2;
+    subtraction->definitions = malloc(sizeof(Function *));
+    if (subtraction->definitions == NULL) {
+        free(subtraction);
         goto error;
     }
 
-    negation->definitions[0] = negateFunc;
-    negation->nDefs = 1;
+    subtraction->definitions[0] = createBinOpFunc(subtract);
+    subtraction->nDefs = 1;
     
-    if (!registerOperation(negation)) return 0;
+    if (!registerOperation(subtraction)) return 0;
     
     return 1;
     
