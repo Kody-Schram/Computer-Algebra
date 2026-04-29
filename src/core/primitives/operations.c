@@ -28,8 +28,8 @@ BuiltinResult add(unsigned int nArgs, Expression **operands) {
     Expression *b = operands[1];
 
     // If not both numbers, return the addition expression again
-    if (a->type != EXPRESSION_INTEGER && a->type != EXPRESSION_DOUBLE &&
-        b->type != EXPRESSION_INTEGER && b->type != EXPRESSION_DOUBLE) return result;
+    if ((a->type != EXPRESSION_INTEGER && a->type != EXPRESSION_DOUBLE) ||
+        (b->type != EXPRESSION_INTEGER && b->type != EXPRESSION_DOUBLE)) return result;
 
     if (a->type == EXPRESSION_INTEGER && b->type == EXPRESSION_INTEGER) {
         Expression *output = dummyExpression(EXPRESSION_INTEGER);
@@ -66,8 +66,8 @@ BuiltinResult subtract(unsigned int nArgs, Expression **operands) {
     Expression *b = operands[1];
 
     // If not both numbers, return the addition expression again
-    if (a->type != EXPRESSION_INTEGER && a->type != EXPRESSION_DOUBLE &&
-        b->type != EXPRESSION_INTEGER && b->type != EXPRESSION_DOUBLE) return result;
+    if ((a->type != EXPRESSION_INTEGER && a->type != EXPRESSION_DOUBLE) ||
+        (b->type != EXPRESSION_INTEGER && b->type != EXPRESSION_DOUBLE)) return result;
 
     if (a->type == EXPRESSION_INTEGER && b->type == EXPRESSION_INTEGER) {
         Expression *output = dummyExpression(EXPRESSION_INTEGER);
@@ -104,8 +104,8 @@ BuiltinResult multiply(unsigned int nArgs, Expression **operands) {
     Expression *b = operands[1];
 
     // If not both numbers, return the addition expression again
-    if (a->type != EXPRESSION_INTEGER && a->type != EXPRESSION_DOUBLE &&
-        b->type != EXPRESSION_INTEGER && b->type != EXPRESSION_DOUBLE) return result;
+    if ((a->type != EXPRESSION_INTEGER && a->type != EXPRESSION_DOUBLE) ||
+        (b->type != EXPRESSION_INTEGER && b->type != EXPRESSION_DOUBLE)) return result;
 
     if (a->type == EXPRESSION_INTEGER && b->type == EXPRESSION_INTEGER) {
         Expression *output = dummyExpression(EXPRESSION_INTEGER);
@@ -155,8 +155,8 @@ BuiltinResult exponent(unsigned int nArgs, Expression **operands) {
     Expression *b = operands[1];
 
     // If not both numbers, return the addition expression again
-    if (a->type != EXPRESSION_INTEGER && a->type != EXPRESSION_DOUBLE &&
-        b->type != EXPRESSION_INTEGER && b->type != EXPRESSION_DOUBLE) return result;
+    if ((a->type != EXPRESSION_INTEGER && a->type != EXPRESSION_DOUBLE) ||
+        (b->type != EXPRESSION_INTEGER && b->type != EXPRESSION_DOUBLE)) return result;
 
     if (a->type == EXPRESSION_INTEGER && b->type == EXPRESSION_INTEGER) {
         Expression *output = dummyExpression(EXPRESSION_INTEGER);
@@ -197,6 +197,10 @@ BuiltinResult divide(unsigned int nArgs, Expression **operands) {
     Expression *a = operands[0];
     Expression *b = operands[1];
 
+    // If not both numbers, return the addition expression again
+    if ((a->type != EXPRESSION_INTEGER && a->type != EXPRESSION_DOUBLE) ||
+        (b->type != EXPRESSION_INTEGER && b->type != EXPRESSION_DOUBLE)) return result;
+
     double av = (a->type == EXPRESSION_INTEGER) ? (double) a->integer : a->value;
     double bv = (b->type == EXPRESSION_INTEGER) ? (double) b->integer : b->value;
 
@@ -213,34 +217,6 @@ BuiltinResult divide(unsigned int nArgs, Expression **operands) {
         return result;
 }
 
-
-BuiltinResult negate(unsigned int nArgs, Expression **operands) {
-    BuiltinResult result = {.type = BUILTIN_NEUTRAL, .output = NULL};
-    
-    if (operands[0]->type == EXPRESSION_INTEGER) {
-        Expression *output = dummyExpression(EXPRESSION_INTEGER);
-        if (output == NULL) goto error;
-        
-        output->integer = -1 * operands[0]->integer;
-        
-        result.type = BUILTIN_SUCCESS;
-        result.output = output;
-        return result;
-    }
-    
-    Expression *output = dummyExpression(EXPRESSION_DOUBLE);
-    if (output == NULL) goto error;
-    
-    output->value = -1 * operands[0]->value;
-    
-    result.type = BUILTIN_SUCCESS;
-    result.output = output;
-    return result;
-    
-    error:
-        result.type = BUILTIN_ERROR;
-        return result;
-}
 
 
 int registerOperation(Operation *op) {
