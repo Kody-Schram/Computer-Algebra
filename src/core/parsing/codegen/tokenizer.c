@@ -242,6 +242,7 @@ Token *tokenize(char *buffer) {
 
         Token *newToken;
 		if (type == TOKEN_OPERATOR) newToken = createTokenOperator(cmp.cmp->operation);
+		else if (type == TOKEN_FUNC_CALL_PLACEHOLDER) newToken = createTokenFuncPlaceholder(cmp.cmp->func);
 		else newToken = createToken(type, buffer + i, end - i);
 
 		Debug(0, "type = %d\n", newToken->type);

@@ -32,6 +32,7 @@ struct Token {
         char *value;
         FunctionCall *call;
         const Operation *op;
+		const Function *func;
     };
 
     struct Token *next;
