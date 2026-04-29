@@ -12,7 +12,7 @@ add_library(Core STATIC
     parsing/parser_utils.c
     
     parsing/codegen/ast.c
-    parsing/codegen/lexer.c
+    parsing/codegen/normalizer.c
     parsing/codegen/tokenizer.c
     
     execution/simplify.c
