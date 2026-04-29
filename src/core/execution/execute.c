@@ -46,7 +46,6 @@ static int executeRecur(Expression **ptr, Environment *env) {
         }
 
         case EXPRESSION_OPERATOR:
-            if (expr->nOperands != expr->op->arity) return 1; // Unexpected number of operands, leave symbolic
             Debug(0, "\nOperands %d\n", expr->nOperands);
             Debug(1, printExpression(expr));
             
@@ -54,13 +53,18 @@ static int executeRecur(Expression **ptr, Environment *env) {
                 if (!executeRecur(&(expr->operands[i]), env)) return 0;
             }
         
+            if (expr->nOperands != expr->op->arity) return 1; // Unexpected number of operands, leave symbolic
+
             for (int i = 0; i < expr->op->nDefs; i ++) {
                 Function *func = expr->op->definitions[i];
                 Debug(0, "Running main operator now\n");
                 
                 BuiltinResult result = func->builtin(expr->nOperands, expr->operands);
                 if (result.type == BUILTIN_ERROR) return 0;
-                if (result.type == BUILTIN_NEUTRAL) continue; // keeps running until one of the definitions evaluates or errors
+                if (result.type == BUILTIN_NEUTRAL) {
+					Debug(0, "operation definition %d was neutral\n", i);
+					continue; // keeps running until one of the definitions evaluates or errors
+				}
                 
                 Debug(0, "Output of operation\n");
                 Debug(1, printExpression(result.output));

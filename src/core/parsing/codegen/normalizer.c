@@ -12,9 +12,8 @@
 /**
  * @brief Adds * where it is implied through standard math notation
  * 
- * @retval -1: Error, could not complete the function
- * @retval 0: No implicit multiplcation found, no action taken
- * @retval 1: Properly identified and corrected implied multiplcation
+ * @retval 0: Error
+ * @retval 1: Success
  * 
  * @param cur Current token in list
  * @param prev Previous token in list
@@ -29,7 +28,7 @@ static int handleImplicitMul(Token *cur, Token *prev) {
             Token *mult = createToken(TOKEN_OPERATOR, "*", 1);
             if (mult == NULL) {
                 perror("Error in implicit multiplication");
-                return -1;
+                return 0;
             }
 
             prev->next = mult;
@@ -47,7 +46,7 @@ static int handleImplicitMul(Token *cur, Token *prev) {
             Token *mult = createToken(TOKEN_OPERATOR, "*", 1);
             if (mult == NULL) {
                 perror("Error in implicit multiplication");
-                return -1;
+                return 0;
             }
 
             mult->next = nextToken;
@@ -64,38 +63,38 @@ static int handleImplicitMul(Token *cur, Token *prev) {
             Token *mult = createToken(TOKEN_OPERATOR, "*", 1);
             if (mult == NULL) {
                 perror("Error in implicit multiplication");
-                return -1;
+                return 0;
             }
 
             prev->next = mult;
             mult->next = cur;
-return 1; }
+			return 1; 
+		}
     }
 
-    return 0;
+    return 1;
 }
 
 /**
  * @brief Replaces ** tokens with a ^ token
  * 
- * @retval -1: Error, could not properly create the new token
- * @retval 0: "**" tokens not found, no replacement made
- * @retval 1: Properly replaced with "^"
+ * @retval 0: Error
+ * @retval 1: Success
  * 
  * @param cur Current node in the list
  * @param prev Previous node in the list
- * @return int 
+ * @return int Return code
  */
 static int handleExponentRewrite(Token **cur, Token *prev) {
-    if ((*cur) == NULL || (*cur)->type != TOKEN_OPERATOR || (*cur)->op->symbol != '*') return 0;
-	if ((*cur)->next == NULL || (*cur)->next->type != TOKEN_OPERATOR || (*cur)->next->op->symbol != '*') return 0; 
+    if ((*cur) == NULL || (*cur)->type != TOKEN_OPERATOR || (*cur)->op->symbol != '*') return 1;
+	if ((*cur)->next == NULL || (*cur)->next->type != TOKEN_OPERATOR || (*cur)->next->op->symbol != '*') return 1; 
 
 	Debug(0, "Rewriting exponent\n"); 
 	
 	Token *exponent = createToken(TOKEN_OPERATOR, "^", 1);
     if (exponent == NULL) {
 		perror("Error in exponent rewrite"); 
-		return -1; 
+		return 0; 
 	}
 
 	exponent->next = (*cur)->next->next;
@@ -110,25 +109,25 @@ static int handleExponentRewrite(Token **cur, Token *prev) {
 
     return 1;
 }
+
 /** @brief Checks to ensure binary operators valid
- * @retval -1: Invalid binary operation
- * @retval 0: No binary operation
- * @retval 1: Binary operator is valid
+ * @retval 0: Error 
+ * @retval 1: Success
  * 
  * @param cur Current node in the list
  * @param prev Previous node in the list
- * @return int Error code
+ * @return int Return code
  */
 static int checkInvalidBinop(const Token *cur, const Token *prev) {
-    if (cur->type != TOKEN_OPERATOR) return 0;
+    if (cur->type != TOKEN_OPERATOR) return 1;
     if (cur->next == NULL) {
         printf("Operator must be followed by another token.\n");
-        return -1;
+        return 0;
     }
 
     if (prev == NULL) {
         printf("Operator must be preceeded by another token.\n");
-        return -1;
+        return 0;
     }
 
     // If next op is -, will recheck later, may be a negative number instead of a minus
@@ -137,12 +136,12 @@ static int checkInvalidBinop(const Token *cur, const Token *prev) {
     // Handles invalid negative signs
     if (cur->value[0] == '-' && (cur->next == NULL || cur->next->type == TOKEN_OPERATOR)) {
         printf("Invalid operation \"%s %s %s\".\n", prev->value, cur->value, cur->next->value);
-        return -1;
+        return 0;
     }
 
     if (cur->next->type != TOKEN_IDENTIFIER && cur->next->type != TOKEN_NUMBER && cur->next->type != TOKEN_FUNC_CALL_PLACEHOLDER && cur->next->type != TOKEN_LEFT_PAREN) {
         printf("Invalid operation \"%s %s %s\".\n", prev->value, cur->value, cur->next->value);
-        return -1;
+        return 0;
     }
     
     return 1;
@@ -151,25 +150,25 @@ static int checkInvalidBinop(const Token *cur, const Token *prev) {
 /**
  * @brief Adds parenthesis around first term after function call if none are found
  * 
- * @retval -1: Error
- * @retval 0: No parenthesis added
- * @retval 1: Parenthesis added
+ * @retval 0: Error 
+ * @retval 1: Success
  * 
  * @param cur Current node in the list
- * @return int Error code
+ * @return int Return code
  */
 static int handleFunctionParens(Token *cur) {
-	if (cur != NULL && cur->type != TOKEN_FUNC_CALL_PLACEHOLDER) return 1;
+	if (cur == NULL || cur->type != TOKEN_FUNC_CALL_PLACEHOLDER) return 1;
+
+	// Assume since theres opening paren that the parameters are explicit
+	if (cur->next == NULL || cur->next->type == TOKEN_LEFT_PAREN) return 1;
 
 	Debug(0, "handling function parens\n");
 	Token *func = cur;
 	Token *opening = NULL;
 	Token *closing = NULL;
 
-	if (cur->next != NULL && cur->next->type != TOKEN_LEFT_PAREN) {
-		opening = createToken(TOKEN_LEFT_PAREN, "(", 1);
-		if (opening == NULL) goto error;
-	}
+	opening = createToken(TOKEN_LEFT_PAREN, "(", 1);
+	if (opening == NULL) goto error;
 
 	while (cur->next != NULL && cur->next->type != TOKEN_OPERATOR) cur = cur->next;
 
@@ -178,8 +177,9 @@ static int handleFunctionParens(Token *cur) {
 
 	closing->next = cur->next;
 	cur->next = closing;
+
 	
-	opening->next = func->next;
+	if (opening != NULL) opening->next = func->next;
 	func->next = opening;
 
 	return 1;
@@ -312,8 +312,7 @@ int handleLocalVariables(Token **ptr, char **parameters, int nParameters) {
 
 
 int normalize(Token** head) {
-    Config *config = GLOBALCONTEXT->config;
-    Debug(0, "\nLexing Tokens\n");
+    Debug(0, "\nNormalizing Tokens\n");
 
     Token **ptr = head;
     Token *prev = NULL;
@@ -321,11 +320,11 @@ int normalize(Token** head) {
     int openParenthesis = 0;
 
     while (*ptr != NULL) {
-        if (handleNegative(*ptr, prev) == -1) return 0;
-        if (handleFunctionParens(*ptr) == -1) return 0;
-        if (handleImplicitMul(*ptr, prev) == -1) return 0;
-        if (handleExponentRewrite(ptr, prev) == -1) return 0;
-        if (checkInvalidBinop(*ptr, prev) == -1) return 0;
+        if (!handleNegative(*ptr, prev)) return 0;
+        if (!handleFunctionParens(*ptr)) return 0;
+        if (!handleImplicitMul(*ptr, prev)) return 0;
+        if (!handleExponentRewrite(ptr, prev)) return 0;
+        if (!checkInvalidBinop(*ptr, prev)) return 0;
 
         // Counts open parenthesis
         if ((*ptr)->type == TOKEN_LEFT_PAREN) {

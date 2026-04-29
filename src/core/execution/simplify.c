@@ -2,7 +2,6 @@
 #include <string.h>
 
 #include "simplify.h"
-#include "core/utils/data_types.h"
 #include "core/primitives/types.h"
 #include "core/utils/type_utils.h"
 #include "core/utils/log.h"

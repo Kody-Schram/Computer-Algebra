@@ -265,8 +265,6 @@ Token *tokenize(char *buffer) {
 		Debug(1, printTokens(head));
 
     }
-	Debug(0, "finished tokenizing\n");
-    Debug(1, printTokens(head));
     
     return head;
 }

@@ -17,3 +17,5 @@ tests/logs/*
 *.ps1
 combine.sh
 project_dump.txt
+combineh.sh
+project_symbols.txt

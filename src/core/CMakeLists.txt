@@ -2,7 +2,6 @@ add_library(Core STATIC
     utils/input.c
     utils/log.c
     utils/type_utils.c
-    utils/data_types.c
     
     context/config.c
     context/context.c

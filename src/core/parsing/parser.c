@@ -5,6 +5,7 @@
 #include "parser.h"
 #include "core/context/context.h"
 #include "core/context/environment.h"
+#include "core/parsing/parser_types.h"
 #include "core/utils/log.h"
 #include "core/utils/type_utils.h"
 
@@ -63,42 +64,36 @@ static int parseFunctionCalls(Token **head) {
 
             // Prepares list of parameters
             int size = cur->nParams;
+			Debug(0, "%d parameters\n", size);
             int nParameters = 0;
             Expression **paramExprs = malloc(sizeof(Expression *) * size);
             if (paramExprs == NULL) goto error;
 
             // Selects opening paren to be freed
-            Token *opening = cur->next;
-            Token *seperator = NULL;
+            Token *seperator = cur->next;
 
             // skips to start of parameter
-            cur = cur->next->next;
-
-            // Free opening parenthesis
-            free(opening->value);
-            free(opening);
+            cur = seperator->next;
 
             callPlaceholder->next = NULL;
 
             // Loops through function call
             while (cur != NULL && cur->type != TOKEN_RIGHT_PAREN) {
                 Token *paramHead = cur;
-                int parens = 0;
+                int depth = 0;
 
-                if (seperator != NULL) {
-                    free(seperator->value);
-                    free(seperator);
-                }
+				free(seperator->value);
+				free(seperator);
 
-				if (nParameters >= size) {
+				if (nParameters + 1 > size) {
 					printf("Invalid number of parameters for function %s\n", callPlaceholder->value);	
 					goto parameter_error;
 				}
 
                 // Loops until end of parameter
-                while (!(parens == 0 && cur->type == TOKEN_SEPARATOR) && !(parens == 0 && cur->type == TOKEN_RIGHT_PAREN)) {
-                    if (cur->type == TOKEN_LEFT_PAREN) parens ++;
-                    if (cur->type == TOKEN_RIGHT_PAREN) parens --;
+                while (!(depth == 0 && cur->type == TOKEN_SEPARATOR) && !(depth == 0 && cur->type == TOKEN_RIGHT_PAREN)) {
+                    if (cur->type == TOKEN_LEFT_PAREN) depth ++;
+                    if (cur->type == TOKEN_RIGHT_PAREN) depth --;
                     
                     prev = cur;
                     cur = cur->next;
@@ -107,6 +102,7 @@ static int parseFunctionCalls(Token **head) {
                 // Cur is now at either ',' or ')', so prev is last token in parameter
                 prev->next = NULL;
                 seperator = cur;
+				cur = cur->next;
 
 
                 // Recursively parses calls
@@ -176,12 +172,10 @@ static int parseFunctionCalls(Token **head) {
 
 			free(callPlaceholder->value);
             free(callPlaceholder);
-
-			// Frees closing parenthesis
+			
 			free(seperator->value);
 			free(seperator);
-			
-			cur = callToken->next;
+
 
             Debug(0, "Finished with handling call to: %s.\n", call->identifier);
             continue; 
@@ -254,7 +248,7 @@ static int parseFunctionAssignment(Token *head) {
             // Switches to BODY if '->' is found
             if (cur->type == TOKEN_MAPPING) {
                 Debug(0, "Moving to function body.\n");
-                if (parameters == 0) {
+                if (nParameters == 0) {
                     printf("No parameters were passed. If this is intentional, define a variable instead.\n");
                     goto error;
                 }
@@ -267,7 +261,7 @@ static int parseFunctionAssignment(Token *head) {
                 Debug(0, "Adding function parameter '%s'\n", cur->value);
                 if (nParameters >= size) {
                     size *= 2;
-                    char **temp = realloc(parameters, size);
+                    char **temp = realloc(parameters, sizeof(char *) * size);
                     if (temp == NULL) goto error;
                     
                     parameters = temp;
