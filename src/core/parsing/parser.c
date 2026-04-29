@@ -9,7 +9,7 @@
 #include "core/utils/type_utils.h"
 
 #include "core/parsing/codegen/tokenizer.h"
-#include "core/parsing/codegen/lexer.h"
+#include "core/parsing/codegen/normalizer.h"
 #include "core/parsing/codegen/ast.h"
 #include "core/parsing/parser_utils.h"
 
@@ -55,15 +55,14 @@ static int parseFunctionCalls(Token **head) {
     while (cur != NULL) {
         // Recursively parses nested function calls
         if (cur->type == TOKEN_FUNC_CALL_PLACEHOLDER) {
-            Debug(0, "Function call: %s found\n", cur->value);
-            Token *funcCall = cur;
+            Token *callPlaceholder = cur;
             Token *prev = NULL;
 
             Token *callToken = NULL;
             FunctionCall *call = NULL;
 
             // Prepares list of parameters
-            int size = DEFAULT_PARAMETERS_SIZE;
+            int size = cur->nParams;
             int nParameters = 0;
             Expression **paramExprs = malloc(sizeof(Expression *) * size);
             if (paramExprs == NULL) goto error;
@@ -79,7 +78,7 @@ static int parseFunctionCalls(Token **head) {
             free(opening->value);
             free(opening);
 
-            funcCall->next = NULL;
+            callPlaceholder->next = NULL;
 
             // Loops through function call
             while (cur != NULL && cur->type != TOKEN_RIGHT_PAREN) {
@@ -91,8 +90,13 @@ static int parseFunctionCalls(Token **head) {
                     free(seperator);
                 }
 
+				if (nParameters >= size) {
+					printf("Invalid number of parameters for function %s\n", callPlaceholder->value);	
+					goto parameter_error;
+				}
+
                 // Loops until end of parameter
-                while(!(parens == 0 && cur->type == TOKEN_SEPARATOR) && !(parens == 0 && cur->type == TOKEN_RIGHT_PAREN)) {
+                while (!(parens == 0 && cur->type == TOKEN_SEPARATOR) && !(parens == 0 && cur->type == TOKEN_RIGHT_PAREN)) {
                     if (cur->type == TOKEN_LEFT_PAREN) parens ++;
                     if (cur->type == TOKEN_RIGHT_PAREN) parens --;
                     
@@ -103,19 +107,8 @@ static int parseFunctionCalls(Token **head) {
                 // Cur is now at either ',' or ')', so prev is last token in parameter
                 prev->next = NULL;
                 seperator = cur;
-                cur = cur->next;
 
-                // Reallocates parameters list if needed
-                if (nParameters >= size - 1) {
-                    size += DEFAULT_PARAMETERS_SIZE; 
-                    Expression **temp = realloc(paramExprs, sizeof(Expression *) * size);
 
-                    if (temp == NULL) goto parameter_error;
-
-                    paramExprs = temp;
-
-                }
-                
                 // Recursively parses calls
                 if (!parseFunctionCalls(&paramHead)) goto parameter_error;
                 
@@ -136,6 +129,9 @@ static int parseFunctionCalls(Token **head) {
                 // Simplify parameter
                 // ==================
 
+				Debug(0, "Parameter expr\n");
+				Debug(1, printExpression(expr));
+
                 paramExprs[nParameters] = expr;
                 nParameters ++;
 
@@ -149,7 +145,8 @@ static int parseFunctionCalls(Token **head) {
                     
                     goto error;
             }
-            
+           
+
             // Creates new function call token
             Debug(0, "Creating new function call token.\n");
             callToken = calloc(1, sizeof(Token));
@@ -161,7 +158,7 @@ static int parseFunctionCalls(Token **head) {
             call = malloc(sizeof(FunctionCall));
             if (call == NULL) goto error;
             
-            call->identifier = strdup(funcCall->value);
+            call->identifier = strdup(callPlaceholder->value);
             if (call->identifier == NULL) goto error;
             call->nParams = nParameters;
             call->parameters = paramExprs;
@@ -177,11 +174,14 @@ static int parseFunctionCalls(Token **head) {
 
             Debug(0, "Freeing old tokens.\n");
 
-            free(seperator->value);
-            free(seperator);
-            free(funcCall->value);
-            free(funcCall);
+			free(callPlaceholder->value);
+            free(callPlaceholder);
 
+			// Frees closing parenthesis
+			free(seperator->value);
+			free(seperator);
+			
+			cur = callToken->next;
 
             Debug(0, "Finished with handling call to: %s.\n", call->identifier);
             continue; 
@@ -209,6 +209,7 @@ static int parseFunctionCalls(Token **head) {
     }
 
     Debug(0, "Finished parsing all calls, returning.\n");
+	Debug(1, printTokens(*head));
     return 1;
 }
 
@@ -288,7 +289,7 @@ static int parseFunctionAssignment(Token *head) {
 
     // Redoes identifier tokens now that local variables for parameters are established, then redoes lexing
     if (!handleLocalVariables(&asgn, parameters, nParameters)) goto error;
-    if (!lex(&asgn->next)) goto error;
+    if (!normalize(&asgn->next)) goto error;
 
     if (!parseFunctionCalls(&asgn->next)) goto error;
 
@@ -416,7 +417,9 @@ ParserResult parse(char *buffer) {
     head = tokenize(buffer);
     if (head == NULL) return result;
 
-    if (!lex(&head)) goto error;
+    if (!normalize(&head)) goto error;
+	Debug(0, "Normalizer out\n");
+	Debug(1, printTokens(head));
 
     if (containsAssignment(head)) {
         if (containsFunctionAssignment(head)) {
