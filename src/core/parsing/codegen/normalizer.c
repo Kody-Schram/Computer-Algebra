@@ -323,7 +323,6 @@ int normalize(Token** head) {
     while (*ptr != NULL) {
         if (handleNegative(*ptr, prev) == -1) return 0;
         if (handleFunctionParens(*ptr) == -1) return 0;
-		Debug(1, printTokens(*ptr));
         if (handleImplicitMul(*ptr, prev) == -1) return 0;
         if (handleExponentRewrite(ptr, prev) == -1) return 0;
         if (checkInvalidBinop(*ptr, prev) == -1) return 0;
