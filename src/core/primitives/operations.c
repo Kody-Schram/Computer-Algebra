@@ -252,6 +252,7 @@ int initPrimitiveOperations() {
     addition->commutative = true;
     addition->symbol = '+';
     addition->arity = 2;
+	addition->precedence = 1;
     addition->definitions = malloc(sizeof(Function *));
     if (addition->definitions == NULL) {
         free(addition);
@@ -272,6 +273,7 @@ int initPrimitiveOperations() {
     multiplication->commutative = true;
     multiplication->symbol = '*';
     multiplication->arity = 2;
+	multiplication->precedence = 2;
     multiplication->definitions = malloc(sizeof(Function *));
     if (multiplication->definitions == NULL) {
         free(multiplication);
@@ -292,6 +294,7 @@ int initPrimitiveOperations() {
     exponentiation->commutative = false;
     exponentiation->symbol = '^';
     exponentiation->arity = 2;
+	exponentiation->precedence = 3;
     exponentiation->definitions = malloc(sizeof(Function *));
     if (exponentiation->definitions == NULL) {
         free(exponentiation);
@@ -313,6 +316,7 @@ int initPrimitiveOperations() {
     division->commutative = false;
     division->symbol = '/';
     division->arity = 2;
+	division->precedence = 2;
     division->definitions = malloc(sizeof(Function *));
     if (division->definitions == NULL) {
         free(division);
@@ -333,6 +337,7 @@ int initPrimitiveOperations() {
     subtraction->commutative = false;
     subtraction->symbol = '-';
     subtraction->arity = 2;
+	subtraction->precedence = 1;
     subtraction->definitions = malloc(sizeof(Function *));
     if (subtraction->definitions == NULL) {
         free(subtraction);

@@ -37,11 +37,13 @@ struct Operation {
     bool commutative;
 	bool rightAssociative;
 	bool leftAssociative;
-    unsigned int arity; // Number of required operands
     char symbol;
-    
-    Function **definitions;
+
+    unsigned int arity; // Number of required operands
+	unsigned int precedence;
     unsigned int nDefs;
+
+    Function **definitions;
 };
 
 struct Expression {

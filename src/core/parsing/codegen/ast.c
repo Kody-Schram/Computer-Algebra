@@ -10,34 +10,6 @@
 #define DEFAULT_NODE_STACK_SIZE 10
 
 /**
- * @brief Gets the precedent of operator
- * 
- * @param operator 
- * @return int Precedent of operator
- */
-static int getPrecedent(const char *operator) {
-    int precedent = 0;
-
-    // set precedent for '->'
-    switch(operator[0]) {
-        case '+':
-        case '-':
-            precedent = 1;
-            break;
-        case '*':
-        case '/':
-            precedent = 2;
-            break;
-        case '^':
-            precedent = 3;
-            break;
-    }
-
-    return precedent;
-}
-
-
-/**
  * @brief Gets the length of linked list
  * 
  * @param head Start of Token linked list
@@ -120,11 +92,10 @@ RPNList *shuntingYard(Token *head) {
                 // Pops all operators on stack with greater or equal precedent
                 while ((operators.entries > 0) 
                     && (((Token *) operators.items[operators.entries - 1])->value[0] != '(') 
-                    && (getPrecedent(((Token *) operators.items[operators.entries - 1])->value) >= getPrecedent(cur->value))) {
+                    && (((Token *)operators.items[operators.entries - 1])->op->precedence >= cur->op->precedence)) {
                     
                             // Right associativity for exponents
-                    if (((Token *) operators.items[operators.entries - 1])->value[0] == '^' 
-                        && getPrecedent(((Token *) operators.items[operators.entries - 1])->value) == getPrecedent(cur->value)) break;
+					if (((Token *)operators.items[operators.entries - 1])->op->rightAssociative) break;
                     
                     operators.entries --;
                     output.items[output.entries] = operators.items[operators.entries];
