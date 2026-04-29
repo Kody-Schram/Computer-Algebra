@@ -27,12 +27,12 @@ enum TokenType {
 
 struct Token {
     TokenType type;
+	unsigned int nParams;
 
     union {
         char *value;
         FunctionCall *call;
         const Operation *op;
-		const Function *func;
     };
 
     struct Token *next;

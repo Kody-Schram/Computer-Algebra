@@ -10,9 +10,6 @@
 Token *createTokenOperator(const Operation *op);
 
 
-
-Token *createTokenFuncPlaceholder(const Function *func); 
-
 /**
  * @brief Creates a Token object
  * 

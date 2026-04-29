@@ -28,22 +28,6 @@ Token *createTokenOperator(const Operation *op) {
 }
 
 
-Token *createTokenFuncPlaceholder(const Function *func) {
-	Debug(0, "Running dedicated function placeholder creation func\n");
-	Token *token = calloc(1, sizeof(Token));
-	if (token == NULL) {
-		perror("Error creating token");
-		return NULL;
-	}
-
-	token->type = TOKEN_FUNC_CALL_PLACEHOLDER;
-	token->next = NULL;
-	token->func = func;
-
-	return token;
-}
-
-
 Token *createToken(TokenType type, const char *value, int l) {
     if (type != TOKEN_OPERATOR) {
         // Allocates new token
@@ -120,7 +104,7 @@ static void printToken(const Token *token, FILE *stream) {
 				break;
         }
 
-        if (token->type == TOKEN_FUNC_CALL) {
+        if (token->type == TOKEN_FUNC_CALL || token->type == TOKEN_FUNC_CALL_PLACEHOLDER) {
             fprintf(stream, "<type: %s>\n", type);
             //printf("<type: %s>\n", type);
         }
