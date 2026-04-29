@@ -173,7 +173,7 @@ static void printLinkedCmpList(FILE *stream, const Component *cmp) {
                 if (!GLOBALCONTEXT->config->PRINT_OPS) break; // will only print out user defined operations (maybe add setting in config for this)
                 fprintf(stream, "Op '%s'\n", cmp->identifier);
                 
-                fprintf(stream, "  Associative: %d\n", cmp->operation->associative);
+                fprintf(stream, "  Associative: L(%d), R(%d)\n", cmp->operation->leftAssociative, cmp->operation->rightAssociative);
                 fprintf(stream, "  Commutative: %d\n", cmp->operation->commutative);
                 
                 break;

@@ -34,8 +34,9 @@ enum ExpressionType {
 
 
 struct Operation {
-    bool associative;
     bool commutative;
+	bool rightAssociative;
+	bool leftAssociative;
     unsigned int arity; // Number of required operands
     char symbol;
     

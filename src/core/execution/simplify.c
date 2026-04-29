@@ -91,7 +91,7 @@ static int simplifyRecur(Expression **ptr) {
     Expression *expr = *ptr;
     
     Debug(0, "Flattening operation\n");
-    if (expr->op->associative && !flattenOps(expr)) return 0;
+    if (expr->op->leftAssociative && expr->op->rightAssociative && !flattenOps(expr)) return 0;
     Debug(0, "\nafter\n");
     Debug(1, printExpression(expr));
     

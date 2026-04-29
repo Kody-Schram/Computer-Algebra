@@ -247,7 +247,8 @@ int initPrimitiveOperations() {
     addition = malloc(sizeof(Operation));
     if (addition == NULL) goto error;
 
-    addition->associative = true;
+    addition->leftAssociative = true;
+    addition->rightAssociative = true;
     addition->commutative = true;
     addition->symbol = '+';
     addition->arity = 2;
@@ -266,7 +267,8 @@ int initPrimitiveOperations() {
     multiplication = malloc(sizeof(Operation));
     if (multiplication == NULL) goto error;
 
-    multiplication->associative = true;
+    multiplication->leftAssociative = true;
+    multiplication->rightAssociative = true;
     multiplication->commutative = true;
     multiplication->symbol = '*';
     multiplication->arity = 2;
@@ -285,7 +287,8 @@ int initPrimitiveOperations() {
     exponentiation = malloc(sizeof(Operation));
     if (exponentiation == NULL) goto error;
 
-    exponentiation->associative = false;
+    exponentiation->leftAssociative = false;
+	exponentiation->rightAssociative = true;
     exponentiation->commutative = false;
     exponentiation->symbol = '^';
     exponentiation->arity = 2;
@@ -305,7 +308,8 @@ int initPrimitiveOperations() {
     division = malloc(sizeof(Operation));
     if (division == NULL) goto error;
 
-    division->associative = false;
+    division->leftAssociative = true;
+	division->rightAssociative = false;
     division->commutative = false;
     division->symbol = '/';
     division->arity = 2;
@@ -324,7 +328,8 @@ int initPrimitiveOperations() {
     subtraction = malloc(sizeof(Operation));
     if (subtraction == NULL) goto error;
     
-    subtraction->associative = false;
+    subtraction->leftAssociative = true;
+	subtraction->rightAssociative = false;
     subtraction->commutative = false;
     subtraction->symbol = '-';
     subtraction->arity = 2;
