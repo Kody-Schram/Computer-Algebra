@@ -9,14 +9,16 @@ The tokenizer, lexer, and parsing is all custom, no algorithms or common impleme
   - Implemented src/parser/codegen/ast.c in shuntingYard()
   - [Source](https://en.wikipedia.org/wiki/Shunting_yard_algorithm)
 
-## Execution
-### Algebra
-
+## Potential Sources
+These are sources which I have found and may implement, further research required.
 - Gröbner Bases for algebraic simplification
-  - Implemented at src/execution/algebra/algebra.c in simplifyRecur()
-  - [Source](https://mathweb.ucsd.edu/~helton/BILLSPAPERSscanned/HSW98.pdf)
+    - Not implemented yet
+    - [Source](https://mathweb.ucsd.edu/~helton/BILLSPAPERSscanned/HSW98.pdf)
 
-### Calculus
 - Risch/Risch-Norman for symbolic integration
-  - Not implemented yet
-  - Research not done yet
+    - Not implemented yet
+    - Research not done yet
+
+- Computer Algebra, Algorithms, Systems and Applications
+    - Not implemented yet
+    - [Source](https://dn720705.ca.archive.org/0/items/ost-computer-science-computeralgebra/ComputerAlgebra.pdf)
