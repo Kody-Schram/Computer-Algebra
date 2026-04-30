@@ -85,7 +85,7 @@ static int handleImplicitMul(Token *cur, Token *prev) {
  * @param prev Previous node in the list
  * @return int Return code
  */
-static int handleExponentRewrite(Token **cur, Token *prev) {
+static int handleExponentRewrite(Token **cur){
     if ((*cur) == NULL || (*cur)->type != TOKEN_OPERATOR || (*cur)->op->symbol != '*') return 1;
 	if ((*cur)->next == NULL || (*cur)->next->type != TOKEN_OPERATOR || (*cur)->next->op->symbol != '*') return 1; 
 
@@ -99,13 +99,10 @@ static int handleExponentRewrite(Token **cur, Token *prev) {
 
 	exponent->next = (*cur)->next->next;
 	
-	free((*cur)->next->value);
 	free((*cur)->next);
-	free((*cur)->value);
     free(*cur);
 
-    if (prev != NULL) prev->next = exponent;
-    else *cur = exponent;
+    *cur = exponent;
 
     return 1;
 }
@@ -323,7 +320,7 @@ int normalize(Token** head) {
         if (!handleNegative(*ptr, prev)) return 0;
         if (!handleFunctionParens(*ptr)) return 0;
         if (!handleImplicitMul(*ptr, prev)) return 0;
-        if (!handleExponentRewrite(ptr, prev)) return 0;
+        if (!handleExponentRewrite(ptr)) return 0;
         if (!checkInvalidBinop(*ptr, prev)) return 0;
 
         // Counts open parenthesis
