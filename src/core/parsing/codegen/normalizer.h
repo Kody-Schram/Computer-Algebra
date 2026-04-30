@@ -3,18 +3,16 @@
 
 #include "core/parsing/parser_types.h"
 
+typedef enum NORMALIZER_RESULT {
+	NORM_SUCCESS,
+	NORM_ERROR,
+	NORM_SYNTAX_ERROR
+} NORMALIZER_RESULT;
 
-int handleLocalVariables(Token **ptr, char **parameters, int nParameters);
 
-/**
- * @brief Refines tokens list for AST generation
- * 
- * @retval NULL: Error lexing the token list
- * @retval Token*: Properly lexed the list, return head of list
- * 
- * @param head Head of linked list
- * @return Token* 
- */
-int normalize(Token **head);
+NORMALIZER_RESULT handleLocalVariables(Token **ptr, char **parameters, int nParameters);
+
+
+NORMALIZER_RESULT normalize(Token **head);
 
 #endif

@@ -51,9 +51,9 @@ static int process(char *buffer) {
     if (keyword == -1) return 0;
     else if (keyword == 1) return 1;
 
-    ParserResult result = parse(buffer);
+    PARSER_RESULT result = parse(buffer);
     if (result.type == PARSER_ERROR) return 0;
-    if (result.expr == NULL) return 1;
+    if (result.expr == NULL || result.type == PARSER_SYNTAX_ERROR) return 1;
     
     if (!simplify(&result.expr)) {
         freeExpression(result.expr);

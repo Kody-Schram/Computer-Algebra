@@ -19,7 +19,7 @@
 
 typedef enum {
     IDENTIFIER,
-    PARAMETERS,
+    PARAMETERS, 
     BODY
 } FunctionComponent;
 
@@ -49,7 +49,7 @@ static int containsAssignment(Token *head) {
 }
 
 
-static int parseFunctionCalls(Token **head) {
+static PARSER_RESULT parseFunctionCalls(Token **head) {
     Token *cur = *head;
     Token *funcPrev = NULL;
 
@@ -87,7 +87,7 @@ static int parseFunctionCalls(Token **head) {
 
 				if (nParameters + 1 > size) {
 					printf("Invalid number of parameters for function %s\n", callPlaceholder->value);	
-					goto parameter_error;
+					goto parameter_syntax_error;
 				}
 
                 // Loops until end of parameter
@@ -106,8 +106,12 @@ static int parseFunctionCalls(Token **head) {
 
 
                 // Recursively parses calls
-                if (!parseFunctionCalls(&paramHead)) goto parameter_error;
-                
+				PARSER_RESULT callOut = parseFunctionCalls(&paramHead);
+                if (callOut.type != PARSER_SUCCESS) {
+					if (callOut.type == PARSER_ERROR) goto parameter_error;
+					goto parameter_syntax_error;
+				}
+
                 // ===========================================================
                 // Look into ways to reduce recursive calls to these functions
                 // ===========================================================
@@ -134,6 +138,12 @@ static int parseFunctionCalls(Token **head) {
                 freeTokens(paramHead);
 
                 continue;
+				
+				parameter_syntax_error:
+                    if (rpn != NULL) free(rpn->items);
+                    free(rpn);
+
+					goto syntax_error;
 
                 parameter_error:
                     if (rpn != NULL) free(rpn->items);
@@ -179,6 +189,20 @@ static int parseFunctionCalls(Token **head) {
 
             Debug(0, "Finished with handling call to: %s.\n", call->identifier);
             continue; 
+			
+			syntax_error:
+                freeTokens(*head);
+                
+                for (int i = 0; i < nParameters; i ++) {
+                    freeExpression(paramExprs[i]);
+                }
+                free(paramExprs);
+                freeTokens(cur);
+                freeTokens(callToken);
+                if (call != NULL) free(call->identifier);
+                free(call);
+
+				return (PARSER_RESULT) {PARSER_SYNTAX_ERROR, NULL};
 
             error:
                 perror("Error in parsing function call");
@@ -193,7 +217,7 @@ static int parseFunctionCalls(Token **head) {
                 if (call != NULL) free(call->identifier);
                 free(call);
                 
-                return 0;
+                return (PARSER_RESULT) {PARSER_ERROR, NULL};
         }
 
         if (cur != NULL) {
@@ -204,11 +228,11 @@ static int parseFunctionCalls(Token **head) {
 
     Debug(0, "Finished parsing all calls, returning.\n");
 	Debug(1, printTokens(*head));
-    return 1;
+    return (PARSER_RESULT) {PARSER_SUCCESS, NULL};
 }
 
 
-static int parseFunctionAssignment(Token *head) {
+static PARSER_RESULT parseFunctionAssignment(Token *head) {
     char *identifier = NULL;
     RPNList *rpn = NULL;
     Expression *expr = NULL;
@@ -232,16 +256,16 @@ static int parseFunctionAssignment(Token *head) {
                 component = PARAMETERS;
             } else if (cur->type != TOKEN_IDENTIFIER) {
                 printf("Invalid token: '%s' within function identifier.\n", cur->value);
-                goto error;
+                goto syntax_error;
             } else {
                 if (identifier != NULL) {
                     printf("Invalid function declaration.\n");
-                    goto error;
+                    goto syntax_error;
                 }
                 identifier = strdup(cur->value);
                 if (identifier == NULL) {
                     perror("Error parsing function assignment");
-                    goto error;
+                    goto syntax_error;
                 }
             }
         } else if (component == PARAMETERS) {
@@ -250,13 +274,14 @@ static int parseFunctionAssignment(Token *head) {
                 Debug(0, "Moving to function body.\n");
                 if (nParameters == 0) {
                     printf("No parameters were passed. If this is intentional, define a variable instead.\n");
-                    goto error;
+                    goto syntax_error;
                 }
                 asgn = cur;
                 component = BODY;
             } else if (cur->type != TOKEN_IDENTIFIER && cur->type != TOKEN_SEPARATOR) {
                 printf("Invalid token: '%s' within function parameters.\n", cur->value);
-                goto error;
+
+                goto syntax_error;
             } else if (cur->type == TOKEN_IDENTIFIER) {
                 Debug(0, "Adding function parameter '%s'\n", cur->value);
                 if (nParameters >= size) {
@@ -278,14 +303,22 @@ static int parseFunctionAssignment(Token *head) {
     // Checks body for second assignment/mapping token
     if (containsAssignment(asgn->next) || containsFunctionAssignment(asgn->next)) {
         printf("Cannot have assignment within a function definition.\n");
-        goto error;
+        goto syntax_error;
     }
 
     // Redoes identifier tokens now that local variables for parameters are established, then redoes lexing
     if (!handleLocalVariables(&asgn, parameters, nParameters)) goto error;
-    if (!normalize(&asgn->next)) goto error;
+	NORMALIZER_RESULT normOut = normalize(&asgn->next);
+	if (normOut != NORM_SUCCESS) {
+		if (normOut == NORM_ERROR) goto error;
+		goto syntax_error;
+	}
 
-    if (!parseFunctionCalls(&asgn->next)) goto error;
+	PARSER_RESULT callOut = parseFunctionCalls(&asgn->next);
+	if (callOut.type != PARSER_SUCCESS) {
+		if (callOut.type == PARSER_ERROR) goto error;
+		goto syntax_error;
+	}
 
     rpn = shuntingYard(asgn->next);
     if (rpn == NULL) goto error;
@@ -317,7 +350,22 @@ static int parseFunctionAssignment(Token *head) {
     free(rpn);
     free(identifier);
 
-    return 1;
+    return (PARSER_RESULT) {PARSER_SUCCESS, NULL};
+
+	
+	syntax_error:
+        freeTokens(head);
+        free(identifier);
+        if (parameters != NULL) {
+            for (int i = 0; i < nParameters; i ++) free(parameters[i]);
+        }
+        free(parameters);
+        if (rpn != NULL) free(rpn->items);
+        free(rpn);
+        if (expr != NULL) freeExpression(expr);
+        free(function);
+		return (PARSER_RESULT) {PARSER_SYNTAX_ERROR, NULL};
+
     
     error:
         freeTokens(head);
@@ -331,11 +379,11 @@ static int parseFunctionAssignment(Token *head) {
         if (expr != NULL) freeExpression(expr);
         free(function);
 
-        return 0;
+        return (PARSER_RESULT) {PARSER_ERROR, NULL};
 }
 
 
-static int parseAssignment(Token *head) {
+static PARSER_RESULT parseAssignment(Token *head) {
     char *identifier = NULL;
     RPNList *rpn = NULL;
     Expression *expr = NULL;
@@ -348,11 +396,11 @@ static int parseAssignment(Token *head) {
                 identifier = cur->value;
                 if (identifier == NULL) {
                     perror("Error parsing variable assignment");
-                    goto error;
+                    goto syntax_error;
                 }
             } else {
                 printf("Invalid token '%s' in variable identifier.\n", cur->value);
-                goto error;
+                goto syntax_error;
             }
         } else if (cur->type == TOKEN_ASSIGNMENT) {
             asgn = cur;
@@ -361,9 +409,10 @@ static int parseAssignment(Token *head) {
         cur = cur->next;
     }
 
-    if (!parseFunctionCalls(&asgn->next)) {
-        printf("Error parsing function call(s)\n");
-        goto error;
+	PARSER_RESULT callOut = parseFunctionCalls(&asgn->next);
+	if (callOut.type != PARSER_SUCCESS) {
+		if (callOut.type == PARSER_ERROR) goto error;
+		goto syntax_error;
     }
 
     rpn = shuntingYard(asgn->next);
@@ -386,7 +435,18 @@ static int parseAssignment(Token *head) {
     free(rpn->items);
     free(rpn);
 
-    return 1;
+    return (PARSER_RESULT) {PARSER_SUCCESS, NULL};
+	
+
+	syntax_error:
+        free(identifier);
+        freeTokens(head);
+        if (rpn != NULL) free(rpn->items);
+        free(rpn);
+        freeExpression(expr);
+
+		return (PARSER_RESULT) {PARSER_SYNTAX_ERROR, NULL};
+
 
     error:
         free(identifier);
@@ -395,14 +455,14 @@ static int parseAssignment(Token *head) {
         free(rpn);
         freeExpression(expr);
         
-        return 0;
+        return (PARSER_RESULT) {PARSER_ERROR, NULL};
 }
 
 
-ParserResult parse(char *buffer) {
+PARSER_RESULT parse(char *buffer) {
     Info(0, "\nParsing: '%s'\n", buffer);
     
-    ParserResult result = {PARSER_ERROR, NULL};
+    PARSER_RESULT result = {PARSER_ERROR, NULL};
     
     Token *head = NULL;
     RPNList *rpn = NULL;
@@ -411,22 +471,26 @@ ParserResult parse(char *buffer) {
     head = tokenize(buffer);
     if (head == NULL) return result;
 
-    if (!normalize(&head)) goto error;
+	NORMALIZER_RESULT normOut = normalize(&head);
+    if (normOut == NORM_ERROR) goto error;
+	else if (normOut == NORM_SYNTAX_ERROR) goto syntax_error;
+
 	Debug(0, "Normalizer out\n");
 	Debug(1, printTokens(head));
 
     if (containsAssignment(head)) {
+		PARSER_RESULT asgnOut;
         if (containsFunctionAssignment(head)) {
-            if (!parseFunctionAssignment(head)) return result;
-            goto assignment_success;
+            return parseFunctionAssignment(head);
         }
-        else if  (!parseAssignment(head)) return result;
-        
-        assignment_success:
-        return (ParserResult) {PARSER_SUCCESS, NULL};
+        return parseAssignment(head);
     }
 
-    if (!parseFunctionCalls(&head)) goto error;
+	PARSER_RESULT callOut = parseFunctionCalls(&head);
+	if (callOut.type != PARSER_SUCCESS) {
+		if (callOut.type == PARSER_ERROR) goto error;
+		goto syntax_error;
+	}
 
     rpn = shuntingYard(head);
     if (rpn == NULL) goto error;
@@ -437,8 +501,14 @@ ParserResult parse(char *buffer) {
     free(rpn);
     freeTokens(head);
 
-    return (ParserResult) {PARSER_SUCCESS, expr};
-    
+    return (PARSER_RESULT) {PARSER_SUCCESS, expr};
+
+	syntax_error:
+        freeTokens(head);
+        if (rpn != NULL) free(rpn->items);
+        free(rpn);
+		return (PARSER_RESULT) {PARSER_SYNTAX_ERROR, expr};
+
     error:
         freeTokens(head);
         if (rpn != NULL) free(rpn->items);

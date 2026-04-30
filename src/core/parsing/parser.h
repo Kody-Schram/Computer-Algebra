@@ -4,20 +4,19 @@
 #include "core/primitives/types.h"
 #include "parser_types.h"
 
-typedef enum ParserResultType ParserResultType;
-typedef struct ParserResult ParserResult;
 
 
-enum ParserResultType {
+typedef enum PARSER_RESULT_T {
     PARSER_SUCCESS,
+	PARSER_SYNTAX_ERROR,
     PARSER_ERROR
-};
+} PARSER_RESULT_T;
 
 
-struct ParserResult {
-    ParserResultType type;
+typedef struct PARSER_RESULT {
+    PARSER_RESULT_T type;
     Expression *expr;
-};
+} PARSER_RESULT;
 
 
 int parseFunction(Token *head);
@@ -31,6 +30,6 @@ int parseFunction(Token *head);
  * @param buffer Mathematical string
  * @return Token* 
  */
-ParserResult parse(char *buffer);
+PARSER_RESULT parse(char *buffer);
 
 #endif

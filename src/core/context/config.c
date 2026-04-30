@@ -495,7 +495,7 @@ Config *loadConfig(char *cpath) {
             freeConfig(config);
             return NULL;
         }
-        config->CONFIG_FILE_PATH = cpath;
+        config->CONFIG_FILE_PATH = strdup(cpath);
     }
 
     yaml_parser_t parser;

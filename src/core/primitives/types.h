@@ -96,7 +96,7 @@ struct Function {
 
     union {
         Expression *definition;
-        BuiltinResult (*builtin) (unsigned int nArgs, Expression ** exprs);
+        const BuiltinResult (*builtin) (unsigned int nArgs, Expression ** exprs);
     };
 };
 
