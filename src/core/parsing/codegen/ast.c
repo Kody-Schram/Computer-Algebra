@@ -3,6 +3,7 @@
 
 #include "ast.h"
 #include "core/context/context.h"
+#include "core/parsing/parser_types.h"
 #include "core/utils/log.h"
 #include "core/parsing/parser_utils.h"
 #include "core/utils/type_utils.h"
@@ -89,13 +90,14 @@ RPNList *shuntingYard(Token *head) {
 
         } else if (cur->type == TOKEN_OPERATOR) {
             if (operators.entries > 0) {
+				Token *opToken = (Token *) operators.items[operators.entries - 1];
                 // Pops all operators on stack with greater or equal precedent
                 while ((operators.entries > 0) 
-                    && (((Token *) operators.items[operators.entries - 1])->value[0] != '(') 
-                    && (((Token *)operators.items[operators.entries - 1])->op->precedence >= cur->op->precedence)) {
+                    && (opToken->type == TOKEN_LEFT_PAREN) 
+                    && (opToken->type == TOKEN_OPERATOR && opToken->op->precedence >= cur->op->precedence)) {
                     
                             // Right associativity for exponents
-					if (((Token *)operators.items[operators.entries - 1])->op->rightAssociative) break;
+					if (opToken->type == TOKEN_OPERATOR && opToken->op->rightAssociative && !opToken->op->leftAssociative) break;
                     
                     operators.entries --;
                     output.items[output.entries] = operators.items[operators.entries];
