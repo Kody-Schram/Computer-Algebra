@@ -30,11 +30,11 @@ endif()
 
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(YAML REQUIRED yaml-0.1)
-pkg_check_modules(GMP REQUIRED gmp)
+# pkg_check_modules(GMP REQUIRED gmp)
 
 add_subdirectory(src/core)
 add_subdirectory(src/modules)
-#add_executable(${PROJECT_NAME} src/main.c)
+add_executable(${PROJECT_NAME} src/main.c)
 
 target_link_libraries(${PROJECT_NAME}
     PRIVATE
