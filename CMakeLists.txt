@@ -11,7 +11,7 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release)
 endif()
 
-if(CMAKE_BUILD_TYPE STREQUAL "Develop")
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     add_compile_options(-g3 -O0)
     message("Making develop build.")
 endif()
@@ -30,15 +30,17 @@ endif()
 
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(YAML REQUIRED yaml-0.1)
+pkg_check_modules(GMP REQUIRED gmp)
 
 add_subdirectory(src/core)
 add_subdirectory(src/modules)
-add_executable(${PROJECT_NAME} src/main.c)
+#add_executable(${PROJECT_NAME} src/main.c)
 
 target_link_libraries(${PROJECT_NAME}
     PRIVATE
     Core
     Modules
     ${YAML_LIBRARIES}
+	#	${GMP_LIBRARIES}
     m
 )

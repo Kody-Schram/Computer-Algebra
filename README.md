@@ -19,7 +19,7 @@ cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_FLAGS="-march=native" ..
 cmake --build .
 ```
 
-`-DCMAKE_C_FLAGS="-march=native"` is not required and shouldn't be included if you plan on distributing the binary you build. Otherwise this may marginally improve performance on your specific machine.
+`-DCMAKE_C_FLAGS="-march=native"` is not required and shouldn't be included if you plan on distributing the binary and or developing/contributing to/on this project. `Debug` is the proper build type for development. Otherwise this may marginally improve performance on your specific machine.
 
 ### Configuration
 
