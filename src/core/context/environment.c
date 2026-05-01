@@ -16,12 +16,6 @@ static void freeComponent(Component *cmp) {
             freeFunction(cmp->func);
             break;
             
-        case COMP_OPERATION:
-            Debug(0, "Freeing operation '%s'\n", cmp->identifier);
-			if (cmp->operation != NULL) free(cmp->operation->implementations);
-            free(cmp->operation);
-            break;
-            
         case COMP_VARIABLE:
             Debug(0, "Freeing variable '%s'\n", cmp->identifier);
             freeExpression(cmp->value);
@@ -63,10 +57,6 @@ int bindComponent(Environment *env, ComponentType type, const char *identifier, 
     }
     
     switch (type) {
-        case COMP_OPERATION:
-            new->operation = (Operation *) data;
-            break;
-            
         case COMP_VARIABLE:
             new->value = (Expression *) data;
             break;
@@ -121,27 +111,6 @@ Component *searchEnvironment(const Environment *env, const char *identifier) {
 }
 
 
-Component *searchEnvironmentOperator(const Environment *env, const char symbol) {
-    switch (env->type) {
-        case ENV_LIST:
-            Component *cmp = env->compList;
-            
-            while (cmp != NULL) {
-                if (cmp->type == COMP_OPERATION && cmp->identifier[0] == symbol) return cmp;
-                cmp = cmp->next;
-            }
-            
-            return NULL;
-            
-        case ENV_HASH:
-            printf("op searching hash isnt implemented yet");
-            break;
-    }
-    
-    return NULL;
-}
-
-
 static void printLinkedCmpList(FILE *stream, const Component *cmp) {
     while (cmp != NULL) {
         switch (cmp->type) {
@@ -169,16 +138,6 @@ static void printLinkedCmpList(FILE *stream, const Component *cmp) {
                 free(str);
                 
                 break;
-                
-            case COMP_OPERATION:
-                if (!GLOBALCONTEXT->config->PRINT_OPS) break; // will only print out user defined operations (maybe add setting in config for this)
-                fprintf(stream, "Op '%s'\n", cmp->identifier);
-                
-                fprintf(stream, "  Associative: L(%d), R(%d)\n", cmp->operation->leftAssociative, cmp->operation->rightAssociative);
-                fprintf(stream, "  Commutative: %d\n", cmp->operation->commutative);
-                
-                break;
-                
         }
         cmp = cmp->next;
     }

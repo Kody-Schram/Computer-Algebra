@@ -6,6 +6,7 @@ add_library(Core STATIC
     context/config.c
     context/context.c
     context/environment.c
+	context/registry.c
     
     parsing/parser.c
     parsing/parser_utils.c

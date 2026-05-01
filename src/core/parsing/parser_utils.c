@@ -5,6 +5,7 @@
 #include "parser_utils.h"
 #include "core/context/context.h"
 #include "core/context/environment.h"
+#include "core/context/registry.h"
 #include "core/parsing/parser_types.h"
 #include "core/utils/log.h"
 #include "core/primitives/types.h"
@@ -54,12 +55,12 @@ Token *createToken(TokenType type, const char *value, int l) {
         return token;
     } else {
         Debug(0, "Creating operator token, %c\n", value[0]);
-        Component *cmp = searchEnvironmentOperator(GLOBALCONTEXT->env, value[0]);
-        if (cmp == NULL) {
+		Operation *op = searchOperation(GLOBALCONTEXT->registry, value[0]);
+        if (op == NULL) {
             return NULL;
         }
 
-        return createTokenOperator(cmp->operation);
+        return createTokenOperator(op);
         
     }
 }

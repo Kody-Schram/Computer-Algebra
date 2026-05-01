@@ -210,36 +210,40 @@ BuiltinResult divide(unsigned int nArgs, Expression **operands) {
 }
 
 
+Operation *createOperation(const char symbol, bool lA, bool rA, bool c, unsigned int precedence) {
+	Operation *op = malloc(sizeof(Operation));
+	if (op == NULL) {
+		perror("Error creating operation");
+		return NULL;
+	}
 
-int registerOperation(Operation *op) {
-    char *id = malloc(sizeof(char) * 2);
-    if (id == NULL) {
-        perror("Error registering operation");
-        return 0;
-    }
-    id[0] = op->symbol;
-    id[1] = '\0';
-    
-    int result = bindComponent(GLOBALCONTEXT->env, COMP_OPERATION, id, op);
-    free(id);
-    
-    return result;
-}
+	op->symbol = symbol;
+	op->leftAssociative = lA;
+	op->rightAssociative = rA;
+	op->commutative = c;
+	op->arity = 2;
+	op->precedence = precedence;
 
-
-static int initOperationImplementations(Operation *op, BuiltinResult (*function) (unsigned int, Expression **)) {
 	op->implementationSize = DEFAULT_IMPLEMENTATIONS;
-	op->nImplementations = 1;
-
+	op->nImplementations = 0;
 	op->implementations = malloc(BUILTIN_FUNCTION_POINTER_SIZE * op->implementationSize);
-	if (op->implementations == NULL) return 0;
+	if (op == NULL) {
+		perror("Error creating operation");
+		free(op);
+		return NULL;
+	}
 
-	op->implementations[0] = function;
-
-	return 1;
+	return op;
 }
 
-int registerImplementation(Operation *op, BuiltinResult (*function) (unsigned int, Expression **)) {
+
+void freeOperation(Operation *op) {
+	free(op->implementations);
+	free(op);
+}
+
+
+int addOperationImplementation(Operation *op, BuiltinResult (*function) (unsigned int, Expression **)) {
 	if (op->nImplementations >= op->implementationSize) { 
 		op->implementationSize += DEFAULT_IMPLEMENTATIONS;
 		BuiltinResult (*(*temp)) (unsigned int, Expression **) = realloc(op->implementations, BUILTIN_FUNCTION_POINTER_SIZE * op->implementationSize);
@@ -257,98 +261,59 @@ int registerImplementation(Operation *op, BuiltinResult (*function) (unsigned in
 
 
 int initPrimitiveOperations() {
-    Operation *addition = NULL;
-    Operation *multiplication = NULL;
-    Operation *exponentiation = NULL;
-    
-    Operation *division = NULL;
-    Operation *subtraction = NULL;
-    
-    
-    addition = malloc(sizeof(Operation));
-    if (addition == NULL) goto error;
+	Operation *addition = createOperation('+', true, true, true, 1);
+	if (addition == NULL) goto error; 
 
-    addition->leftAssociative = true;
-    addition->rightAssociative = true;
-    addition->commutative = true;
-    addition->symbol = '+';
-    addition->arity = 2;
-	addition->precedence = 1;
-	if (!initOperationImplementations(addition, add)) {
-		free(addition);
+	if (!addOperationImplementation(addition, add)) {
+		freeOperation(addition);
 		goto error;
 	}
 
-    if (!registerOperation(addition)) return 0;
+    if (!registerOperation(GLOBALCONTEXT->registry, addition)) return 0;
     
     
-    multiplication = malloc(sizeof(Operation));
-    if (multiplication == NULL) goto error;
+	Operation *multiplication = createOperation('*', true, true, true, 2);
+	if (multiplication == NULL) goto error;
 
-    multiplication->leftAssociative = true;
-    multiplication->rightAssociative = true;
-    multiplication->commutative = true;
-    multiplication->symbol = '*';
-    multiplication->arity = 2;
-	multiplication->precedence = 2;
-   	if (!initOperationImplementations(multiplication, multiply)) {
-		free(multiplication);
+	if (!addOperationImplementation(multiplication, multiply)) {
+		freeOperation(multiplication);
 		goto error;
 	}
 
-    if (!registerOperation(multiplication)) return 0;
+    if (!registerOperation(GLOBALCONTEXT->registry, multiplication)) return 0;
     
     
-    exponentiation = malloc(sizeof(Operation));
-    if (exponentiation == NULL) goto error;
-
-    exponentiation->leftAssociative = false;
-	exponentiation->rightAssociative = true;
-    exponentiation->commutative = false;
-    exponentiation->symbol = '^';
-    exponentiation->arity = 2;
-	exponentiation->precedence = 3;
-	if (!initOperationImplementations(exponentiation, exponent)) {
-		free(exponentiation);
-		goto error;
-	}
+	Operation *exponentiation = createOperation('^', false, true, false, 3);
+	if (exponentiation == NULL) goto error;
     
-    if (!registerOperation(exponentiation)) return 0;
-    
-    
-    
-    division = malloc(sizeof(Operation));
-    if (division == NULL) goto error;
-
-    division->leftAssociative = true;
-	division->rightAssociative = false;
-    division->commutative = false;
-    division->symbol = '/';
-    division->arity = 2;
-	division->precedence = 2;
-    if (!initOperationImplementations(division, divide)) {
-		free(division);
+	if (!addOperationImplementation(exponentiation, exponent)) {
+		freeOperation(exponentiation);
 		goto error;
 	}
 
-    if (!registerOperation(division)) return 0;
+    if (!registerOperation(GLOBALCONTEXT->registry, exponentiation)) return 0;
     
     
-    subtraction = malloc(sizeof(Operation));
-    if (subtraction == NULL) goto error;
+   	Operation *division = createOperation('/', true, false, false, 2);
+	if (division == NULL) goto error;
+
+	if (!addOperationImplementation(division, divide)) {
+		freeOperation(division);
+		goto error;
+	}
+
+    if (!registerOperation(GLOBALCONTEXT->registry, division)) return 0;
     
-    subtraction->leftAssociative = true;
-	subtraction->rightAssociative = false;
-    subtraction->commutative = false;
-    subtraction->symbol = '-';
-    subtraction->arity = 2;
-	subtraction->precedence = 1;
-	if (!initOperationImplementations(subtraction, subtract)) {
-		free(subtraction);
+    
+	Operation *subtraction = createOperation('-', true, false, false, 1);
+	if (subtraction == NULL) goto error;
+
+	if (!addOperationImplementation(subtraction, subtract)) {
+		freeOperation(subtraction);
 		goto error;
 	}
     
-    if (!registerOperation(subtraction)) return 0;
+    if (!registerOperation(GLOBALCONTEXT->registry, subtraction)) return 0;
     
     return 1;
     

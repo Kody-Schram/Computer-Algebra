@@ -12,7 +12,6 @@ typedef struct Environment Environment;
 
 // Environment related definitions
 enum ComponentType {
-    COMP_OPERATION,
     COMP_VARIABLE,
     COMP_FUNCTION
 };
@@ -26,7 +25,6 @@ struct Component {
     union {
         Function *func;
         Expression *value;
-        Operation *operation;
     };
 };
 
@@ -54,9 +52,6 @@ int bindComponent(Environment *env, ComponentType type, const char *identifier, 
 
 
 Component *searchEnvironment(const Environment *env, const char *identifier);
-
-
-Component *searchEnvironmentOperator(const Environment *env, const char symbol);
 
 
 FILE *printEnvironment(const Environment *env);

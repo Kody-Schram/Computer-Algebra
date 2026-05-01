@@ -6,15 +6,19 @@
 #include "tokenizer.h"
 #include "core/context/context.h"
 #include "core/context/environment.h"
+#include "core/context/registry.h"
+#include "core/primitives/types.h"
 #include "core/utils/log.h"
 
 #include "core/parsing/parser_types.h"
 #include "core/parsing/parser_utils.h"
 
+
 typedef struct  {
     char *op;
     TokenType type;
 } DelimiterMapping;
+
 
 static const DelimiterMapping DEFAULT_MAPPING[] = {
     {":", TOKEN_ASSIGNMENT},
@@ -24,12 +28,15 @@ static const DelimiterMapping DEFAULT_MAPPING[] = {
     {"->", TOKEN_MAPPING}
 };
 
+
 static const int N_MAPPINGS = 5;
+
 
 typedef struct {
     int len;
     TokenType type;
 } DelimiterReturn;
+
 
 typedef struct {
     int len;
@@ -71,19 +78,16 @@ static int getNumber(const char *c) {
 }
 
 
-static ComponentReturn getOperatorComponent(const char *c) {
+static Operation *getOperator(const char *c) {
     Debug(0, "Getting operator component, '%c'\n", (char) c[0]);
-    ComponentReturn result = {.len = 0, .cmp = NULL};
-    if (isalnum(c[0])) return result;
+    if (isalnum(c[0])) return NULL;
     
     Debug(0, "getting cmp\n");
     
-    Component *cmp = searchEnvironmentOperator(GLOBALCONTEXT->env, (char) c[0]);
-    if (cmp == NULL) return result;
+    Operation *op = searchOperation(GLOBALCONTEXT->registry, (char) c[0]);
+    if (op == NULL) return NULL;
     
-    result.len = 1;
-    result.cmp = cmp;
-    return result;
+    return op;
 }
 
 
@@ -168,6 +172,7 @@ Token *tokenize(char *buffer) {
     int matchLen;
     DelimiterReturn delim;
     ComponentReturn cmp;
+	Operation *op = NULL;
 
     int spaceI = -1;
     TokenType prevT = -1;
@@ -197,8 +202,8 @@ Token *tokenize(char *buffer) {
             type = delim.type;
         }
         
-        else if ((cmp = getOperatorComponent(buffer + i)).len) {
-            end += cmp.len;
+        else if ((op = getOperator(buffer + i)) != NULL) {
+            end ++;
             type = TOKEN_OPERATOR;
         }
         
@@ -241,7 +246,7 @@ Token *tokenize(char *buffer) {
         prevT = type;
 
         Token *newToken;
-		if (type == TOKEN_OPERATOR) newToken = createTokenOperator(cmp.cmp->operation);
+		if (type == TOKEN_OPERATOR) newToken = createTokenOperator(op);
 		else newToken = createToken(type, buffer + i, end - i);
 		if (type == TOKEN_FUNC_CALL_PLACEHOLDER) newToken->nParams = cmp.cmp->func->nParameters;
 
