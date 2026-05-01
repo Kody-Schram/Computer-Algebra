@@ -90,23 +90,24 @@ RPNList *shuntingYard(Token *head) {
 
         } else if (cur->type == TOKEN_OPERATOR) {
             if (operators.entries > 0) {
+				Token *opToken = (Token *) operators.items[operators.entries - 1];
                 // Pops all operators on stack with greater or equal precedent
                 while ((operators.entries > 0) 
-                    && (((Token *) operators.items[operators.entries - 1])->type != TOKEN_LEFT_PAREN) 
+                    && (opToken->type != TOKEN_LEFT_PAREN) 
                     && (
-						((Token *) operators.items[operators.entries - 1])->type == TOKEN_OPERATOR 
-						&& ((Token *) operators.items[operators.entries - 1])->op->precedence >= cur->op->precedence)
+						opToken->type == TOKEN_OPERATOR 
+						&& opToken->op->precedence >= cur->op->precedence)
 					) {
                     
                             // Right associativity for exponents
-					if (((Token *) operators.items[operators.entries - 1])->type == TOKEN_OPERATOR 
-						&& ((Token *) operators.items[operators.entries - 1])->op->rightAssociative
-						&& !((Token *) operators.items[operators.entries - 1])->op->leftAssociative
-						&& ((Token *) operators.items[operators.entries - 1])->op->precedence == cur->op->precedence) break;
+					if (opToken->op->rightAssociative
+						&& !opToken->op->leftAssociative
+						&& opToken->op->precedence == cur->op->precedence) break;
                     
                     operators.entries --;
-                    output.items[output.entries] = operators.items[operators.entries];
+                    output.items[output.entries] = opToken;
 					output.entries ++;
+					if (operators.entries > 0) opToken = (Token *) operators.items[operators.entries - 1];
                 }
             }
 
