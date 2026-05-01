@@ -41,18 +41,19 @@ struct Operation {
 
     unsigned int arity; // Number of required operands
 	unsigned int precedence;
-    unsigned int nDefs;
+	unsigned int implementationSize;
+    unsigned int nImplementations;
 
-    Function **definitions;
+    BuiltinResult (*(*implementations)) (unsigned int nArgs, Expression **exprs);
 };
 
 struct Expression {
     ExpressionType type;
+	unsigned int nOperands;
 
     union {
         struct {
             const Operation *op;
-            unsigned int nOperands;
             struct Expression **operands;
         };
 

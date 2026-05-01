@@ -18,7 +18,8 @@ static void freeComponent(Component *cmp) {
             
         case COMP_OPERATION:
             Debug(0, "Freeing operation '%s'\n", cmp->identifier);
-            freeOperation(cmp->operation);
+			if (cmp->operation != NULL) free(cmp->operation->implementations);
+            free(cmp->operation);
             break;
             
         case COMP_VARIABLE:

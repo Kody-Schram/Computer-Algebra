@@ -7,6 +7,9 @@
 int registerOperation(Operation *op);
 
 
+int registerImplementation(Operation *op, BuiltinResult (*function) (unsigned int nArgs, Expression **exprs));
+
+
 int initPrimitiveOperations();
 
 #endif

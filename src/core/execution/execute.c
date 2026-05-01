@@ -54,12 +54,9 @@ static int executeRecur(Expression **ptr, Environment *env) {
             }
         
             if (expr->nOperands != expr->op->arity) return 1; // Unexpected number of operands, leave symbolic
-
-            for (int i = 0; i < expr->op->nDefs; i ++) {
-                Function *func = expr->op->definitions[i];
-                Debug(0, "Running main operator now\n");
-                
-                BuiltinResult result = func->builtin(expr->nOperands, expr->operands);
+ 
+            for (int i = 0; i < expr->op->nImplementations; i ++) {
+                BuiltinResult result = expr->op->implementations[i](expr->nOperands, expr->operands);
                 if (result.type == BUILTIN_ERROR) return 0;
                 if (result.type == BUILTIN_NEUTRAL) {
 					Debug(0, "operation definition %d was neutral\n", i);

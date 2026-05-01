@@ -9,16 +9,8 @@
 #include "core/primitives/types.h"
 #include "core/utils/type_utils.h"
 
-
-static Function *createBinOpFunc(BuiltinResult (*builtin) (unsigned int nArgs, Expression **exprs)) {
-    Function *op = calloc(1, sizeof(Function));
-    if (op == NULL) return NULL;
-    op->nParameters = 2;
-    op->type = BUILTIN;
-    op->builtin = builtin;
-
-    return op;
-}
+#define DEFAULT_IMPLEMENTATIONS 2
+#define BUILTIN_FUNCTION_POINTER_SIZE sizeof(BuiltinResult (*)(unsigned int, Expression **))
 
 
 BuiltinResult add(unsigned int nArgs, Expression **operands) {
@@ -235,6 +227,35 @@ int registerOperation(Operation *op) {
 }
 
 
+static int initOperationImplementations(Operation *op, BuiltinResult (*function) (unsigned int, Expression **)) {
+	op->implementationSize = DEFAULT_IMPLEMENTATIONS;
+	op->nImplementations = 1;
+
+	op->implementations = malloc(BUILTIN_FUNCTION_POINTER_SIZE * op->implementationSize);
+	if (op->implementations == NULL) return 0;
+
+	op->implementations[0] = function;
+
+	return 1;
+}
+
+int registerImplementation(Operation *op, BuiltinResult (*function) (unsigned int, Expression **)) {
+	if (op->nImplementations >= op->implementationSize) { 
+		op->implementationSize += DEFAULT_IMPLEMENTATIONS;
+		BuiltinResult (*(*temp)) (unsigned int, Expression **) = realloc(op->implementations, BUILTIN_FUNCTION_POINTER_SIZE * op->implementationSize);
+		if (temp == NULL) {
+			perror("Error registering operation implementation");
+			return 0;
+		}
+
+		op->implementations = temp;
+	}
+	op->implementations[op->nImplementations] = function;
+	op->nImplementations ++;
+	return 1;
+}
+
+
 int initPrimitiveOperations() {
     Operation *addition = NULL;
     Operation *multiplication = NULL;
@@ -253,15 +274,11 @@ int initPrimitiveOperations() {
     addition->symbol = '+';
     addition->arity = 2;
 	addition->precedence = 1;
-    addition->definitions = malloc(sizeof(Function *));
-    if (addition->definitions == NULL) {
-        free(addition);
-        goto error;
-    }
-    
-    addition->definitions[0] = createBinOpFunc(add);
-    addition->nDefs = 1;
-    
+	if (!initOperationImplementations(addition, add)) {
+		free(addition);
+		goto error;
+	}
+
     if (!registerOperation(addition)) return 0;
     
     
@@ -274,15 +291,11 @@ int initPrimitiveOperations() {
     multiplication->symbol = '*';
     multiplication->arity = 2;
 	multiplication->precedence = 2;
-    multiplication->definitions = malloc(sizeof(Function *));
-    if (multiplication->definitions == NULL) {
-        free(multiplication);
-        goto error;
-    }
-    
-    multiplication->definitions[0] = createBinOpFunc(multiply);
-    multiplication->nDefs = 1;
-    
+   	if (!initOperationImplementations(multiplication, multiply)) {
+		free(multiplication);
+		goto error;
+	}
+
     if (!registerOperation(multiplication)) return 0;
     
     
@@ -295,14 +308,10 @@ int initPrimitiveOperations() {
     exponentiation->symbol = '^';
     exponentiation->arity = 2;
 	exponentiation->precedence = 3;
-    exponentiation->definitions = malloc(sizeof(Function *));
-    if (exponentiation->definitions == NULL) {
-        free(exponentiation);
-        goto error;
-    }
-    
-    exponentiation->definitions[0] = createBinOpFunc(exponent);
-    exponentiation->nDefs = 1;
+	if (!initOperationImplementations(exponentiation, exponent)) {
+		free(exponentiation);
+		goto error;
+	}
     
     if (!registerOperation(exponentiation)) return 0;
     
@@ -317,15 +326,11 @@ int initPrimitiveOperations() {
     division->symbol = '/';
     division->arity = 2;
 	division->precedence = 2;
-    division->definitions = malloc(sizeof(Function *));
-    if (division->definitions == NULL) {
-        free(division);
-        goto error;
-    }
-    
-    division->definitions[0] = createBinOpFunc(divide);
-    division->nDefs = 1;
-    
+    if (!initOperationImplementations(division, divide)) {
+		free(division);
+		goto error;
+	}
+
     if (!registerOperation(division)) return 0;
     
     
@@ -338,14 +343,10 @@ int initPrimitiveOperations() {
     subtraction->symbol = '-';
     subtraction->arity = 2;
 	subtraction->precedence = 1;
-    subtraction->definitions = malloc(sizeof(Function *));
-    if (subtraction->definitions == NULL) {
-        free(subtraction);
-        goto error;
-    }
-
-    subtraction->definitions[0] = createBinOpFunc(subtract);
-    subtraction->nDefs = 1;
+	if (!initOperationImplementations(subtraction, subtract)) {
+		free(subtraction);
+		goto error;
+	}
     
     if (!registerOperation(subtraction)) return 0;
     
