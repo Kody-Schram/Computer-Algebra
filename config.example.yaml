@@ -45,6 +45,12 @@ keywords:
 
 # Enables configuring runtime settings
 runtime:
+  # Determiens which errors cause the program to exit
+  # On false, only system errors will cause the program to exit 
+  # On true, syntax or system errors will cause the program to exit
+  # Default is false
+  strict: false
+  
   # Defines how many previous outputs are saved
   # For one output, the most recent output is stored under the variable OUTPUT as defined in keywords
   # For more outputs than 1, most recent output is stored under variable OUTPUT_0, and subsequent outputs are OUTPUT_(n-1)

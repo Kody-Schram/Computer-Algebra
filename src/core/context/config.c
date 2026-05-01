@@ -26,6 +26,7 @@ typedef enum {
     STATE_K_ANS,
 
     STATE_RUNTIME,
+	STATE_STRICT,
     STATE_OUTPUTS,
     STATE_PRESERVE_FRACS,
     STATE_LAZY_CALLS,
@@ -339,6 +340,7 @@ static int consumeEvent(State *state, yaml_event_t *event, Config *config) {
                 if (!strcmp(value, "saveOutputs")) *state = STATE_OUTPUTS;
                 else if (!strcmp(value, "preserveFractions")) *state = STATE_PRESERVE_FRACS;
                 else if (!strcmp(value, "lazyFunctionCalls")) *state = STATE_LAZY_CALLS;
+				else if (!strcmp(value, "strict")) * state = STATE_STRICT;
                 else {
                     printf("Unexpected keyword: %s.\n", value);
                     return 0;
@@ -351,6 +353,25 @@ static int consumeEvent(State *state, yaml_event_t *event, Config *config) {
                 
         }
         break;
+
+	case STATE_STRICT:
+		switch (event->type) {
+			case YAML_MAPPING_END_EVENT:
+				*state = STATE_RUNTIME;
+				break;
+
+			case YAML_SCALAR_EVENT:
+				value = (char *) event->data.scalar.value;
+				int b = get_boolean(value);
+
+				if (b == -1) return 0;
+				config->STRICT = b;
+				*state = STATE_RUNTIME;
+				break;
+
+			default:
+				return 0;
+		}
 
     case STATE_OUTPUTS:
         switch (event->type) {
@@ -436,6 +457,8 @@ static void initConfig(Config *config) {
     config->MAPPING[0] = (KeywordMapping) {.cmd=K_QUIT, .keyword=strdup("quit")};
     config->MAPPING[1] = (KeywordMapping) {.cmd=K_ENV, .keyword=strdup("env")};
     config->MAPPING[2] = (KeywordMapping) {.cmd=K_RELOAD, .keyword=strdup("reload")};
+
+	config->STRICT = false;
 
     config->OUTPUTS = 1;
     config->OUTPUT_ID = strdup("ans");
@@ -590,6 +613,8 @@ FILE *printConfig(Config *config) {
 
         fprintf(stream, "'%s'\n", config->MAPPING[i].keyword);
     }
+
+	fprintf(stream, "Strict: %d\n", config->STRICT);
 
     fprintf(stream, "Outputs: %d\n", config->OUTPUTS);
     fprintf(stream, "Output: '%s'\n", config->OUTPUT_ID);

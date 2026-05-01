@@ -43,6 +43,7 @@ struct Config {
     bool PRESERVE_FRACS;
     bool LAZY_CALLS;
     bool PRINT_OPS;
+	bool STRICT;
 };
 
 
