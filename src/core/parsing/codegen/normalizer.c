@@ -10,7 +10,7 @@
 #include "core/parsing/parser_utils.h"
 
 /*
- * Injects implicit multiplication if found
+ * Inserts implicit multiplication if found
  *
  * Return values:
  * -1: System error
@@ -87,8 +87,8 @@ static NORMALIZER_RESULT handleExponentRewrite(Token **cur) {
     if ((*cur) == NULL || (*cur)->type != TOKEN_OPERATOR || (*cur)->op->symbol != '*') return NORM_SUCCESS;
 	if ((*cur)->next == NULL || (*cur)->next->type != TOKEN_OPERATOR || (*cur)->next->op->symbol != '*') return NORM_SUCCESS; 
 
-	Debug(0, "Rewriting exponent\n"); 
-	
+	Debug(0, "Rewriting exponent\n");
+
 	Token *exponent = createToken(TOKEN_OPERATOR, "^", 1);
     if (exponent == NULL) {
 		perror("Error in exponent rewrite"); 
@@ -115,7 +115,7 @@ static NORMALIZER_RESULT handleExponentRewrite(Token **cur) {
  *
  */
 static NORMALIZER_RESULT checkInvalidBinop(const Token *cur, const Token *prev) {
-    if (cur->type != TOKEN_OPERATOR) return NORM_SUCCESS;
+    if (cur->type != TOKEN_OPERATOR) return NORM_SUCCESS; // no work to do
     if (cur->next == NULL) {
         printf("Operator must be followed by another token.\n");
         return NORM_SYNTAX_ERROR;
@@ -127,16 +127,34 @@ static NORMALIZER_RESULT checkInvalidBinop(const Token *cur, const Token *prev) 
     }
 
     // If next op is -, will recheck later, may be a negative number instead of a minus
-    if (cur->next->type == TOKEN_OPERATOR && cur->next->value[0] == '-') return 0;
+    if (cur->next->type == TOKEN_OPERATOR && cur->next->op->symbol == '-') return NORM_SUCCESS;
 
     // Handles invalid negative signs
-    if (cur->value[0] == '-' && (cur->next == NULL || cur->next->type == TOKEN_OPERATOR)) {
-        printf("Invalid operation \"%s %s %s\".\n", prev->value, cur->value, cur->next->value);
+    if (cur->op->symbol == '-' && (cur->next == NULL || cur->next->type == TOKEN_OPERATOR)) {
+        if (prev->type != TOKEN_OPERATOR && cur->next->type != TOKEN_OPERATOR) {
+			printf("Invalid operation \"%s %c %s\".\n", prev->value, cur->op->symbol, cur->next->value);
+		}
+		else if (prev->type != TOKEN_OPERATOR) {
+			printf("Invalid operation \"%s %c %c\".\n", prev->value, cur->op->symbol, cur->next->op->symbol);
+		}
+		else if (cur->next->type != TOKEN_OPERATOR) {
+			printf("Invalid operation \"%c %c %s\".\n", prev->op->symbol, cur->op->symbol, cur->next->value);
+		}
+
         return NORM_SYNTAX_ERROR;
     }
 
     if (cur->next->type != TOKEN_IDENTIFIER && cur->next->type != TOKEN_NUMBER && cur->next->type != TOKEN_FUNC_CALL_PLACEHOLDER && cur->next->type != TOKEN_LEFT_PAREN) {
-        printf("Invalid operation \"%s %s %s\".\n", prev->value, cur->value, cur->next->value);
+        if (prev->type != TOKEN_OPERATOR && cur->next->type != TOKEN_OPERATOR) {
+			printf("Invalid operation \"%s %c %s\".\n", prev->value, cur->op->symbol, cur->next->value);
+		}
+		else if (prev->type != TOKEN_OPERATOR) {
+			printf("Invalid operation \"%s %c %c\".\n", prev->value, cur->op->symbol, cur->next->op->symbol);
+		}
+		else if (cur->next->type != TOKEN_OPERATOR) {
+			printf("Invalid operation \"%c %c %s\".\n", prev->op->symbol, cur->op->symbol, cur->next->value);
+		}
+
         return NORM_SYNTAX_ERROR;
     }
     
@@ -159,7 +177,8 @@ static NORMALIZER_RESULT handleFunctionParens(Token *cur) {
 	// Assume since theres opening paren that the parameters are explicit
 	if (cur->next == NULL || cur->next->type == TOKEN_LEFT_PAREN) return NORM_SUCCESS;
 
-	Debug(0, "handling function parens\n");
+	Debug(0, "Adding implicit function parens\n");
+
 	Token *func = cur;
 	Token *opening = NULL;
 	Token *closing = NULL;
@@ -198,9 +217,11 @@ static NORMALIZER_RESULT handleFunctionParens(Token *cur) {
  *  1: Success or no work done
  *
  */
-static NORMALIZER_RESULT handleNegative(Token *cur, Token *prev) {
-	if (cur->type != TOKEN_OPERATOR || cur->op->symbol != '-' || prev == NULL) return NORM_SUCCESS;
-	if (prev->type != TOKEN_LEFT_PAREN && prev->type != TOKEN_OPERATOR && prev->type != TOKEN_ASSIGNMENT) return NORM_SUCCESS; // is subtraction
+static NORMALIZER_RESULT handleNegative(Token **cur, Token *prev) {
+	if ((*cur)->type != TOKEN_OPERATOR || (*cur)->op->symbol != '-') return NORM_SUCCESS;
+	if (prev != NULL && prev->type != TOKEN_LEFT_PAREN && prev->type != TOKEN_OPERATOR && prev->type != TOKEN_ASSIGNMENT) return NORM_SUCCESS; // is subtraction
+	
+	Debug(0, "Rewriting subtraction as negation\n");
 
 	Token *negative = NULL;
 	Token *mult = NULL;
@@ -211,9 +232,13 @@ static NORMALIZER_RESULT handleNegative(Token *cur, Token *prev) {
 	mult = createToken(TOKEN_OPERATOR, "*", 1);
 	if (mult == NULL) goto error;
 
+
 	negative->next = mult;
-	mult->next = cur;
-	prev->next = negative;
+	mult->next = (*cur)->next;
+	free(*cur);
+	if (prev == NULL) *cur = negative;
+	else prev->next = negative;
+
 
 	return NORM_SUCCESS;
 
@@ -335,7 +360,8 @@ NORMALIZER_RESULT normalize(Token** head) {
     int openParenthesis = 0;
 
     while (*ptr != NULL) {
-        if ((result = handleNegative(*ptr, prev)) != NORM_SUCCESS) return result;
+        if ((result = handleNegative(ptr, prev)) != NORM_SUCCESS) return result;
+		Debug(1, printTokens(*head));
         if ((result = handleFunctionParens(*ptr)) != NORM_SUCCESS) return result;
         if ((result = handleImplicitMul(*ptr, prev)) != NORM_SUCCESS) return result;
         if ((result = handleExponentRewrite(ptr)) != NORM_SUCCESS) return result;

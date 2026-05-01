@@ -255,7 +255,7 @@ static PARSER_RESULT parseFunctionAssignment(Token *head) {
                 Debug(0, "Moving to function parameters.\n");
                 component = PARAMETERS;
             } else if (cur->type != TOKEN_IDENTIFIER) {
-                printf("Invalid token: '%s' within function identifier.\n", cur->value);
+                printf("Invalid token: within function identifier.\n");
                 goto syntax_error;
             } else {
                 if (identifier != NULL) {
@@ -279,7 +279,7 @@ static PARSER_RESULT parseFunctionAssignment(Token *head) {
                 asgn = cur;
                 component = BODY;
             } else if (cur->type != TOKEN_IDENTIFIER && cur->type != TOKEN_SEPARATOR) {
-                printf("Invalid token: '%s' within function parameters.\n", cur->value);
+                printf("Invalid token: within function parameters.\n");
 
                 goto syntax_error;
             } else if (cur->type == TOKEN_IDENTIFIER) {
@@ -300,6 +300,11 @@ static PARSER_RESULT parseFunctionAssignment(Token *head) {
         cur = cur->next;
     }
 
+	if (component != BODY) {
+		printf("Invalid function definition\n");
+		goto syntax_error;
+	}
+
     // Checks body for second assignment/mapping token
     if (containsAssignment(asgn->next) || containsFunctionAssignment(asgn->next)) {
         printf("Cannot have assignment within a function definition.\n");
@@ -307,8 +312,13 @@ static PARSER_RESULT parseFunctionAssignment(Token *head) {
     }
 
     // Redoes identifier tokens now that local variables for parameters are established, then redoes lexing
-    if (!handleLocalVariables(&asgn, parameters, nParameters)) goto error;
-	NORMALIZER_RESULT normOut = normalize(&asgn->next);
+	NORMALIZER_RESULT normOut = handleLocalVariables(&asgn, parameters, nParameters);
+	if (normOut != NORM_SUCCESS) {
+		if (normOut == NORM_ERROR) goto error;
+		goto syntax_error;
+	}
+
+	normOut = normalize(&asgn->next);
 	if (normOut != NORM_SUCCESS) {
 		if (normOut == NORM_ERROR) goto error;
 		goto syntax_error;
@@ -349,6 +359,8 @@ static PARSER_RESULT parseFunctionAssignment(Token *head) {
     free(rpn->items);
     free(rpn);
     free(identifier);
+
+	Debug(0, "Successfully parsed function assignment\n");
 
     return (PARSER_RESULT) {PARSER_SUCCESS, NULL};
 

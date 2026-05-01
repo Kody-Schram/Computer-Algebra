@@ -90,23 +90,28 @@ RPNList *shuntingYard(Token *head) {
 
         } else if (cur->type == TOKEN_OPERATOR) {
             if (operators.entries > 0) {
-				Token *opToken = (Token *) operators.items[operators.entries - 1];
                 // Pops all operators on stack with greater or equal precedent
                 while ((operators.entries > 0) 
-                    && (opToken->type == TOKEN_LEFT_PAREN) 
-                    && (opToken->type == TOKEN_OPERATOR && opToken->op->precedence >= cur->op->precedence)) {
+                    && (((Token *) operators.items[operators.entries - 1])->type != TOKEN_LEFT_PAREN) 
+                    && (
+						((Token *) operators.items[operators.entries - 1])->type == TOKEN_OPERATOR 
+						&& ((Token *) operators.items[operators.entries - 1])->op->precedence >= cur->op->precedence)
+					) {
                     
                             // Right associativity for exponents
-					if (opToken->type == TOKEN_OPERATOR && opToken->op->rightAssociative && !opToken->op->leftAssociative) break;
+					if (((Token *) operators.items[operators.entries - 1])->type == TOKEN_OPERATOR 
+						&& ((Token *) operators.items[operators.entries - 1])->op->rightAssociative
+						&& !((Token *) operators.items[operators.entries - 1])->op->leftAssociative
+						&& ((Token *) operators.items[operators.entries - 1])->op->precedence == cur->op->precedence) break;
                     
                     operators.entries --;
                     output.items[output.entries] = operators.items[operators.entries];
-                    output.entries ++;
+					output.entries ++;
                 }
             }
 
             operators.items[operators.entries] = cur;
-            operators.entries ++;
+			operators.entries ++;
 
             if (operators.entries == operators.size) {
                 if (reallocStack(&operators)) goto error;
@@ -114,7 +119,7 @@ RPNList *shuntingYard(Token *head) {
 
         } else if (cur->type == TOKEN_RIGHT_PAREN) {
             // Pops all operators within parenthesis when closing is reached
-            while (operators.entries > 0 && ((Token *) operators.items[operators.entries - 1])->value[0] != '(') {
+            while (operators.entries > 0 && ((Token *) operators.items[operators.entries - 1])->type != TOKEN_LEFT_PAREN) {
                 operators.entries --;
                 output.items[output.entries] = operators.items[operators.entries];
                 output.entries ++;
