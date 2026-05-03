@@ -5,15 +5,14 @@
 
 #include "operations.h"
 #include "core/context/context.h"
-#include "core/context/environment.h"
 #include "core/primitives/types.h"
 #include "core/utils/type_utils.h"
 
+
 #define DEFAULT_IMPLEMENTATIONS 2
-#define BUILTIN_FUNCTION_POINTER_SIZE sizeof(BuiltinResult (*)(unsigned int, Expression **))
 
 
-BuiltinResult add(unsigned int nArgs, Expression **operands) {
+BuiltinResult add(uint32_t nArgs, Expression **operands) {
     BuiltinResult result = {.type = BUILTIN_NEUTRAL, NULL};
 
     Expression *a = operands[0];
@@ -51,7 +50,7 @@ BuiltinResult add(unsigned int nArgs, Expression **operands) {
 }
 
 
-BuiltinResult subtract(unsigned int nArgs, Expression **operands) {
+BuiltinResult subtract(uint32_t nArgs, Expression **operands) {
     BuiltinResult result = {.type = BUILTIN_NEUTRAL, NULL};
 
     Expression *a = operands[0];
@@ -89,7 +88,7 @@ BuiltinResult subtract(unsigned int nArgs, Expression **operands) {
 }
 
 
-BuiltinResult multiply(unsigned int nArgs, Expression **operands) {
+BuiltinResult multiply(uint32_t nArgs, Expression **operands) {
     BuiltinResult result = {.type = BUILTIN_NEUTRAL, NULL};
 
     Expression *a = operands[0];
@@ -140,7 +139,7 @@ static long long _powi(long long a, long long e) {
 }
 
 
-BuiltinResult exponent(unsigned int nArgs, Expression **operands) {
+BuiltinResult exponent(uint32_t nArgs, Expression **operands) {
     BuiltinResult result = {.type = BUILTIN_NEUTRAL, NULL};
 
     Expression *a = operands[0];
@@ -178,7 +177,7 @@ BuiltinResult exponent(unsigned int nArgs, Expression **operands) {
 }
 
 
-BuiltinResult divide(unsigned int nArgs, Expression **operands) {
+BuiltinResult divide(uint32_t nArgs, Expression **operands) {
     BuiltinResult result = {.type = BUILTIN_NEUTRAL, NULL};
 
     if (GLOBALCONTEXT->config->PRESERVE_FRACS) {
@@ -210,7 +209,7 @@ BuiltinResult divide(unsigned int nArgs, Expression **operands) {
 }
 
 
-Operation *createOperation(const char symbol, bool lA, bool rA, bool c, unsigned int precedence) {
+Operation *createOperation(const char symbol, bool lA, bool rA, bool c, uint32_t precedence) {
 	Operation *op = malloc(sizeof(Operation));
 	if (op == NULL) {
 		perror("Error creating operation");
@@ -226,7 +225,7 @@ Operation *createOperation(const char symbol, bool lA, bool rA, bool c, unsigned
 
 	op->implementationSize = DEFAULT_IMPLEMENTATIONS;
 	op->nImplementations = 0;
-	op->implementations = malloc(BUILTIN_FUNCTION_POINTER_SIZE * op->implementationSize);
+	op->implementations = malloc(sizeof(BuiltinImplementation) * op->implementationSize);
 	if (op == NULL) {
 		perror("Error creating operation");
 		free(op);
@@ -243,10 +242,10 @@ void freeOperation(Operation *op) {
 }
 
 
-int addOperationImplementation(Operation *op, BuiltinResult (*function) (unsigned int, Expression **)) {
+int addOperationImplementation(Operation *op, BuiltinImplementation fn){
 	if (op->nImplementations >= op->implementationSize) { 
 		op->implementationSize += DEFAULT_IMPLEMENTATIONS;
-		BuiltinResult (*(*temp)) (unsigned int, Expression **) = realloc(op->implementations, BUILTIN_FUNCTION_POINTER_SIZE * op->implementationSize);
+		BuiltinImplementation *temp = realloc(op->implementations, sizeof(BuiltinImplementation) * op->implementationSize);
 		if (temp == NULL) {
 			perror("Error registering operation implementation");
 			return 0;
@@ -254,7 +253,7 @@ int addOperationImplementation(Operation *op, BuiltinResult (*function) (unsigne
 
 		op->implementations = temp;
 	}
-	op->implementations[op->nImplementations] = function;
+	op->implementations[op->nImplementations] = fn;
 	op->nImplementations ++;
 	return 1;
 }

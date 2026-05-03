@@ -1,16 +1,21 @@
 #ifndef OPERATIONS_H
 #define OPERATIONS_H
 
+#include <stdint.h>
+
 #include "types.h"
 
 
-Operation *createOperation(const char symbol, bool lA, bool rA, bool c, unsigned int operands);
+Operation *createOperation(const char symbol, bool lA, bool rA, bool c, uint32_t operands);
 
 
 void freeOperation(Operation *op);
 
 
-int registerImplementation(Operation *op, BuiltinResult (*function) (unsigned int nArgs, Expression **exprs));
+int registerImplementation(
+		Operation *op,
+		BuiltinResult (*function) (uint32_t nArgs, Expression **exprs)
+);
 
 
 int initPrimitiveOperations();

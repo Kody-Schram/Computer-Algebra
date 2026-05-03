@@ -13,7 +13,7 @@ endif()
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     add_compile_options(-g3 -O0)
-    message("Making develop build.")
+    message("Making debug build.")
 endif()
 
 # Use for gprof profiling
@@ -24,7 +24,7 @@ endif()
 
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
     add_definitions(-DRelease)
-    add_compile_options(-s -O3)
+    add_compile_options(-s -O3 -Os)
     message("Making release build.")
 endif()
 

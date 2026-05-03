@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdint.h>
 
 #include "execute.h"
 #include "core/context/context.h"
@@ -8,7 +9,7 @@
 #include "core/utils/type_utils.h"
 
 
-static int executeRecur(Expression **ptr, Environment *env) {
+static bool executeRecur(Expression **ptr, Environment *env) {
     if (ptr == NULL || *ptr == NULL) return 0;
     Expression *expr = *ptr;
 
@@ -55,7 +56,7 @@ static int executeRecur(Expression **ptr, Environment *env) {
         
             if (expr->nOperands != expr->op->arity) return 1; // Unexpected number of operands, leave symbolic
  
-            for (int i = 0; i < expr->op->nImplementations; i ++) {
+            for (uint32_t i = 0; i < expr->op->nImplementations; i ++) {
                 BuiltinResult result = expr->op->implementations[i](expr->nOperands, expr->operands);
                 if (result.type == BUILTIN_ERROR) return 0;
                 if (result.type == BUILTIN_NEUTRAL) {

@@ -1,5 +1,6 @@
-#ifndef TYPES_H
-#define TYPES_H
+#pragma once 
+
+#include <stdint.h>
 
 #ifndef PROJECT_NAME
     #define PROJECT_NAME "project"
@@ -22,6 +23,7 @@ typedef enum BuiltinResultType BuiltinResultType;
 typedef struct BuiltinResult BuiltinResult;
 typedef struct Function Function;
 
+typedef BuiltinResult (*BuiltinImplementation) (uint32_t nArgs, Expression **exprs);
 
 // Expression related definitions
 enum ExpressionType {
@@ -39,17 +41,17 @@ struct Operation {
 	bool leftAssociative;
     char symbol;
 
-    unsigned int arity; // Number of required operands
-	unsigned int precedence;
-	unsigned int implementationSize;
-    unsigned int nImplementations;
+    uint32_t arity; // Number of required operands
+	uint8_t precedence;
 
-    BuiltinResult (*(*implementations)) (unsigned int nArgs, Expression **exprs);
+	uint32_t implementationSize;
+    uint32_t nImplementations;
+	BuiltinImplementation *implementations;
 };
 
 struct Expression {
     ExpressionType type;
-	unsigned int nOperands;
+	uint32_t nOperands;
 
     union {
         struct {
@@ -69,7 +71,7 @@ struct Expression {
 struct FunctionCall {
     char *identifier;
     Expression **parameters;
-    unsigned int nParams;
+    uint32_t nParams;
 };
 
 
@@ -92,13 +94,16 @@ struct BuiltinResult {
 
 struct Function {
     FunctionType type;
-    unsigned int nParameters;
+    uint32_t nParameters;
     char **parameters;
 
     union {
         Expression *definition;
-        const BuiltinResult (*builtin) (unsigned int nArgs, Expression ** exprs);
+
+		struct {
+			uint32_t implementationSize;
+			uint32_t nImplementations;
+			BuiltinImplementation *implementations;
+		};
     };
 };
-
-#endif
