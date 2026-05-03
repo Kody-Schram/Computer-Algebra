@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <inttypes.h>
 
 #include "type_utils.h"
 #include "core/utils/log.h"
@@ -120,7 +121,7 @@ static void printExpressionRec(const Expression *expr, int level, FILE *stream) 
 
     switch(expr->type) {
         case EXPRESSION_INTEGER:
-            fprintf(stream, "<type: INTEGER, value: %lld>\n", expr->integer);
+            fprintf(stream, "<type: INTEGER, value: %" PRId64 ">\n", expr->integer);
             break;
 
         case EXPRESSION_DOUBLE:
@@ -228,8 +229,8 @@ static void expressionToStringRecur(const Expression *expr, FILE *stream) {
             break;
 
         case EXPRESSION_INTEGER:
-            if (expr->integer < 0) fprintf(stream, "(%lld)", expr->integer);
-            else fprintf(stream, "%lld", expr->integer);
+            if (expr->integer < 0) fprintf(stream, "(%" PRId64 ")", expr->integer);
+            else fprintf(stream, "%" PRId64, expr->integer);
             break;
 
         case EXPRESSION_VARIABLE:

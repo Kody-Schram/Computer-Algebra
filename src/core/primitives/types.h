@@ -61,7 +61,7 @@ struct Expression {
 
         char *identifier;
         double value;
-        long long integer;
+        int64_t integer;
         FunctionCall *call;
     };
 };
