@@ -1,5 +1,6 @@
-#ifndef PARSERTYPES_H
-#define PARSERTYPES_H
+#pragma once
+
+#include <stdint.h>
 
 #include "core/primitives/types.h"
 
@@ -27,7 +28,7 @@ enum TokenType {
 
 struct Token {
     TokenType type;
-	unsigned int nParams;
+	uint32_t nParams;
 
     union {
         char *value;
@@ -41,14 +42,12 @@ struct Token {
 
 // RPN related definitions
 struct RPNList {
-    int length;
+    uint32_t length;
     Token **items;
 };
 
 struct Stack {
-    int size;
-    int entries;
+    uint32_t size;
+    uint32_t entries;
     void **items;
 };
-
-#endif

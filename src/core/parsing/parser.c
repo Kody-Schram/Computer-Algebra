@@ -6,6 +6,7 @@
 #include "core/context/context.h"
 #include "core/context/environment.h"
 #include "core/parsing/parser_types.h"
+#include "core/primitives/types.h"
 #include "core/utils/log.h"
 #include "core/utils/type_utils.h"
 
@@ -24,28 +25,28 @@ typedef enum {
 } FunctionComponent;
 
 
-static int containsFunctionAssignment(Token *head) {
+static bool containsFunctionAssignment(Token *head) {
     Token *cur = head;
     while (cur != NULL) {
         if (cur->type == TOKEN_MAPPING) {
             Debug(0, "Function mapping found.\n");
-            return 1;
+            return true;
         }
         cur = cur->next;
     }
 
-    return 0;
+    return false;
 }
 
 
 static int containsAssignment(Token *head) {
     Token *cur = head;
     while (cur != NULL) {
-        if (cur->type == TOKEN_ASSIGNMENT) return 1;
+        if (cur->type == TOKEN_ASSIGNMENT) return true;
         cur = cur->next;
     }
 
-    return 0;
+    return false;
 }
 
 
@@ -107,8 +108,8 @@ static PARSER_RESULT parseFunctionCalls(Token **head) {
 
                 // Recursively parses calls
 				PARSER_RESULT callOut = parseFunctionCalls(&paramHead);
-                if (callOut.type != PARSER_SUCCESS) {
-					if (callOut.type == PARSER_ERROR) goto parameter_error;
+                if (callOut != PARSER_SUCCESS) {
+					if (callOut == PARSER_ERROR) goto parameter_error;
 					goto parameter_syntax_error;
 				}
 
@@ -202,7 +203,7 @@ static PARSER_RESULT parseFunctionCalls(Token **head) {
                 if (call != NULL) free(call->identifier);
                 free(call);
 
-				return (PARSER_RESULT) {PARSER_SYNTAX_ERROR, NULL};
+				return PARSER_SYNTAX_ERROR;
 
             error:
                 perror("Error in parsing function call");
@@ -217,7 +218,7 @@ static PARSER_RESULT parseFunctionCalls(Token **head) {
                 if (call != NULL) free(call->identifier);
                 free(call);
                 
-                return (PARSER_RESULT) {PARSER_ERROR, NULL};
+                return PARSER_ERROR;
         }
 
         if (cur != NULL) {
@@ -228,7 +229,7 @@ static PARSER_RESULT parseFunctionCalls(Token **head) {
 
     Debug(0, "Finished parsing all calls, returning.\n");
 	Debug(1, printTokens(*head));
-    return (PARSER_RESULT) {PARSER_SUCCESS, NULL};
+    return PARSER_SUCCESS;
 }
 
 
@@ -312,21 +313,21 @@ static PARSER_RESULT parseFunctionAssignment(Token *head) {
     }
 
     // Redoes identifier tokens now that local variables for parameters are established, then redoes lexing
-	NORMALIZER_RESULT normOut = handleLocalVariables(&asgn, parameters, nParameters);
-	if (normOut != NORM_SUCCESS) {
-		if (normOut == NORM_ERROR) goto error;
+	PARSER_RESULT result = handleLocalVariables(&asgn, parameters, nParameters);
+	if (result != PARSER_SUCCESS) {
+		if (result == PARSER_ERROR) goto error;
 		goto syntax_error;
 	}
 
-	normOut = normalize(&asgn->next);
-	if (normOut != NORM_SUCCESS) {
-		if (normOut == NORM_ERROR) goto error;
+	result = normalize(&asgn->next);
+	if (result != PARSER_SUCCESS) {
+		if (result == PARSER_SUCCESS) goto error;
 		goto syntax_error;
 	}
 
-	PARSER_RESULT callOut = parseFunctionCalls(&asgn->next);
-	if (callOut.type != PARSER_SUCCESS) {
-		if (callOut.type == PARSER_ERROR) goto error;
+	result = parseFunctionCalls(&asgn->next);
+	if (result != PARSER_SUCCESS) {
+		if (result == PARSER_ERROR) goto error;
 		goto syntax_error;
 	}
 
@@ -362,7 +363,7 @@ static PARSER_RESULT parseFunctionAssignment(Token *head) {
 
 	Debug(0, "Successfully parsed function assignment\n");
 
-    return (PARSER_RESULT) {PARSER_SUCCESS, NULL};
+    return PARSER_SUCCESS;
 
 	
 	syntax_error:
@@ -376,7 +377,7 @@ static PARSER_RESULT parseFunctionAssignment(Token *head) {
         free(rpn);
         if (expr != NULL) freeExpression(expr);
         free(function);
-		return (PARSER_RESULT) {PARSER_SYNTAX_ERROR, NULL};
+		return PARSER_SYNTAX_ERROR;
 
     
     error:
@@ -391,14 +392,14 @@ static PARSER_RESULT parseFunctionAssignment(Token *head) {
         if (expr != NULL) freeExpression(expr);
         free(function);
 
-        return (PARSER_RESULT) {PARSER_ERROR, NULL};
+        return PARSER_ERROR;
 }
 
 
 static PARSER_RESULT parseAssignment(Token *head) {
     char *identifier = NULL;
     RPNList *rpn = NULL;
-    Expression *expr = NULL;
+	Expression *expr = NULL;
 
     Token *cur = head;
     Token *asgn = NULL;
@@ -422,8 +423,8 @@ static PARSER_RESULT parseAssignment(Token *head) {
     }
 
 	PARSER_RESULT callOut = parseFunctionCalls(&asgn->next);
-	if (callOut.type != PARSER_SUCCESS) {
-		if (callOut.type == PARSER_ERROR) goto error;
+	if (callOut != PARSER_SUCCESS) {
+		if (callOut == PARSER_ERROR) goto error;
 		goto syntax_error;
     }
 
@@ -447,7 +448,7 @@ static PARSER_RESULT parseAssignment(Token *head) {
     free(rpn->items);
     free(rpn);
 
-    return (PARSER_RESULT) {PARSER_SUCCESS, NULL};
+    return PARSER_SUCCESS;
 	
 
 	syntax_error:
@@ -457,8 +458,7 @@ static PARSER_RESULT parseAssignment(Token *head) {
         free(rpn);
         freeExpression(expr);
 
-		return (PARSER_RESULT) {PARSER_SYNTAX_ERROR, NULL};
-
+		return PARSER_SYNTAX_ERROR;
 
     error:
         free(identifier);
@@ -467,63 +467,61 @@ static PARSER_RESULT parseAssignment(Token *head) {
         free(rpn);
         freeExpression(expr);
         
-        return (PARSER_RESULT) {PARSER_ERROR, NULL};
+		return PARSER_ERROR;
 }
 
 
-PARSER_RESULT parse(char *buffer) {
+PARSER_RESULT parse(char *buffer, Expression **expr) {
     Info(0, "\nParsing: '%s'\n", buffer);
-    
-    PARSER_RESULT result = {PARSER_ERROR, NULL};
     
     Token *head = NULL;
     RPNList *rpn = NULL;
-    Expression *expr = NULL;
     
     head = tokenize(buffer);
-    if (head == NULL) return result;
+    if (head == NULL) return PARSER_ERROR;
 
-	NORMALIZER_RESULT normOut = normalize(&head);
-    if (normOut == NORM_ERROR) goto error;
-	else if (normOut == NORM_SYNTAX_ERROR) goto syntax_error;
+	PARSER_RESULT result = normalize(&head);
+	if (result != PARSER_SUCCESS) {
+		if (result == PARSER_ERROR) goto error;
+		goto syntax_error;
+	}
 
 	Debug(0, "Normalizer out\n");
 	Debug(1, printTokens(head));
 
     if (containsAssignment(head)) {
-		PARSER_RESULT asgnOut;
         if (containsFunctionAssignment(head)) {
             return parseFunctionAssignment(head);
         }
         return parseAssignment(head);
     }
 
-	PARSER_RESULT callOut = parseFunctionCalls(&head);
-	if (callOut.type != PARSER_SUCCESS) {
-		if (callOut.type == PARSER_ERROR) goto error;
+	result = parseFunctionCalls(&head);
+	if (result != PARSER_SUCCESS) {
+		if (result == PARSER_ERROR) goto error;
 		goto syntax_error;
 	}
 
     rpn = shuntingYard(head);
     if (rpn == NULL) goto error;
 
-    expr = expressionFromRPN(rpn);
+    *expr = expressionFromRPN(rpn);
 
     free(rpn->items);
     free(rpn);
     freeTokens(head);
 
-    return (PARSER_RESULT) {PARSER_SUCCESS, expr};
+	return PARSER_SUCCESS;
 
 	syntax_error:
         freeTokens(head);
         if (rpn != NULL) free(rpn->items);
         free(rpn);
-		return (PARSER_RESULT) {PARSER_SYNTAX_ERROR, expr};
+		return PARSER_SYNTAX_ERROR;
 
     error:
         freeTokens(head);
         if (rpn != NULL) free(rpn->items);
         free(rpn);
-        return result;
+      	return PARSER_ERROR;
 }

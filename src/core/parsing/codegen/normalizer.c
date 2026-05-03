@@ -18,7 +18,7 @@
  *  1: Success or no work done
  *
  */
-static NORMALIZER_RESULT handleImplicitMul(Token *cur, Token *prev) {
+static PARSER_RESULT handleImplicitMul(Token *cur, Token *prev) {
     // Handle implicit multiplcation with left bracket or function
     // x(x-1) => x*(x-1)
     if ((cur->type == TOKEN_LEFT_PAREN || cur->type == TOKEN_FUNC_CALL_PLACEHOLDER) && prev != NULL) {
@@ -27,13 +27,13 @@ static NORMALIZER_RESULT handleImplicitMul(Token *cur, Token *prev) {
             Token *mult = createToken(TOKEN_OPERATOR, "*", 1);
             if (mult == NULL) {
                 perror("Error in implicit multiplication");
-                return NORM_ERROR;
+                return PARSER_ERROR;
             }
 
             prev->next = mult;
             mult->next = cur;
 
-            return NORM_SUCCESS;
+            return PARSER_SUCCESS;
         }
     }
     // Handle implicit multiplcation with right bracket
@@ -45,13 +45,13 @@ static NORMALIZER_RESULT handleImplicitMul(Token *cur, Token *prev) {
             Token *mult = createToken(TOKEN_OPERATOR, "*", 1);
             if (mult == NULL) {
                 perror("Error in implicit multiplication");
-                return NORM_ERROR;
+                return PARSER_ERROR;
             }
 
             mult->next = nextToken;
             cur->next = mult;
 
-            return NORM_SUCCESS;
+            return PARSER_SUCCESS;
         }
     }
     // Handle constant and identifier multiplication
@@ -62,16 +62,16 @@ static NORMALIZER_RESULT handleImplicitMul(Token *cur, Token *prev) {
             Token *mult = createToken(TOKEN_OPERATOR, "*", 1);
             if (mult == NULL) {
                 perror("Error in implicit multiplication");
-                return NORM_ERROR;
+                return PARSER_ERROR;
             }
 
             prev->next = mult;
             mult->next = cur;
-			return NORM_SUCCESS; 
+			return PARSER_SUCCESS; 
 		}
     }
 
-    return NORM_SUCCESS;
+    return PARSER_SUCCESS;
 }
 
 /*
@@ -83,16 +83,16 @@ static NORMALIZER_RESULT handleImplicitMul(Token *cur, Token *prev) {
  *  1: Success or no work done
  *
  */
-static NORMALIZER_RESULT handleExponentRewrite(Token **cur) {
-    if ((*cur) == NULL || (*cur)->type != TOKEN_OPERATOR || (*cur)->op->symbol != '*') return NORM_SUCCESS;
-	if ((*cur)->next == NULL || (*cur)->next->type != TOKEN_OPERATOR || (*cur)->next->op->symbol != '*') return NORM_SUCCESS; 
+static PARSER_RESULT handleExponentRewrite(Token **cur) {
+    if ((*cur) == NULL || (*cur)->type != TOKEN_OPERATOR || (*cur)->op->symbol != '*') return PARSER_SUCCESS;
+	if ((*cur)->next == NULL || (*cur)->next->type != TOKEN_OPERATOR || (*cur)->next->op->symbol != '*') return PARSER_SUCCESS; 
 
 	Debug(0, "Rewriting exponent\n");
 
 	Token *exponent = createToken(TOKEN_OPERATOR, "^", 1);
     if (exponent == NULL) {
 		perror("Error in exponent rewrite"); 
-		return NORM_ERROR; 
+		return PARSER_ERROR; 
 	}
 
 	exponent->next = (*cur)->next->next;
@@ -102,7 +102,7 @@ static NORMALIZER_RESULT handleExponentRewrite(Token **cur) {
 
     *cur = exponent;
 
-    return NORM_SUCCESS;
+    return PARSER_SUCCESS;
 }
 
 /*
@@ -114,20 +114,20 @@ static NORMALIZER_RESULT handleExponentRewrite(Token **cur) {
  *  1: Success or no work done
  *
  */
-static NORMALIZER_RESULT checkInvalidBinop(const Token *cur, const Token *prev) {
-    if (cur->type != TOKEN_OPERATOR) return NORM_SUCCESS; // no work to do
+static PARSER_RESULT checkInvalidBinop(const Token *cur, const Token *prev) {
+    if (cur->type != TOKEN_OPERATOR) return PARSER_SUCCESS; // no work to do
     if (cur->next == NULL) {
         printf("Operator must be followed by another token.\n");
-        return NORM_SYNTAX_ERROR;
+        return PARSER_SYNTAX_ERROR;
     }
 
     if (prev == NULL) {
         printf("Operator must be preceeded by another token.\n");
-        return NORM_SYNTAX_ERROR;
+        return PARSER_SYNTAX_ERROR;
     }
 
     // If next op is -, will recheck later, may be a negative number instead of a minus
-    if (cur->next->type == TOKEN_OPERATOR && cur->next->op->symbol == '-') return NORM_SUCCESS;
+    if (cur->next->type == TOKEN_OPERATOR && cur->next->op->symbol == '-') return PARSER_SUCCESS;
 
     // Handles invalid negative signs
     if (cur->op->symbol == '-' && (cur->next == NULL || cur->next->type == TOKEN_OPERATOR)) {
@@ -141,7 +141,7 @@ static NORMALIZER_RESULT checkInvalidBinop(const Token *cur, const Token *prev) 
 			printf("Invalid operation \"%c %c %s\".\n", prev->op->symbol, cur->op->symbol, cur->next->value);
 		}
 
-        return NORM_SYNTAX_ERROR;
+        return PARSER_SYNTAX_ERROR;
     }
 
     if (cur->next->type != TOKEN_IDENTIFIER && cur->next->type != TOKEN_NUMBER && cur->next->type != TOKEN_FUNC_CALL_PLACEHOLDER && cur->next->type != TOKEN_LEFT_PAREN) {
@@ -155,10 +155,10 @@ static NORMALIZER_RESULT checkInvalidBinop(const Token *cur, const Token *prev) 
 			printf("Invalid operation \"%c %c %s\".\n", prev->op->symbol, cur->op->symbol, cur->next->value);
 		}
 
-        return NORM_SYNTAX_ERROR;
+        return PARSER_SYNTAX_ERROR;
     }
     
-    return NORM_SUCCESS;
+    return PARSER_SUCCESS;
 }
 
 /*
@@ -171,11 +171,11 @@ static NORMALIZER_RESULT checkInvalidBinop(const Token *cur, const Token *prev) 
  *  1: Success or no work done
  *
  */
-static NORMALIZER_RESULT handleFunctionParens(Token *cur) {
-	if (cur == NULL || cur->type != TOKEN_FUNC_CALL_PLACEHOLDER) return NORM_SUCCESS;
+static PARSER_RESULT handleFunctionParens(Token *cur) {
+	if (cur == NULL || cur->type != TOKEN_FUNC_CALL_PLACEHOLDER) return PARSER_SUCCESS;
 
 	// Assume since theres opening paren that the parameters are explicit
-	if (cur->next == NULL || cur->next->type == TOKEN_LEFT_PAREN) return NORM_SUCCESS;
+	if (cur->next == NULL || cur->next->type == TOKEN_LEFT_PAREN) return PARSER_SUCCESS;
 
 	Debug(0, "Adding implicit function parens\n");
 
@@ -198,14 +198,14 @@ static NORMALIZER_RESULT handleFunctionParens(Token *cur) {
 	if (opening != NULL) opening->next = func->next;
 	func->next = opening;
 
-	return NORM_SUCCESS;
+	return PARSER_SUCCESS;
 
 	error:
 		perror("Error handling function parentheses");
 		freeTokens(opening);
 		freeTokens(closing);
 
-		return NORM_ERROR;
+		return PARSER_ERROR;
 }
 
 /*
@@ -217,9 +217,9 @@ static NORMALIZER_RESULT handleFunctionParens(Token *cur) {
  *  1: Success or no work done
  *
  */
-static NORMALIZER_RESULT handleNegative(Token **cur, Token *prev) {
-	if ((*cur)->type != TOKEN_OPERATOR || (*cur)->op->symbol != '-') return NORM_SUCCESS;
-	if (prev != NULL && prev->type != TOKEN_LEFT_PAREN && prev->type != TOKEN_OPERATOR && prev->type != TOKEN_ASSIGNMENT) return NORM_SUCCESS; // is subtraction
+static PARSER_RESULT handleNegative(Token **cur, Token *prev) {
+	if ((*cur)->type != TOKEN_OPERATOR || (*cur)->op->symbol != '-') return PARSER_SUCCESS;
+	if (prev != NULL && prev->type != TOKEN_LEFT_PAREN && prev->type != TOKEN_OPERATOR && prev->type != TOKEN_ASSIGNMENT) return PARSER_SUCCESS; // is subtraction
 	
 	Debug(0, "Rewriting subtraction as negation\n");
 
@@ -240,14 +240,14 @@ static NORMALIZER_RESULT handleNegative(Token **cur, Token *prev) {
 	else prev->next = negative;
 
 
-	return NORM_SUCCESS;
+	return PARSER_SUCCESS;
 
 	error:
 		perror("Error handling negative");
 		freeTokens(negative);
 		freeTokens(mult);
 
-		return NORM_ERROR;
+		return PARSER_ERROR;
 }
 
 /*
@@ -259,7 +259,7 @@ static NORMALIZER_RESULT handleNegative(Token **cur, Token *prev) {
  * 1: Success or no work done
  *
  */
-NORMALIZER_RESULT handleLocalVariables(Token **ptr, char **parameters, int nParameters) {
+PARSER_RESULT handleLocalVariables(Token **ptr, char **parameters, int nParameters) {
     Config *config = GLOBALCONTEXT->config;
     Environment *env = GLOBALCONTEXT->env;
 
@@ -307,14 +307,14 @@ NORMALIZER_RESULT handleLocalVariables(Token **ptr, char **parameters, int nPara
                 Token *left = createToken(TOKEN_IDENTIFIER, identifier, max);
                 if (left == NULL) {
                     perror("Error handling local variables");
-                    return NORM_ERROR;
+                    return PARSER_ERROR;
                 }
 
                 Token *right = createToken(TOKEN_IDENTIFIER, id + max, strlen(id) - max);
                 if (right == NULL) {
                     perror("Error handling local variables");
                     free(left);
-                    return NORM_ERROR;
+                    return PARSER_ERROR;
                 }
 
                 left->next = right;
@@ -336,7 +336,7 @@ NORMALIZER_RESULT handleLocalVariables(Token **ptr, char **parameters, int nPara
         cur = cur->next;
     }
 
-    return NORM_SUCCESS;
+    return PARSER_SUCCESS;
 }
 
 /**
@@ -350,22 +350,22 @@ NORMALIZER_RESULT handleLocalVariables(Token **ptr, char **parameters, int nPara
  *	Token **head: pointer to token linked list
  *
  */
-NORMALIZER_RESULT normalize(Token** head) {
+PARSER_RESULT normalize(Token** head) {
     Debug(0, "\nNormalizing Tokens\n");
 
     Token **ptr = head;
     Token *prev = NULL;
-	NORMALIZER_RESULT result = NORM_SUCCESS;
+	PARSER_RESULT result = PARSER_SUCCESS;
 
     int openParenthesis = 0;
 
     while (*ptr != NULL) {
-        if ((result = handleNegative(ptr, prev)) != NORM_SUCCESS) return result;
+        if ((result = handleNegative(ptr, prev)) != PARSER_SUCCESS) return result;
 		Debug(1, printTokens(*head));
-        if ((result = handleFunctionParens(*ptr)) != NORM_SUCCESS) return result;
-        if ((result = handleImplicitMul(*ptr, prev)) != NORM_SUCCESS) return result;
-        if ((result = handleExponentRewrite(ptr)) != NORM_SUCCESS) return result;
-        if ((result = checkInvalidBinop(*ptr, prev)) != NORM_SUCCESS) return result;
+        if ((result = handleFunctionParens(*ptr)) != PARSER_SUCCESS) return result;
+        if ((result = handleImplicitMul(*ptr, prev)) != PARSER_SUCCESS) return result;
+        if ((result = handleExponentRewrite(ptr)) != PARSER_SUCCESS) return result;
+        if ((result = checkInvalidBinop(*ptr, prev)) != PARSER_SUCCESS) return result;
 		// Counts open parenthesis 
 		if ((*ptr)->type == TOKEN_LEFT_PAREN) { 
 			//Empty parens, what are we doing gang 
@@ -373,7 +373,7 @@ NORMALIZER_RESULT normalize(Token** head) {
                 printf("Empty parenthesis.\n");
                 Debug(0, "Empty parens\n");
                 Debug(1, printTokens(*head));
-                return NORM_SYNTAX_ERROR;
+                return PARSER_SYNTAX_ERROR;
             }
             openParenthesis ++;
         }
@@ -381,7 +381,7 @@ NORMALIZER_RESULT normalize(Token** head) {
         if ((*ptr)->type == TOKEN_RIGHT_PAREN) {
             if (openParenthesis <= 0) {
                 printf("Mismatched parenthesis.\n");
-                return NORM_SYNTAX_ERROR;
+                return PARSER_SYNTAX_ERROR;
             }
 
             openParenthesis --;
@@ -393,12 +393,12 @@ NORMALIZER_RESULT normalize(Token** head) {
 
     if (openParenthesis > 0) {
         printf("Mismatched parenthesis.\n");
-        return NORM_SYNTAX_ERROR;
+        return PARSER_SYNTAX_ERROR;
     } 
 
     Debug(0, "Updated Tokens\n");
     Debug(1, printTokens(*head));
 
-    return NORM_SUCCESS;
+    return PARSER_SUCCESS;
 
 }

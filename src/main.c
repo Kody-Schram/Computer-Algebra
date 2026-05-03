@@ -5,6 +5,7 @@
 
 #include "core/context/context.h"
 #include "core/context/environment.h"
+#include "core/primitives/types.h"
 #include "core/utils/log.h"
 #include "core/utils/input.h"
 
@@ -44,36 +45,44 @@ static int handleKeywords(char *buffer) {
     return 0;
 }
 
-
+// Handles processing input
+// 
+// Return value:
+// 0: Error/quit
+// 1: Success
 static int process(char *buffer) {
     Debug(0, "\nProcessing '%s'\n", buffer);
     int keyword = handleKeywords(buffer);
     if (keyword == -1) return 0;
     else if (keyword == 1) return 1;
 
-    PARSER_RESULT result = parse(buffer);
-	if (result.type != PARSER_SUCCESS) {
-		if (GLOBALCONTEXT->config->STRICT || result.type == PARSER_ERROR) return 0;
+	Expression *expr = NULL;
+    PARSER_RESULT result = parse(buffer, &expr);
+	if (result != PARSER_SUCCESS) {
+		free(expr);
+		if (GLOBALCONTEXT->config->STRICT || result == PARSER_ERROR) return 0;
 		return 1;
 	}
+
+	if (expr == NULL) return 1;
     
-    if (!simplify(&result.expr)) {
-        freeExpression(result.expr);
+    if (!simplify(&expr)) {
+        freeExpression(expr);
         return 1;
     }
 
-    if (!execute(&result.expr)) {
-        freeExpression(result.expr);
+    if (!execute(&expr)) {
+        freeExpression(expr);
         return 1;
     }
 
-    char *str = expressionToString(result.expr);
+    char *str = expressionToString(expr);
     if (str != NULL) printf("%s\n\n", str);
     free(str);
 
     if (GLOBALCONTEXT->config->OUTPUTS > 0) {
-        if (!updateOutputVariables(GLOBALCONTEXT->env, result.expr)) return 0;
-    } else freeExpression(result.expr);
+        if (!updateOutputVariables(GLOBALCONTEXT->env, expr)) return 0;
+    } else freeExpression(expr);
 
 	return 1;
 }
