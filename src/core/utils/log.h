@@ -1,5 +1,4 @@
-#ifndef LOG_H
-#define LOG_H
+#pragma once
 
 #include <stdio_ext.h>
 
@@ -17,5 +16,3 @@ void printStream(FILE *stream);
 
 
 void Info(const int fileStream, const void *stream, ...);
-
-#endif

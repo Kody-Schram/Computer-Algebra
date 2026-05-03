@@ -1,5 +1,4 @@
-#ifndef PARSERUTILS_H
-#define PARSERUTILS_H
+#pragma once
 
 #include <stdio.h>
 
@@ -42,6 +41,3 @@ FILE *printRPN(const RPNList *list);
  * @param head Head of linked list
  */
 void freeTokens(Token *head);
-
-
-#endif

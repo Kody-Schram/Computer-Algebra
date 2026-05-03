@@ -1,5 +1,4 @@
-#ifndef CONTEXT_H
-#define CONTEXT_H
+#pragma once
 
 #include "core/primitives/types.h"
 #include "environment.h"
@@ -23,6 +22,3 @@ int initContext(char *cpath);
 
 
 void freeContext(Context *context);
-
-
-#endif

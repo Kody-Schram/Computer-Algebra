@@ -1,5 +1,4 @@
-#ifndef OPERATIONS_H
-#define OPERATIONS_H
+#pragma once
 
 #include <stdint.h>
 
@@ -19,5 +18,3 @@ int registerImplementation(
 
 
 int initPrimitiveOperations();
-
-#endif

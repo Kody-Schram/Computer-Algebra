@@ -1,5 +1,4 @@
-#ifndef CONFIG_H
-#define CONFIG_H
+#pragma once
 
 #include <stdio.h>
 
@@ -54,6 +53,3 @@ FILE *printConfig(Config *config);
 
 
 void freeConfig(Config *config);
-
-
-#endif

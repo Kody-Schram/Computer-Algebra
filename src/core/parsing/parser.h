@@ -1,8 +1,6 @@
-#ifndef PARSER_H
-#define PARSER_H
+#pragma once
 
 #include "core/primitives/types.h"
-#include "parser_types.h"
 
 
 typedef enum PARSER_RESULT {
@@ -22,5 +20,3 @@ typedef enum PARSER_RESULT {
  * @return Token* 
  */
 PARSER_RESULT parse(char *buffer, Expression **expr);
-
-#endif

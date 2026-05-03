@@ -1,7 +1,7 @@
-#ifndef TYPE_UTILS_H
-#define TYPE_UTILS_H
+#pragma once
 
 #include <stdio.h>
+
 #include "core/primitives/types.h"
 
 
@@ -21,5 +21,3 @@ char *expressionToString(const Expression *expr);
 
 
 void freeFunction(Function *func);
-
-#endif

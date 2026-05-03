@@ -1,5 +1,4 @@
-#ifndef REGISTRY_H
-#define REGISTRY_H
+#pragma once
 
 #include "core/primitives/types.h"
 
@@ -21,5 +20,3 @@ Operation *searchOperation(Registry *registry, char symbol);
 
 
 void freeRegistry(Registry *registry);
-
-#endif

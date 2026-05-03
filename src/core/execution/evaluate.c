@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdint.h>
 
-#include "execute.h"
+#include "evaluate.h"
 #include "core/context/context.h"
 #include "core/context/environment.h"
 #include "core/utils/log.h"
@@ -9,8 +9,8 @@
 #include "core/utils/type_utils.h"
 
 
-static bool executeRecur(Expression **ptr, Environment *env) {
-    if (ptr == NULL || *ptr == NULL) return 0;
+static bool evaluateRecur(Expression **ptr, Environment *env) {
+    if (ptr == NULL || *ptr == NULL) return false;
     Expression *expr = *ptr;
 
     Debug(0, "Recursively executing\n");
@@ -19,7 +19,7 @@ static bool executeRecur(Expression **ptr, Environment *env) {
     switch (expr->type) {
         case EXPRESSION_INTEGER:
         case EXPRESSION_DOUBLE:
-            return 1;
+            return true;
 
         case EXPRESSION_VARIABLE: {
             Debug(0, "Updating variable '%s'\n", expr->identifier);
@@ -36,14 +36,14 @@ static bool executeRecur(Expression **ptr, Environment *env) {
                     freeExpression(expr);
 
                     *ptr = deepCopyExpression(cmp->value);
-                    if (!executeRecur(ptr, env)) return 0;
+                    if (!evaluateRecur(ptr, env)) return false;
 
-                    return 1;
+                    return true;
                 }
                 curEnv = curEnv->parent;
             }
 
-            return 1;
+            return true;
         }
 
         case EXPRESSION_OPERATOR:
@@ -51,14 +51,14 @@ static bool executeRecur(Expression **ptr, Environment *env) {
             Debug(1, printExpression(expr));
             
             for (int i = 0; i < expr->nOperands; i ++) {
-                if (!executeRecur(&(expr->operands[i]), env)) return 0;
+                if (!evaluateRecur(&(expr->operands[i]), env)) return false;
             }
         
-            if (expr->nOperands != expr->op->arity) return 1; // Unexpected number of operands, leave symbolic
+            if (expr->nOperands != expr->op->arity) return true; // Unexpected number of operands, leave symbolic
  
             for (uint32_t i = 0; i < expr->op->nImplementations; i ++) {
                 BuiltinResult result = expr->op->implementations[i](expr->nOperands, expr->operands);
-                if (result.type == BUILTIN_ERROR) return 0;
+                if (result.type == BUILTIN_ERROR) return false;
                 if (result.type == BUILTIN_NEUTRAL) {
 					Debug(0, "operation definition %d was neutral\n", i);
 					continue; // keeps running until one of the definitions evaluates or errors
@@ -67,14 +67,14 @@ static bool executeRecur(Expression **ptr, Environment *env) {
                 Debug(0, "Output of operation\n");
                 Debug(1, printExpression(result.output));
                 
-                if (result.output == NULL) return 1;
+                if (result.output == NULL) return true;
                 
                 freeExpression(expr);
                 *ptr = result.output;
-                return 1;
+                return true;
             }
                     
-            return 1;
+            return true;
 
         case EXPRESSION_FUNCTION_CALL:
             FunctionCall *call = expr->call;
@@ -82,18 +82,18 @@ static bool executeRecur(Expression **ptr, Environment *env) {
             Component *cmp = searchEnvironment(GLOBALCONTEXT->env, call->identifier);
             if (cmp == NULL || cmp->type == COMP_VARIABLE) {
                 printf("Error getting environment component.\n");
-                return 0;
+                return false;
             }
 
             Function *func = cmp->func;
             if (func == NULL) {
                 printf("Function '%s' couldn't be found in the environment.\n", call->identifier);
-                return 0;
+                return false;
             }
 
             if (call->nParams != func->nParameters) {
                 printf("Expected %d parameters for '%s', %d parameters were passed.\n", func->nParameters, call->identifier, call->nParams);
-                return 0;
+                return false;
             }
 
             // Goes up call stack, if global environment is found, then this is evaluating rather than like binding a new variable/function
@@ -107,22 +107,22 @@ static bool executeRecur(Expression **ptr, Environment *env) {
                 tempEnv = tempEnv->parent;
             }
 
-            if (!evaluating && GLOBALCONTEXT->config->LAZY_CALLS) return 1;
+            if (!evaluating && GLOBALCONTEXT->config->LAZY_CALLS) return true;
             
             Environment *callEnv = createEnvironment(ENV_LIST);
-            if (callEnv == NULL) return 0;
+            if (callEnv == NULL) return false;
             
             callEnv->parent = env;
             
             for (int i = 0; i < func->nParameters; i ++) {
-                if (!executeRecur(&call->parameters[i], env)) {
+                if (!evaluateRecur(&call->parameters[i], env)) {
                     freeEnvironment(callEnv);
-                    return 0;
+                    return false;
                 }
                 
                 if (!bindComponent(callEnv, COMP_VARIABLE, func->parameters[i], call->parameters[i])) {
                     freeEnvironment(callEnv);
-                    return 0;
+                    return false;
                 }
             }
             
@@ -136,10 +136,10 @@ static bool executeRecur(Expression **ptr, Environment *env) {
                 case DEFINED:
                     Debug(0, "Executing defined function\n");
                     Expression *exec = deepCopyExpression(func->definition);
-                    if (exec == NULL) return 0;
-                    if (!executeRecur(&exec, callEnv)) {
+                    if (exec == NULL) return false;
+                    if (!evaluateRecur(&exec, callEnv)) {
                         freeEnvironment(callEnv);
-                        return 0;
+                        return false;
                     }
                     
                     freeExpression(expr);
@@ -155,17 +155,17 @@ static bool executeRecur(Expression **ptr, Environment *env) {
             
             freeEnvironment(callEnv);
             
-            return 1;
+            return true;
     }
 
-    return 1;
+    return true;
 }
 
 
-int execute(Expression **expr) {
+bool evaluate(Expression **expr) {
     Info(0, "\nExecuting\n");
     Info(1, printExpression(*expr));
-    if (!executeRecur(expr, GLOBALCONTEXT->env)) return 0;
+    if (!evaluateRecur(expr, GLOBALCONTEXT->env)) return false;
 
-    return 1;
+    return true;
 }

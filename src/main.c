@@ -14,7 +14,7 @@
 
 #include "core/parsing/parser.h"
 #include "core/execution/simplify.h"
-#include "core/execution/execute.h"
+#include "core/execution/evaluate.h"
 
 
 static int handleKeywords(char *buffer) {
@@ -71,7 +71,7 @@ static int process(char *buffer) {
         return 1;
     }
 
-    if (!execute(&expr)) {
+    if (!evaluate(&expr)) {
         freeExpression(expr);
         return 1;
     }

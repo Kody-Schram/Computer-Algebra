@@ -1,5 +1,4 @@
-#ifndef ENVIRONMENT_H
-#define ENVIRONMENT_H
+#pragma once
 
 #include <stdio.h>
 #include "core/primitives/types.h"
@@ -64,5 +63,3 @@ int initOutputVariables(Environment *env);
 
 
 int updateOutputVariables(Environment *env, Expression *output);
-
-#endif
