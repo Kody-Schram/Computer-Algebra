@@ -1,3 +1,4 @@
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -126,8 +127,8 @@ BuiltinResult multiply(uint32_t nArgs, Expression **operands) {
 }
 
 
-static long long _powi(long long a, long long e) {
-    long long r = 1;
+static uint64_t _powi(uint64_t a, uint64_t e) {
+    uint64_t r = 1;
 
     while (e > 0) {
         if (e % 2 == 1) r *= a;

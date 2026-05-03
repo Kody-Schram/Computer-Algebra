@@ -7,6 +7,7 @@
 #include "core/utils/log.h"
 #include "core/primitives/types.h"
 #include "core/utils/type_utils.h"
+#include "core/execution/execution_utils.h"
 
 
 static bool evaluateRecur(Expression **ptr, Environment *env) {
@@ -50,31 +51,25 @@ static bool evaluateRecur(Expression **ptr, Environment *env) {
             Debug(0, "\nOperands %d\n", expr->nOperands);
             Debug(1, printExpression(expr));
             
-            for (int i = 0; i < expr->nOperands; i ++) {
+            for (uint32_t i = 0; i < expr->nOperands; i ++) {
                 if (!evaluateRecur(&(expr->operands[i]), env)) return false;
             }
         
             if (expr->nOperands != expr->op->arity) return true; // Unexpected number of operands, leave symbolic
+			BuiltinResult result = callImplementations(
+									expr->op->nImplementations, 
+									expr->op->implementations,
+									expr->nOperands,
+									expr->operands
+									);
+
+			if (result.type == BUILTIN_ERROR) return false;
+			else if (result.type == BUILTIN_NEUTRAL) return true;
+
+			freeExpression(expr);
+			*ptr = result.output;
+			return true;
  
-            for (uint32_t i = 0; i < expr->op->nImplementations; i ++) {
-                BuiltinResult result = expr->op->implementations[i](expr->nOperands, expr->operands);
-                if (result.type == BUILTIN_ERROR) return false;
-                if (result.type == BUILTIN_NEUTRAL) {
-					Debug(0, "operation definition %d was neutral\n", i);
-					continue; // keeps running until one of the definitions evaluates or errors
-				}
-                
-                Debug(0, "Output of operation\n");
-                Debug(1, printExpression(result.output));
-                
-                if (result.output == NULL) return true;
-                
-                freeExpression(expr);
-                *ptr = result.output;
-                return true;
-            }
-                    
-            return true;
 
         case EXPRESSION_FUNCTION_CALL:
             FunctionCall *call = expr->call;
@@ -108,54 +103,66 @@ static bool evaluateRecur(Expression **ptr, Environment *env) {
             }
 
             if (!evaluating && GLOBALCONTEXT->config->LAZY_CALLS) return true;
-            
-            Environment *callEnv = createEnvironment(ENV_LIST);
-            if (callEnv == NULL) return false;
-            
-            callEnv->parent = env;
-            
-            for (int i = 0; i < func->nParameters; i ++) {
-                if (!evaluateRecur(&call->parameters[i], env)) {
-                    freeEnvironment(callEnv);
-                    return false;
-                }
-                
-                if (!bindComponent(callEnv, COMP_VARIABLE, func->parameters[i], call->parameters[i])) {
-                    freeEnvironment(callEnv);
-                    return false;
-                }
-            }
-            
-            Debug(0, "Call env\n");
-            Debug(1, printEnvironment(callEnv));
-            
-            // Prevents double free of params
-            expr->call->nParams = 0;
+           
+			if (func->type == DEFINED) {
+				Environment *callEnv = createEnvironment(ENV_LIST);
+				if (callEnv == NULL) return false;
+				
+				callEnv->parent = env;
+				
+				for (uint32_t i = 0; i < func->nParameters; i ++) {
+					if (!evaluateRecur(&call->parameters[i], env)) {
+						freeEnvironment(callEnv);
+						return false;
+					}
+					
+					if (!bindComponent(callEnv, COMP_VARIABLE, func->parameters[i], call->parameters[i])) {
+						freeEnvironment(callEnv);
+						return false;
+					}
+				}
+				
+				Debug(0, "Call env\n");
+				Debug(1, printEnvironment(callEnv));
+				
+				// Prevents double free of params
+				expr->call->nParams = 0;
 
-            switch (func->type) {
-                case DEFINED:
-                    Debug(0, "Executing defined function\n");
-                    Expression *exec = deepCopyExpression(func->definition);
-                    if (exec == NULL) return false;
-                    if (!evaluateRecur(&exec, callEnv)) {
-                        freeEnvironment(callEnv);
-                        return false;
-                    }
-                    
-                    freeExpression(expr);
+				Debug(0, "Executing defined function\n");
+				Expression *exec = deepCopyExpression(func->definition);
+				if (exec == NULL) return false;
+				if (!evaluateRecur(&exec, callEnv)) {
+					freeEnvironment(callEnv);
+					return false;
+				}
+				
+				freeExpression(expr);
 
-                    Debug(0, "\nCall result\n");
-                    Debug(1, printExpression(exec));
-                    *ptr = exec;
-                    break;
- 
-                default:
-                    printf("Undefined behavior as of now.\n");
+				Debug(0, "\nCall result\n");
+				Debug(1, printExpression(exec));
+				*ptr = exec;
+
+				freeEnvironment(callEnv);
+				return true;
             }
-            
-            freeEnvironment(callEnv);
-            
-            return true;
+
+			for (uint32_t i = 0; i < func->nParameters; i ++) {
+				if (!evaluateRecur(&call->parameters[i], env)) return false;
+			}
+
+			result = callImplementations(
+									func->nImplementations,
+									func->implementations,
+									func->nParameters,
+									call->parameters
+									);
+
+			if (result.type == BUILTIN_ERROR) return false;
+			else if (result.type == BUILTIN_NEUTRAL) return true;
+
+			freeExpression(expr);
+			*ptr = result.output;
+			return true;
     }
 
     return true;

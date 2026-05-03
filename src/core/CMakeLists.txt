@@ -15,6 +15,7 @@ add_library(Core STATIC
     parsing/codegen/normalizer.c
     parsing/codegen/tokenizer.c
     
+	execution/execution_utils.c
     execution/simplify.c
     execution/evaluate.c
     
