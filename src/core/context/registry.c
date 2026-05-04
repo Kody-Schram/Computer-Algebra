@@ -31,13 +31,13 @@ Registry *initRegistry() {
 }
 
 
-int registerOperation(Registry *registry, Operation *op) {
+bool registerOperation(Registry *registry, Operation *op) {
 	if (registry->registeredOperations >= registry->operationsSize) {
-		registry->operationsSize += DEFAULT_OPERATIONS;
+		registry->operationsSize ++;
 		Operation **tmp = realloc(registry->operations, registry->operationsSize);
 		if (tmp == NULL) {
 			perror("Error registering operation");
-			return 0;
+			return false;
 		}
 
 		registry->operations = tmp;
@@ -46,11 +46,11 @@ int registerOperation(Registry *registry, Operation *op) {
 	registry->operations[registry->registeredOperations] = op;
 	registry->registeredOperations ++;
 
-	return 1;
+	return true;
 }
 
 
-Operation *searchOperation(Registry *registry, const char symbol) {
+Operation *searchOperation(const Registry *registry, const char symbol) {
 	for (unsigned int i = 0; i < registry->registeredOperations; i ++) {
 		if (registry->operations[i]->symbol == symbol) return registry->operations[i];
 	}

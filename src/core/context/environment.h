@@ -47,7 +47,7 @@ struct Environment {
 Environment *createEnvironment(EnvironmentType type);
 
 
-int bindComponent(Environment *env, ComponentType type, const char *identifier, const void *data);
+bool bindComponent(Environment *env, ComponentType type, const char *identifier, const void *data);
 
 
 Component *searchEnvironment(const Environment *env, const char *identifier);

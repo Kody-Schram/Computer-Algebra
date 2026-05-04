@@ -1,11 +1,12 @@
 #pragma once
 
 #include "core/primitives/types.h"
+#include <stdint.h>
 
 
 typedef struct Registry {
-	unsigned int operationsSize;
-	unsigned int registeredOperations;
+	uint32_t operationsSize;
+	uint32_t registeredOperations;
 	Operation **operations;
 } Registry;
 
@@ -13,10 +14,10 @@ typedef struct Registry {
 Registry *initRegistry();
 
 
-int registerOperation(Registry *registry, Operation *op);
+bool registerOperation(Registry *registry, Operation *op);
 
 
-Operation *searchOperation(Registry *registry, char symbol);
+Operation *searchOperation(const Registry *registry, char symbol);
 
 
 void freeRegistry(Registry *registry);

@@ -41,11 +41,11 @@ Environment *createEnvironment(EnvironmentType type) {
 }
 
 
-int bindComponent(Environment *env, ComponentType type, const char *identifier, const void *data) {
+bool bindComponent(Environment *env, ComponentType type, const char *identifier, const void *data) {
     Component *new = calloc(1, sizeof(Component));
     if (new == NULL) {
         perror("Error in binding component");
-        return 0;
+        return false;
     }
     
     new->type = type;
@@ -53,7 +53,7 @@ int bindComponent(Environment *env, ComponentType type, const char *identifier, 
     if (new->identifier == NULL) {
         perror("Error binding component");
         freeComponent(new);
-        return 0;
+        return false;
     }
     
     switch (type) {
@@ -68,7 +68,7 @@ int bindComponent(Environment *env, ComponentType type, const char *identifier, 
         default:
             printf("What kinda shit you think this is?");
             freeComponent(new);
-            return 0;
+            return false;
     }
     
     switch (env->type) {
@@ -80,10 +80,10 @@ int bindComponent(Environment *env, ComponentType type, const char *identifier, 
         case ENV_HASH:
             printf("Binding to hash env not implemented yet.\n");
             freeComponent(new);
-            return 0;
+            return false;
     }
     
-    return 1;
+    return true;
 }
 
 
