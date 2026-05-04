@@ -2,7 +2,7 @@
 
 #include <stdio_ext.h>
 
-#ifdef Release
+#ifdef NDEBUG 
 
 #define Debug(fileStream, stream, ...) ((void) 0)
 

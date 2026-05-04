@@ -23,8 +23,9 @@ if(CMAKE_BUILD_TYPE STREQUAL "Profile")
 endif()
 
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
-    add_definitions(-DRelease)
-    add_compile_options(-s -O3 -Os)
+	add_compile_definitions(NDEBUG)
+    add_compile_options(-O3)
+	add_link_options(-s)
     message("Making release build.")
 endif()
 
