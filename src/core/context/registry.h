@@ -6,6 +6,7 @@
 
 typedef struct ObjectRegistry {
 	char *identifier;
+	char *originModule;
 	void (*cleanup) (void *data);
 	int32_t (*compare) (void const *ptr);
 } ObjectRegistry;
@@ -33,9 +34,12 @@ bool registerOperation(Registry *registry, Operation *op);
 
 
 bool registerObject(
-		Registry *registry, char const *identifier,
+		Registry *registry, char const *identifier, char const *originModule,
 		void (*cleanup) (void *data), int32_t (*compare) (void const *ptr)
 );
+
+
+uint32_t getObjectId(char const *identifier);
 
 
 void freeRegistry(Registry *registry);

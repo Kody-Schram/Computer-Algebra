@@ -6,6 +6,6 @@
 
 
 BuiltinResult callImplementations(
-		uint32_t nImplementations, BuiltinImplementation *implementations,
-		uint32_t nArgs, Expression **exprs		
+		uint32_t nImplementations, BuiltinImplementation const * const implementations,
+		Context const *ctx, uint32_t nArgs, Expression **exprs		
 );

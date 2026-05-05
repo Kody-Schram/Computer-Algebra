@@ -24,10 +24,13 @@ typedef enum BuiltinResultType BuiltinResultType;
 typedef struct BuiltinResult BuiltinResult;
 typedef struct Function Function;
 
-typedef BuiltinResult (*BuiltinImplementation)(uint32_t nArgs, Expression **exprs);
+
+typedef struct Context Context;
+typedef BuiltinResult (*BuiltinImplementation)(Context const *ctx, uint32_t nArgs, Expression **exprs);
 
 // Expression related definitions
 enum ExpressionType {
+	EXPRESSION_OBJECT,
     EXPRESSION_VARIABLE,
     EXPRESSION_INTEGER,
     EXPRESSION_DOUBLE,
@@ -75,7 +78,7 @@ struct Expression {
 
 		// Mathematical objects
 		struct {
-			uint64_t const objectType;
+			uint64_t const objectId;
 			void *data;
 		};
 

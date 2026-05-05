@@ -31,6 +31,7 @@ static bool evaluateRecur(Expression **ptr, Environment *env) {
 			BuiltinResult result = callImplementations(
 									expr->op->nImplementations, 
 									expr->op->implementations,
+									GLOBALCONTEXT,
 									expr->nOperands,
 									expr->operands
 									);
@@ -73,6 +74,7 @@ static bool evaluateRecur(Expression **ptr, Environment *env) {
 			result = callImplementations(
 									func->nImplementations,
 									func->implementations,
+									GLOBALCONTEXT,
 									expr->nInputs,	
 									expr->inputs
 									);

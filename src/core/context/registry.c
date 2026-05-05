@@ -91,7 +91,7 @@ bool addOperationImplementation(Registry *registry, char symbol, BuiltinImplemen
 
 
 bool registerObject(
-		Registry *registry, char const *identifier,
+		Registry *registry, char const *identifier, char const *originModule,
 		void (*cleanup) (void *data), int32_t (*compare) (void const *ptr)
 ) {
 	if (registry->registeredObjects >= registry->objectsSize) {

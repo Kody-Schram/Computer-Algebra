@@ -5,11 +5,11 @@
 #include "config.h"
 #include "registry.h"
 
-typedef struct {
+struct Context {
     Environment *env;
     Config *config;
 	Registry *registry;
-} Context;
+};
 
 
 extern Context *GLOBALCONTEXT;

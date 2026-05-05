@@ -5,14 +5,14 @@
 
 
 BuiltinResult callImplementations(
-		uint32_t nImplementations, BuiltinImplementation *implementations,
-		uint32_t nArgs, Expression **exprs
+		uint32_t nImplementations, BuiltinImplementation const * const implementations,
+		Context const *ctx, uint32_t nArgs, Expression **exprs
 ) {
 	if (nImplementations == 0) return (BuiltinResult) {.type = BUILTIN_NEUTRAL, .output=NULL };
 
 	BuiltinResult result;
 	for (uint32_t i = 0; i < nImplementations; i ++) {
-		result = implementations[i](nArgs, exprs);
+		result = implementations[i](ctx, nArgs, exprs);
 		if (result.type == BUILTIN_NEUTRAL) continue;
 		break;
 	}
