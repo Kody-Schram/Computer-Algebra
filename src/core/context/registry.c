@@ -1,3 +1,4 @@
+#include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -50,11 +51,49 @@ bool registerOperation(Registry *registry, Operation *op) {
 }
 
 
-Operation *searchOperation(const Registry *registry, const char symbol) {
+const Operation *searchOperation(Registry const *registry, char symbol) {
 	for (unsigned int i = 0; i < registry->registeredOperations; i ++) {
 		if (registry->operations[i]->symbol == symbol) return registry->operations[i];
 	}
 
+	return NULL;
+}
+
+
+bool registerObject(
+		Registry *registry, Object *obj,
+		void (*cleanup) (void *data), int32_t (*compare) (void const *ptr)
+) {
+	if (registry->registeredObjects >= registry->objectsSize) {
+		registry->objectsSize ++;
+		ObjectRegistry *tmp = realloc(registry->objects, registry->objectsSize);
+		if (tmp == NULL) {
+			perror("Error registering object");
+			return false;
+		}
+
+		registry->objects = tmp;
+	}
+
+	ObjectRegistry reg = {
+		.obj = obj,
+		.cleanup = cleanup,
+		.compare = compare
+	};
+
+	registry->objects[registry->registeredObjects] = reg;
+	registry->registeredObjects ++;
+
+	return true;
+}
+
+
+static const Object *searchObjectID(const Registry *registry, uint32_t id) {
+	return NULL;
+}
+
+
+const Object *searchObject(const Registry *registry, const char *id) {
 	return NULL;
 }
 
