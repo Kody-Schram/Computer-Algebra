@@ -16,7 +16,7 @@ void printStream(FILE *stream) {
     fclose(stream);
 }
 
-#ifndef Release
+#ifndef NDEBUG 
 void Debug(const int fileStream, const void *stream, ...) {
     if (GLOBALCONTEXT->config->LOG_LEVEL < DEBUG) {
         if (fileStream) fclose((FILE *) stream);
@@ -38,7 +38,7 @@ void Debug(const int fileStream, const void *stream, ...) {
         vfprintf(GLOBALCONTEXT->config->LOG_STREAM, (char *) stream, args);
         fflush(GLOBALCONTEXT->config->LOG_STREAM);
         
-        va_end(args);
+        va_end(args); 
     }
 }
 #endif
