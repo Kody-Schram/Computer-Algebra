@@ -12,12 +12,12 @@ typedef struct Component Component;
 typedef struct Environment Environment;
 
 // Forward declaring types
+typedef struct Object Object;
 typedef enum OperationType OperationType;
 typedef struct Operation Operation;
 typedef enum ExpressionType ExpressionType;
 typedef struct Expression Expression;
 
-typedef struct FunctionCall FunctionCall;
 typedef enum FunctionType FunctionType;
 typedef enum BuiltinResultType BuiltinResultType;
 typedef struct BuiltinResult BuiltinResult;
@@ -34,15 +34,23 @@ enum ExpressionType {
     EXPRESSION_OPERATOR
 };
 
+typedef enum associativity {
+	ASSOC_LEFT,
+	ASSOC_RIGHT,
+	ASSOC_BOTH
+} associativity;
+
 
 struct Operation {
-    bool commutative;
-	bool rightAssociative;
-	bool leftAssociative;
-    char symbol;
 
-    uint32_t arity; // Number of required operands
+	associativity associativity;
+
+    bool commutative;
+    char symbol;
+	
 	uint8_t precedence;
+    uint32_t arity; // Number of required operands
+
 
 	uint32_t implementationSize;
     uint32_t nImplementations;
@@ -51,27 +59,35 @@ struct Operation {
 
 struct Expression {
     ExpressionType type;
-	uint32_t nOperands;
+
+	union {
+		uint32_t nOperands;
+		uint32_t nInputs;
+	};
 
     union {
+		// Operations
         struct {
             const Operation *op;
             struct Expression **operands;
         };
 
+		// Mathematical objects
+		struct {
+			const uint64_t objectType;
+			void *data;
+		};
+
+		// Function calls
+		struct {
+			struct Expression **inputs;
+			const Component *cmp;
+		};
+
         char *identifier;
         double value;
         int64_t integer;
-        FunctionCall *call;
     };
-};
-
-
-// Function related definitions
-struct FunctionCall {
-    char *identifier;
-    Expression **parameters;
-    uint32_t nParams;
 };
 
 
@@ -105,5 +121,23 @@ struct Function {
 			uint32_t nImplementations;
 			BuiltinImplementation *implementations;
 		};
+    };
+};
+
+
+enum ComponentType {
+    COMP_VARIABLE,
+    COMP_FUNCTION
+};
+
+struct Component {
+    ComponentType type;
+    char *identifier;
+    // Pack secondary hashing to have super fast comparisions when tokenizing
+    Component *next;
+
+    union {
+        Function *func;
+        Expression *value;
     };
 };

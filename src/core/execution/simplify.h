@@ -3,4 +3,4 @@
 #include "core/primitives/types.h"
 
 
-int simplify(Expression **expr);
+bool simplify(Expression **expr);

@@ -1,3 +1,4 @@
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -11,7 +12,7 @@
 #include "core/utils/type_utils.h"
 
 
-Token *createTokenOperator(const Operation *op) {
+Token *createOperatorToken(const Operation *op) {
     Debug(0, "running dedicated operator creation func\n");
     Token *token = calloc(1, sizeof(Token));
     if (token == NULL) {
@@ -20,11 +21,26 @@ Token *createTokenOperator(const Operation *op) {
     }
     
     token->type = TOKEN_OPERATOR;
-    token->next = NULL;
 	token->op = op;
     
 	Debug(0, "returning new operator token\n");
     return token;
+}
+
+
+Token *createFuncCallToken(const Component *cmp) {
+	Debug(0, "Creating function call token\n");
+	Token *token = calloc(1, sizeof(Token));
+	if (token == NULL) {
+		perror("Error creating token");
+		return NULL;
+	}
+
+	token->type = TOKEN_FUNC_CALL_PLACEHOLDER;
+	token->cmp = cmp;
+	Debug(0, "new token fn nparams %d\n", cmp->func->nParameters);
+
+	return token;
 }
 
 
@@ -49,7 +65,6 @@ Token *createToken(TokenType type, const char *value, int l) {
     
         memcpy(token->value, value, l);
         token->value[l] = '\0';
-        token->next = NULL;
         
         return token;
     } else {
@@ -59,7 +74,7 @@ Token *createToken(TokenType type, const char *value, int l) {
             return NULL;
         }
 
-        return createTokenOperator(op);
+        return createOperatorToken(op);
         
     }
 }
@@ -170,8 +185,9 @@ Expression *createExpression(const Token *token) {
             break;
             
         case TOKEN_FUNC_CALL:
-            expr->type = EXPRESSION_FUNCTION_CALL;
-            expr->call = token->call;
+			free(expr);
+			expr = token->finalizedCall;
+			Debug(0, "new expr fn nparams %d\n", expr->cmp->func->nParameters);
             break;
             
         default:
@@ -193,10 +209,10 @@ FILE *printRPN(const RPNList *list) {
 
     fprintf(stream, "RPN: ");
 
-    for (int i = 0; i < list->length; i ++) {
+    for (uint32_t i = 0; i < list->length; i ++) {
         if (list->items[i]->type != TOKEN_FUNC_CALL && list->items[i]->type != TOKEN_OPERATOR) fprintf(stream, "%s ", list->items[i]->value);
         else if (list->items[i]->type == TOKEN_OPERATOR) fprintf(stream, "%c ", list->items[i]->op->symbol);
-        else fprintf(stream, "%s ", list->items[i]->call->identifier);
+        else fprintf(stream, "%s(%d)", list->items[i]->finalizedCall->cmp->identifier, list->items[i]->finalizedCall->cmp->func->nParameters);
     }
 
     fprintf(stream, "\n");
@@ -211,7 +227,11 @@ void freeTokens(Token *head) {
     while (current != NULL) {
         Token *next = current->next;
         
-        if (current->type != TOKEN_FUNC_CALL && current->type != TOKEN_OPERATOR) {
+        if (current->type != TOKEN_FUNC_CALL_PLACEHOLDER 
+			&&current->type != TOKEN_FUNC_CALL 
+			&& current->type != TOKEN_OPERATOR) 
+		{
+
             Debug(0, "Freeing '%s'\n", current->value);
             free(current->value);
         }

@@ -1,3 +1,4 @@
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -98,20 +99,20 @@ static Operation *getOperator(const char *c) {
  * @param env Environment
  * @return int Length of largest component found or length of contiuguous valid identifier characters
  */
-static ComponentReturn getComponent(char *c) {
+static uint32_t getComponent(char *c, Component **out) {
     Debug(0, "Checking component.\n");
-    ComponentReturn result = {0, NULL};
     
     // If not valid character type for variable name, automatically skip check
-    if (!isalpha(c[0])) return result;
+    if (!isalpha(c[0])) return 0;
     Environment *env = GLOBALCONTEXT->env;
 
     // Gets length of valid identifer characters
-    int length = 0;
+	uint32_t result = 0;
+    uint32_t length = 0;
     while (isalnum(c[length]) || c[length] == '_') length ++;
 
     // Check left
-    for (int i = 0; i < length; i ++) {
+    for (uint32_t i = 0; i < length; i ++) {
         char temp = c[length - i];
         c[length - i] = '\0';
         Component *cmp = searchEnvironment(env, c);
@@ -119,27 +120,26 @@ static ComponentReturn getComponent(char *c) {
 
         if (cmp != NULL) {
             Debug(0, "found left side component: %s\n", cmp->identifier);
-            result.len = length - i;
-            result.cmp = cmp;
+			*out = cmp;
+			result = length - i;
         }
     }
 
-    if (result.len == length) return result;
-    
+	if (result == length) return result;
+
     // Check right
-    for (int i = 1; i < length; i ++) {
+    for (uint32_t i = 1; i < length; i ++) {
         char temp = c[length];
         c[length] = '\0';
         Component *cmp = searchEnvironment(env, c + i);
         c[length] = temp;
 
-        if (cmp != NULL && result.len < length - i) {
+        if (cmp != NULL && result < length - i) {
             Debug(0, "found right side component: %s, %d characters in.\n", cmp->identifier, i);
-            result.len = i;
+			*out = cmp;
+            result = i;
         }
     }
-
-    if (result.len == length) return result;
 
     for (int i = 1; i < length; i ++) {
         for (int end = i + 1; end < length; end ++) {
@@ -148,15 +148,15 @@ static ComponentReturn getComponent(char *c) {
             Component *cmp = searchEnvironment(env, c + i);
             c[end] = temp;
 
-            if (cmp != NULL && result.len < end - i) {
+            if (cmp != NULL && result < end - i) {
                 Debug(0, "found nested component: %s\n", cmp->identifier);
-                result.len = i;
-                return result;
+				*out = cmp;
+                result = i;
             }
         }
     }
 
-    if (result.len == 0) result.len = length;
+    if (result == 0) result = length;
     return result;
 }
 
@@ -171,7 +171,7 @@ Token *tokenize(char *buffer) {
 
     int matchLen;
     DelimiterReturn delim;
-    ComponentReturn cmp;
+    Component *cmp = NULL;
 	Operation *op = NULL;
 
     int spaceI = -1;
@@ -208,11 +208,11 @@ Token *tokenize(char *buffer) {
         }
         
         // Checks if builtin function and return the length if it is
-        else if ((cmp = getComponent(buffer + i)).len) {
+        else if ((matchLen = getComponent(buffer + i, &cmp))) {
             //if (cRet.cmp != NULL) printf("largest component found was %s\n", cRet.cmp->identifier);
-            end += cmp.len;
+            end += matchLen;
 
-            if (cmp.cmp == NULL || cmp.cmp->type == COMP_VARIABLE) type = TOKEN_IDENTIFIER;
+            if (cmp == NULL || cmp->type == COMP_VARIABLE) type = TOKEN_IDENTIFIER;
             else type = TOKEN_FUNC_CALL_PLACEHOLDER;
         }
         
@@ -246,9 +246,9 @@ Token *tokenize(char *buffer) {
         prevT = type;
 
         Token *newToken;
-		if (type == TOKEN_OPERATOR) newToken = createTokenOperator(op);
+		if (type == TOKEN_OPERATOR) newToken = createOperatorToken(op);
+		else if (type == TOKEN_FUNC_CALL_PLACEHOLDER) newToken = createFuncCallToken(cmp);
 		else newToken = createToken(type, buffer + i, end - i);
-		if (type == TOKEN_FUNC_CALL_PLACEHOLDER) newToken->nParams = cmp.cmp->func->nParameters;
 
 		Debug(0, "type = %d\n", newToken->type);
 		if (newToken == NULL) {

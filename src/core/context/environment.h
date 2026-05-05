@@ -10,22 +10,6 @@ typedef struct Environment Environment;
 
 
 // Environment related definitions
-enum ComponentType {
-    COMP_VARIABLE,
-    COMP_FUNCTION
-};
-
-struct Component {
-    ComponentType type;
-    char *identifier;
-    // Pack secondary hashing to have super fast comparisions when tokenizing
-    Component *next;
-
-    union {
-        Function *func;
-        Expression *value;
-    };
-};
 
 enum EnvironmentType {
     ENV_LIST,

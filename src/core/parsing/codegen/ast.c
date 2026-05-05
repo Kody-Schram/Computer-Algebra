@@ -1,9 +1,10 @@
+#include <stdint.h>
 #include <stdlib.h>
-#include <stdio.h>
 
 #include "ast.h"
 #include "core/context/context.h"
 #include "core/parsing/parser_types.h"
+#include "core/primitives/types.h"
 #include "core/utils/log.h"
 #include "core/parsing/parser_utils.h"
 #include "core/utils/type_utils.h"
@@ -16,10 +17,10 @@
  * @param head Start of Token linked list
  * @return int Length of linked list
  */
-static int getLinkedListLength(const Token *head) {
+static uint32_t getLinkedListLength(const Token *head) {
     const Token *cur = head;
 
-    int i = 0;
+    uint32_t i = 0;
     while (cur != NULL) {
         i ++;
         cur = cur->next;
@@ -37,16 +38,16 @@ static int getLinkedListLength(const Token *head) {
  * @param stack 
  * @return int Result
  */
-static int reallocStack(Stack *stack) {
+static bool reallocStack(Stack *stack) {
     stack->size *= 2;
     void **temp = realloc(stack->items, stack->size * sizeof(void*));
     if (temp == NULL) {
         printf("Error reallocating space for stack.\n");
-        return 1;
+        return true;
     }
 
     stack->items = temp;
-    return 0;
+    return false;
 }
 
 
@@ -56,7 +57,7 @@ RPNList *shuntingYard(Token *head) {
     Debug(0, "\nCreating RPN List.\n");
     Token *cur = head;
 
-    int size = getLinkedListLength(head);
+    uint32_t size = getLinkedListLength(head);
     Stack output = {
         size,
         0,
@@ -100,8 +101,7 @@ RPNList *shuntingYard(Token *head) {
 					) {
                     
                             // Right associativity for exponents
-					if (opToken->op->rightAssociative
-						&& !opToken->op->leftAssociative
+					if (opToken->op->associativity == ASSOC_RIGHT
 						&& opToken->op->precedence == cur->op->precedence) break;
                     
                     operators.entries --;
@@ -175,7 +175,7 @@ Expression *expressionFromRPN(RPNList *rpn) {
     if (expressions.items == NULL) return NULL;
     Expression *root = NULL;
 
-    for (int i = 0; i < rpn->length; i ++) {
+    for (uint32_t i = 0; i < rpn->length; i ++) {
         Expression *expr = createExpression(rpn->items[i]);
         if (expr == NULL) goto cleanup;
 
@@ -204,7 +204,7 @@ Expression *expressionFromRPN(RPNList *rpn) {
     return root;
 
     cleanup:
-        for (int i = 0; i < expressions.entries; i ++) {
+        for (uint32_t i = 0; i < expressions.entries; i ++) {
             freeExpression(expressions.items[i]);
         }
         free(expressions.items);

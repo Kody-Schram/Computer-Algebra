@@ -85,32 +85,32 @@ static int combineLikeTerms(Expression **ptr) {
 }
 
 
-static int simplifyRecur(Expression **ptr) {
-    if (ptr == NULL || *ptr == NULL) return 0;
-    if ((*ptr)->type != EXPRESSION_OPERATOR) return 1; // No simplification to be done on non-operators
+static bool simplifyRecur(Expression **ptr) {
+    if (ptr == NULL || *ptr == NULL) return true;
+    if ((*ptr)->type != EXPRESSION_OPERATOR) return true; // No simplification to be done on non-operators
     Expression *expr = *ptr;
     
     Debug(0, "Flattening operation\n");
-    if (expr->op->leftAssociative && expr->op->rightAssociative && !flattenOps(expr)) return 0;
+	if (expr->op->associativity == ASSOC_BOTH && !flattenOps(expr)) return false;
     Debug(0, "\nafter\n");
     Debug(1, printExpression(expr));
     
     for (int i = 0; i < expr->nOperands; i ++) {
-        if (!simplifyRecur(&(expr->operands[i]))) return 0;
+        if (!simplifyRecur(&(expr->operands[i]))) return false;
     }
     
     /* Debug(0, "Combining like terms\n");
     if (!combineLikeTerms(ptr)) return 0; */
 
-    return 1;
+    return true;
 }
 
 
-int simplify(Expression **expr) {
+bool simplify(Expression **expr) {
     Debug(0, "\nSimplifying\n");
     Debug(1, printExpression(*expr));
     
-    if (!simplifyRecur(expr)) return 0;
+    if (!simplifyRecur(expr)) return false;
     
-    return 1;
+    return true;
 }

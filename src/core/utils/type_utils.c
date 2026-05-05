@@ -1,3 +1,4 @@
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -65,38 +66,25 @@ Expression *deepCopyExpression(const Expression *expr) {
             break;
 
         case EXPRESSION_FUNCTION_CALL:
-            FunctionCall *call = malloc(sizeof(FunctionCall));
-            if (call == NULL) goto error;
-            
-            call->identifier = strdup(expr->call->identifier);
-            if (call->identifier == NULL) goto error;
-            
-            call->nParams = expr->call->nParams;
-            
-            call->parameters = malloc(sizeof(Expression *) * call->nParams);
-            if (call->parameters == NULL) {
-                free(call->identifier);
-                free(call);
-                
-                goto error;
-            }
+           	new->cmp = expr->cmp;
+            new->nInputs = expr->nInputs;
 
-            for (int i = 0; i < call->nParams; i ++) {
-                call->parameters[i] = deepCopyExpression(expr->call->parameters[i]);
-                if (call->parameters[i] == NULL) {
-                    free(call->identifier);
-                    for (int j = 0; j < i; j ++) {
-                        freeExpression(call->parameters[j]);
+            new->inputs = malloc(sizeof(Expression *) * expr->nInputs);
+            if (new->inputs == NULL) goto error;
+
+            for (uint32_t i = 0; i < expr->nInputs; i ++) {
+                new->inputs[i] = deepCopyExpression(expr->inputs[i]);
+                if (new->inputs[i] == NULL) {
+                    for (uint32_t j = 0; j < i; j ++) {
+                        freeExpression(new->inputs[j]);
                     }
                     
-                    free(call->parameters);
-                    free(call);
+                    free(new->inputs);
 
                     goto error;
                 }
             }
 
-            new->call = call;
             break;
 
         default:
@@ -142,19 +130,11 @@ static void printExpressionRec(const Expression *expr, int level, FILE *stream) 
             break;
 
         case EXPRESSION_FUNCTION_CALL: 
-            if (expr->call == NULL) {
-                Debug(0, "Function call was NULL\n");
-                return;
-            }
-            if (expr->call->identifier == NULL) {
-                Debug(0, "Call identifer was NULL\n");
-                return;
-            }
-            fprintf(stream, "<type: FUNC_CALL, value: '%s'>\n", expr->call->identifier);
+            fprintf(stream, "<type: FUNC_CALL, value: '%s'>\n", expr->cmp->identifier);
             for (int i = 0; i < level + 1; i++) fprintf(stream, "  ");
 
             fprintf(stream, "Parameters:\n");
-            for (int p = 0; p < expr->call->nParams; p ++) printExpressionRec(expr->call->parameters[p], level + 1, stream);
+            for (int p = 0; p < expr->nInputs; p ++) printExpressionRec(expr->inputs[p], level + 1, stream);
             break;
 
         default:
@@ -178,14 +158,10 @@ void freeExpression(Expression *expr) {
 
     switch (expr->type) {
         case EXPRESSION_FUNCTION_CALL:
-            if (expr->call != NULL) {
-                free(expr->call->identifier);
-                for (int i = 0; i < expr->call->nParams; i ++) {
-                    freeExpression(expr->call->parameters[i]);
-                }
-                free(expr->call->parameters);
-            }
-            free(expr->call);
+			for (uint32_t i = 0; i < expr->nInputs; i ++) {
+				freeExpression(expr->inputs[i]);
+			}
+			free(expr->inputs);
             break;
 
         case EXPRESSION_VARIABLE:
@@ -238,12 +214,12 @@ static void expressionToStringRecur(const Expression *expr, FILE *stream) {
             break;
 
         case EXPRESSION_FUNCTION_CALL:
-            fprintf(stream, "%s(", expr->call->identifier);
-            for (int i = 0; i < expr->call->nParams - 1; i ++) {
-                expressionToStringRecur(expr->call->parameters[i], stream);
+            fprintf(stream, "%s(", expr->cmp->identifier);
+            for (int i = 0; i < expr->nInputs - 1; i ++) {
+                expressionToStringRecur(expr->inputs[i], stream);
                 fprintf(stream, ", ");
             }
-            expressionToStringRecur(expr->call->parameters[expr->call->nParams - 1], stream);
+            expressionToStringRecur(expr->inputs[expr->nInputs - 1], stream);
             fprintf(stream, ")");
             break;
             

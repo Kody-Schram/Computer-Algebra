@@ -1,3 +1,4 @@
+#include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -61,12 +62,11 @@ static PARSER_RESULT parseFunctionCalls(Token **head) {
             Token *prev = NULL;
 
             Token *callToken = NULL;
-            FunctionCall *call = NULL;
 
             // Prepares list of parameters
-            int size = cur->nParams;
+            uint32_t size = callPlaceholder->cmp->func->nParameters;
 			Debug(0, "%d parameters\n", size);
-            int nParameters = 0;
+            uint32_t nParameters = 0;
             Expression **paramExprs = malloc(sizeof(Expression *) * size);
             if (paramExprs == NULL) goto error;
 
@@ -81,7 +81,7 @@ static PARSER_RESULT parseFunctionCalls(Token **head) {
             // Loops through function call
             while (cur != NULL && cur->type != TOKEN_RIGHT_PAREN) {
                 Token *paramHead = cur;
-                int depth = 0;
+                uint32_t depth = 0;
 
 				free(seperator->value);
 				free(seperator);
@@ -162,15 +162,14 @@ static PARSER_RESULT parseFunctionCalls(Token **head) {
             callToken->type = TOKEN_FUNC_CALL;
             callToken->next = seperator->next;
 
-            call = malloc(sizeof(FunctionCall));
-            if (call == NULL) goto error;
-            
-            call->identifier = strdup(callPlaceholder->value);
-            if (call->identifier == NULL) goto error;
-            call->nParams = nParameters;
-            call->parameters = paramExprs;
+            Expression *callExpr = dummyExpression(EXPRESSION_FUNCTION_CALL);
+			if (callExpr == NULL) goto error;
+			callExpr->nInputs = nParameters;
+			callExpr->inputs = paramExprs;
+			callExpr->cmp = callPlaceholder->cmp;
+			Debug(0, "end of call nparams %d\n", callExpr->cmp->func->nParameters);
 
-            callToken->call = call;
+            callToken->finalizedCall = callExpr;
 
 
             Debug(0, "Replacing old call token with new one.\n");
@@ -181,14 +180,13 @@ static PARSER_RESULT parseFunctionCalls(Token **head) {
 
             Debug(0, "Freeing old tokens.\n");
 
-			free(callPlaceholder->value);
             free(callPlaceholder);
 			
 			free(seperator->value);
 			free(seperator);
 
 
-            Debug(0, "Finished with handling call to: %s.\n", call->identifier);
+            Debug(0, "Finished with handling call to: %s.\n", callExpr->cmp->identifier);
             continue; 
 			
 			syntax_error:
@@ -200,8 +198,6 @@ static PARSER_RESULT parseFunctionCalls(Token **head) {
                 free(paramExprs);
                 freeTokens(cur);
                 freeTokens(callToken);
-                if (call != NULL) free(call->identifier);
-                free(call);
 
 				return PARSER_SYNTAX_ERROR;
 
@@ -215,8 +211,6 @@ static PARSER_RESULT parseFunctionCalls(Token **head) {
                 free(paramExprs);
                 freeTokens(cur);
                 freeTokens(callToken);
-                if (call != NULL) free(call->identifier);
-                free(call);
                 
                 return PARSER_ERROR;
         }
@@ -242,10 +236,10 @@ static PARSER_RESULT parseFunctionAssignment(Token *head) {
     Debug(0, "Parsing function definition.\n");
     FunctionComponent component = IDENTIFIER;
 
-    int size = DEFAULT_PARAMETERS_SIZE;
+    uint32_t size = DEFAULT_PARAMETERS_SIZE;
     char **parameters = malloc(sizeof(char *) * size);
     if (parameters == NULL) goto error;
-    int nParameters = 0;
+    uint32_t nParameters = 0;
     
     Token *cur = head;
     Token *asgn = NULL;
@@ -361,7 +355,7 @@ static PARSER_RESULT parseFunctionAssignment(Token *head) {
     free(rpn);
     free(identifier);
 
-	Debug(0, "Successfully parsed function assignment\n");
+	Debug(0, "Successfully parsed function assignment, %d\n", function->nParameters);
 
     return PARSER_SUCCESS;
 

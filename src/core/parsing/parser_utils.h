@@ -6,8 +6,10 @@
 #include "parser_types.h"
 
 
-Token *createTokenOperator(const Operation *op);
+Token *createOperatorToken(const Operation *op);
 
+
+Token *createFuncCallToken(const Component *cmp);
 
 /**
  * @brief Creates a Token object

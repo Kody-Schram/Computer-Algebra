@@ -5,15 +5,15 @@
 #include "types.h"
 
 
-Operation *createOperation(const char symbol, bool lA, bool rA, bool c, uint32_t operands);
+Operation *createOperation(const char symbol, associativity a, bool c, uint32_t operands);
 
 
 void freeOperation(Operation *op);
 
 
-int registerImplementation(
+int addOperationImplementation(
 		Operation *op,
-		BuiltinResult (*function) (uint32_t nArgs, Expression **exprs)
+		BuiltinImplementation fn
 );
 
 

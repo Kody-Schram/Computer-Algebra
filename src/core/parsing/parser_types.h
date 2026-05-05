@@ -28,11 +28,11 @@ enum TokenType {
 
 struct Token {
     TokenType type;
-	uint32_t nParams;
 
     union {
         char *value;
-        FunctionCall *call;
+		Expression *finalizedCall;
+		const Component *cmp;
         const Operation *op;
     };
 

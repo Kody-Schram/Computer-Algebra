@@ -210,7 +210,7 @@ BuiltinResult divide(uint32_t nArgs, Expression **operands) {
 }
 
 
-Operation *createOperation(const char symbol, bool lA, bool rA, bool c, uint32_t precedence) {
+Operation *createOperation(const char symbol, associativity a, bool c, uint32_t precedence) {
 	Operation *op = malloc(sizeof(Operation));
 	if (op == NULL) {
 		perror("Error creating operation");
@@ -218,8 +218,7 @@ Operation *createOperation(const char symbol, bool lA, bool rA, bool c, uint32_t
 	}
 
 	op->symbol = symbol;
-	op->leftAssociative = lA;
-	op->rightAssociative = rA;
+	op->associativity = a;
 	op->commutative = c;
 	op->arity = 2;
 	op->precedence = precedence;
@@ -261,7 +260,7 @@ int addOperationImplementation(Operation *op, BuiltinImplementation fn){
 
 
 int initPrimitiveOperations() {
-	Operation *addition = createOperation('+', true, true, true, 1);
+	Operation *addition = createOperation('+', ASSOC_BOTH, true, 1);
 	if (addition == NULL) goto error; 
 
 	if (!addOperationImplementation(addition, add)) {
@@ -272,7 +271,7 @@ int initPrimitiveOperations() {
     if (!registerOperation(GLOBALCONTEXT->registry, addition)) return 0;
     
     
-	Operation *multiplication = createOperation('*', true, true, true, 2);
+	Operation *multiplication = createOperation('*', ASSOC_BOTH, true, 2);
 	if (multiplication == NULL) goto error;
 
 	if (!addOperationImplementation(multiplication, multiply)) {
@@ -283,7 +282,7 @@ int initPrimitiveOperations() {
     if (!registerOperation(GLOBALCONTEXT->registry, multiplication)) return 0;
     
     
-	Operation *exponentiation = createOperation('^', false, true, false, 3);
+	Operation *exponentiation = createOperation('^', ASSOC_RIGHT, false, 3);
 	if (exponentiation == NULL) goto error;
     
 	if (!addOperationImplementation(exponentiation, exponent)) {
@@ -294,7 +293,7 @@ int initPrimitiveOperations() {
     if (!registerOperation(GLOBALCONTEXT->registry, exponentiation)) return 0;
     
     
-   	Operation *division = createOperation('/', true, false, false, 2);
+   	Operation *division = createOperation('/', ASSOC_LEFT, false, 2);
 	if (division == NULL) goto error;
 
 	if (!addOperationImplementation(division, divide)) {
@@ -305,7 +304,7 @@ int initPrimitiveOperations() {
     if (!registerOperation(GLOBALCONTEXT->registry, division)) return 0;
     
     
-	Operation *subtraction = createOperation('-', true, false, false, 1);
+	Operation *subtraction = createOperation('-', ASSOC_LEFT, false, 1);
 	if (subtraction == NULL) goto error;
 
 	if (!addOperationImplementation(subtraction, subtract)) {
