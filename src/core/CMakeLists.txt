@@ -8,14 +8,15 @@ add_library(Core STATIC
     context/environment.c
 	context/registry.c
     
-    parsing/parser.c
     parsing/parser_utils.c
+    parsing/parser.c
     
     parsing/codegen/ast.c
     parsing/codegen/normalizer.c
     parsing/codegen/tokenizer.c
     
 	execution/execution_utils.c
+	execution/executor.c
     execution/simplify.c
     execution/evaluate.c
     

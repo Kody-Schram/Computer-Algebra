@@ -13,8 +13,7 @@
 #include "core/primitives/operations.h"
 
 #include "core/parsing/parser.h"
-#include "core/execution/simplify.h"
-#include "core/execution/evaluate.h"
+#include "core/execution/executor.h"
 
 
 static int handleKeywords(char *buffer) {
@@ -65,20 +64,12 @@ static int process(char *buffer) {
 	}
 
 	if (expr == NULL) return 1;
-    
-    if (!simplify(&expr)) {
-        freeExpression(expr);
-        return 1;
-    }
+    char *out = NULL;
 
-    if (!evaluate(&expr)) {
-        freeExpression(expr);
-        return 1;
-    }
+	if (!execute(&expr, &out)) return 1;
 
-    char *str = expressionToString(expr);
-    if (str != NULL) printf("%s\n\n", str);
-    free(str);
+    printf("%s\n\n", out);
+	free(out);
 
     if (GLOBALCONTEXT->config->OUTPUTS > 0) {
         if (!updateOutputVariables(GLOBALCONTEXT->env, expr)) return 0;
