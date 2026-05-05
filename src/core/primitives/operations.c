@@ -6,12 +6,12 @@
 
 #include "operations.h"
 #include "core/context/context.h"
+#include "core/context/registry.h"
 #include "core/primitives/types.h"
 #include "core/utils/type_utils.h"
 
 
 #define DEFAULT_IMPLEMENTATIONS 2
-
 
 BuiltinResult add(uint32_t nArgs, Expression **operands) {
     BuiltinResult result = {.type = BUILTIN_NEUTRAL, NULL};
@@ -210,11 +210,11 @@ BuiltinResult divide(uint32_t nArgs, Expression **operands) {
 }
 
 
-Operation *createOperation(const char symbol, associativity a, bool c, uint32_t precedence) {
+bool createOperation(const char symbol, associativity a, bool c, uint32_t precedence) {
 	Operation *op = malloc(sizeof(Operation));
 	if (op == NULL) {
 		perror("Error creating operation");
-		return NULL;
+		return false;
 	}
 
 	op->symbol = symbol;
@@ -229,10 +229,10 @@ Operation *createOperation(const char symbol, associativity a, bool c, uint32_t 
 	if (op == NULL) {
 		perror("Error creating operation");
 		free(op);
-		return NULL;
+		return false;
 	}
 
-	return op;
+	return registerOperation(GLOBALCONTEXT->registry, op);
 }
 
 
@@ -242,78 +242,13 @@ void freeOperation(Operation *op) {
 }
 
 
-int addOperationImplementation(Operation *op, BuiltinImplementation fn){
-	if (op->nImplementations >= op->implementationSize) { 
-		op->implementationSize += DEFAULT_IMPLEMENTATIONS;
-		BuiltinImplementation *temp = realloc(op->implementations, sizeof(BuiltinImplementation) * op->implementationSize);
-		if (temp == NULL) {
-			perror("Error registering operation implementation");
-			return 0;
-		}
-
-		op->implementations = temp;
-	}
-	op->implementations[op->nImplementations] = fn;
-	op->nImplementations ++;
-	return 1;
-}
-
-
 int initPrimitiveOperations() {
-	Operation *addition = createOperation('+', ASSOC_BOTH, true, 1);
-	if (addition == NULL) goto error; 
+	if (!createOperation('+', ASSOC_BOTH, true, 1)) goto error;
+	if (!createOperation('*', ASSOC_BOTH, true, 2)) goto error;
+	if (!createOperation('^', ASSOC_RIGHT, false, 3)) goto error;
+   	if (!createOperation('/', ASSOC_LEFT, false, 2)) goto error;
+	if (!createOperation('-', ASSOC_LEFT, false, 1)) goto error;
 
-	if (!addOperationImplementation(addition, add)) {
-		freeOperation(addition);
-		goto error;
-	}
-
-    if (!registerOperation(GLOBALCONTEXT->registry, addition)) return 0;
-    
-    
-	Operation *multiplication = createOperation('*', ASSOC_BOTH, true, 2);
-	if (multiplication == NULL) goto error;
-
-	if (!addOperationImplementation(multiplication, multiply)) {
-		freeOperation(multiplication);
-		goto error;
-	}
-
-    if (!registerOperation(GLOBALCONTEXT->registry, multiplication)) return 0;
-    
-    
-	Operation *exponentiation = createOperation('^', ASSOC_RIGHT, false, 3);
-	if (exponentiation == NULL) goto error;
-    
-	if (!addOperationImplementation(exponentiation, exponent)) {
-		freeOperation(exponentiation);
-		goto error;
-	}
-
-    if (!registerOperation(GLOBALCONTEXT->registry, exponentiation)) return 0;
-    
-    
-   	Operation *division = createOperation('/', ASSOC_LEFT, false, 2);
-	if (division == NULL) goto error;
-
-	if (!addOperationImplementation(division, divide)) {
-		freeOperation(division);
-		goto error;
-	}
-
-    if (!registerOperation(GLOBALCONTEXT->registry, division)) return 0;
-    
-    
-	Operation *subtraction = createOperation('-', ASSOC_LEFT, false, 1);
-	if (subtraction == NULL) goto error;
-
-	if (!addOperationImplementation(subtraction, subtract)) {
-		freeOperation(subtraction);
-		goto error;
-	}
-    
-    if (!registerOperation(GLOBALCONTEXT->registry, subtraction)) return 0;
-    
     return 1;
     
     error:

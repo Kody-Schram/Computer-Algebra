@@ -1,12 +1,14 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "registry.h"
 #include "core/primitives/types.h"
 
 // +, -, *, /, ^
 #define DEFAULT_OPERATIONS 5
+
 
 Registry *initRegistry() {
 	Registry *registry = NULL;
@@ -51,7 +53,7 @@ bool registerOperation(Registry *registry, Operation *op) {
 }
 
 
-const Operation *searchOperation(Registry const *registry, char symbol) {
+Operation *_searchOperation(Registry const *registry, char symbol) {
 	for (unsigned int i = 0; i < registry->registeredOperations; i ++) {
 		if (registry->operations[i]->symbol == symbol) return registry->operations[i];
 	}
@@ -60,8 +62,36 @@ const Operation *searchOperation(Registry const *registry, char symbol) {
 }
 
 
+Operation const *searchOperation(Registry const *registry, char symbol) {
+	return _searchOperation(registry, symbol);
+}
+
+
+bool addOperationImplementation(Registry *registry, char symbol, BuiltinImplementation fn){
+	Operation *op = _searchOperation(registry, symbol);
+	if (op == NULL) {
+		perror("Error adding operation implementation");
+		return false;
+	}
+
+	if (op->nImplementations >= op->implementationSize) { 
+		op->implementationSize ++;
+		BuiltinImplementation *temp = realloc(op->implementations, sizeof(BuiltinImplementation) * op->implementationSize);
+		if (temp == NULL) {
+			perror("Error registering operation implementation");
+			return 0;
+		}
+
+		op->implementations = temp;
+	}
+	op->implementations[op->nImplementations] = fn;
+	op->nImplementations ++;
+	return 1;
+}
+
+
 bool registerObject(
-		Registry *registry, Object *obj,
+		Registry *registry, char const *identifier,
 		void (*cleanup) (void *data), int32_t (*compare) (void const *ptr)
 ) {
 	if (registry->registeredObjects >= registry->objectsSize) {
@@ -76,7 +106,7 @@ bool registerObject(
 	}
 
 	ObjectRegistry reg = {
-		.obj = obj,
+		.identifier	= strdup(identifier),
 		.cleanup = cleanup,
 		.compare = compare
 	};

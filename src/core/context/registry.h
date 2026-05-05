@@ -5,7 +5,7 @@
 
 
 typedef struct ObjectRegistry {
-	Object *obj;
+	char *identifier;
 	void (*cleanup) (void *data);
 	int32_t (*compare) (void const *ptr);
 } ObjectRegistry;
@@ -26,19 +26,16 @@ typedef struct Registry {
 Registry *initRegistry();
 
 
-bool registerOperation(Registry *registry, Operation *op);
-
-
 Operation const *searchOperation(Registry const *registry, char symbol);
 
 
+bool registerOperation(Registry *registry, Operation *op);
+
+
 bool registerObject(
-		Registry *registry, Object *obj,
+		Registry *registry, char const *identifier,
 		void (*cleanup) (void *data), int32_t (*compare) (void const *ptr)
 );
-
-
-Object const *searchObject(Registry const *registry, char const *id);
 
 
 void freeRegistry(Registry *registry);
