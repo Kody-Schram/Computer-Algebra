@@ -26,8 +26,8 @@ typedef enum {
 } FunctionComponent;
 
 
-static bool containsFunctionAssignment(Token *head) {
-    Token *cur = head;
+static bool containsFunctionAssignment(Token const *head) {
+    Token const *cur = head;
     while (cur != NULL) {
         if (cur->type == TOKEN_MAPPING) {
             Debug(0, "Function mapping found.\n");
@@ -40,8 +40,8 @@ static bool containsFunctionAssignment(Token *head) {
 }
 
 
-static int containsAssignment(Token *head) {
-    Token *cur = head;
+static int containsAssignment(Token const *head) {
+    Token const *cur = head;
     while (cur != NULL) {
         if (cur->type == TOKEN_ASSIGNMENT) return true;
         cur = cur->next;

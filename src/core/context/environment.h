@@ -31,13 +31,13 @@ struct Environment {
 Environment *createEnvironment(EnvironmentType type);
 
 
-bool bindComponent(Environment *env, ComponentType type, const char *identifier, const void *data);
+bool bindComponent(Environment *env, ComponentType type, char const *identifier, void const *data);
 
 
-Component *searchEnvironment(const Environment *env, const char *identifier);
+Component *searchEnvironment(Environment const *env, char const *identifier);
 
 
-FILE *printEnvironment(const Environment *env);
+FILE *printEnvironment(Environment const *env);
 
 
 void freeEnvironment(Environment *env);

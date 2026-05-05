@@ -41,7 +41,7 @@ Environment *createEnvironment(EnvironmentType type) {
 }
 
 
-bool bindComponent(Environment *env, ComponentType type, const char *identifier, const void *data) {
+bool bindComponent(Environment *env, ComponentType type, char const *identifier, void const *data) {
     Component *new = calloc(1, sizeof(Component));
     if (new == NULL) {
         perror("Error in binding component");
@@ -87,7 +87,7 @@ bool bindComponent(Environment *env, ComponentType type, const char *identifier,
 }
 
 
-Component *searchEnvironment(const Environment *env, const char *identifier) {
+Component *searchEnvironment(Environment const *env, char const *identifier) {
     if (identifier == NULL) return NULL;
     //printf("searching environment for '%s'\n", identifier);
     
@@ -111,7 +111,7 @@ Component *searchEnvironment(const Environment *env, const char *identifier) {
 }
 
 
-static void printLinkedCmpList(FILE *stream, const Component *cmp) {
+static void printLinkedCmpList(FILE *stream, Component const *cmp) {
     while (cmp != NULL) {
         switch (cmp->type) {
             case COMP_FUNCTION:
@@ -144,7 +144,7 @@ static void printLinkedCmpList(FILE *stream, const Component *cmp) {
 }
 
 
-FILE *printEnvironment(const Environment *env) {
+FILE *printEnvironment(Environment const *env) {
     FILE *stream = tmpfile();
     if (stream == NULL || env == NULL) return NULL;
     

@@ -8,16 +8,16 @@
 Expression *dummyExpression(ExpressionType type);
 
 
-Expression *deepCopyExpression(const Expression *expr);
+Expression *deepCopyExpression(Expression const *expr);
 
 
-FILE *printExpression(const Expression *expr);
+FILE *printExpression(Expression const *expr);
 
 
 void freeExpression(Expression *expr);
 
 
-char *expressionToString(const Expression *expr);
+char *expressionToString(Expression const *expr);
 
 
 void freeFunction(Function *func);

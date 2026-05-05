@@ -6,10 +6,10 @@
 #include "parser_types.h"
 
 
-Token *createOperatorToken(const Operation *op);
+Token *createOperatorToken(Operation const *op);
 
 
-Token *createFuncCallToken(const Component *cmp);
+Token *createFuncCallToken(Component const *cmp);
 
 /**
  * @brief Creates a Token object
@@ -22,20 +22,20 @@ Token *createFuncCallToken(const Component *cmp);
  * @param l Length of the string value
  * @return Token* 
  */
-Token *createToken(TokenType type, const char *value, int l);
+Token *createToken(TokenType type, char const *value, int l);
 
 /**
  * @brief Prints linked token list in a easy to read format
  * 
  * @param head Head of linked list
  */
-FILE *printTokens(const Token *head);
+FILE *printTokens(Token const *head);
 
 
-Expression *createExpression(const Token *token);
+Expression *createExpression(Token const *token);
 
 
-FILE *printRPN(const RPNList *list);
+FILE *printRPN(RPNList const *list);
 
 /**
  * @brief Frees the memory of old tokens

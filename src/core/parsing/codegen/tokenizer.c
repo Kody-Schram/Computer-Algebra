@@ -30,7 +30,7 @@ static const DelimiterMapping DEFAULT_MAPPING[] = {
 };
 
 
-static const int N_MAPPINGS = 5;
+#define N_MAPPINGS 5
 
 
 typedef struct {
@@ -45,7 +45,7 @@ typedef struct {
 } ComponentReturn;
 
 
-static DelimiterReturn getDelimiter(const char *c) {
+static DelimiterReturn getDelimiter(char const *c) {
     DelimiterReturn result = {.type = TOKEN_SEPARATOR, .len=0};
     if (isalnum(c[0])) return result;
     
@@ -68,7 +68,7 @@ static DelimiterReturn getDelimiter(const char *c) {
  * @param c Buffer
  * @return int Length of found number
  */
-static int getNumber(const char *c) {
+static int getNumber(char const *c) {
     int i = 0;
     if (!isdigit(c[0]) && c[0] != '.') return 0;
 	
@@ -79,13 +79,13 @@ static int getNumber(const char *c) {
 }
 
 
-static Operation *getOperator(const char *c) {
+static Operation const *getOperator(char const *c) {
     Debug(0, "Getting operator component, '%c'\n", (char) c[0]);
     if (isalnum(c[0])) return NULL;
     
     Debug(0, "getting cmp\n");
     
-    Operation *op = searchOperation(GLOBALCONTEXT->registry, (char) c[0]);
+    Operation const *op = searchOperation(GLOBALCONTEXT->registry, (char) c[0]);
     if (op == NULL) return NULL;
     
     return op;
@@ -99,7 +99,7 @@ static Operation *getOperator(const char *c) {
  * @param env Environment
  * @return int Length of largest component found or length of contiuguous valid identifier characters
  */
-static uint32_t getComponent(char *c, Component **out) {
+static uint32_t getComponent(char *c, Component const **out) {
     Debug(0, "Checking component.\n");
     
     // If not valid character type for variable name, automatically skip check
@@ -171,8 +171,8 @@ Token *tokenize(char *buffer) {
 
     int matchLen;
     DelimiterReturn delim;
-    Component *cmp = NULL;
-	Operation *op = NULL;
+    Component const *cmp = NULL;
+	Operation const *op = NULL;
 
     int spaceI = -1;
     TokenType prevT = -1;

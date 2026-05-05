@@ -9,12 +9,13 @@
 
 typedef enum ComponentType ComponentType;
 typedef struct Component Component;
-typedef struct Environment Environment;
 
 // Forward declaring types
 typedef struct Object Object;
+
 typedef enum OperationType OperationType;
 typedef struct Operation Operation;
+
 typedef enum ExpressionType ExpressionType;
 typedef struct Expression Expression;
 
@@ -23,7 +24,7 @@ typedef enum BuiltinResultType BuiltinResultType;
 typedef struct BuiltinResult BuiltinResult;
 typedef struct Function Function;
 
-typedef BuiltinResult (*BuiltinImplementation) (uint32_t nArgs, Expression **exprs);
+typedef BuiltinResult (*BuiltinImplementation)(uint32_t nArgs, Expression **exprs);
 
 // Expression related definitions
 enum ExpressionType {
@@ -68,20 +69,20 @@ struct Expression {
     union {
 		// Operations
         struct {
-            const Operation *op;
+            Operation const *op;
             struct Expression **operands;
         };
 
 		// Mathematical objects
 		struct {
-			const uint64_t objectType;
+			uint64_t const objectType;
 			void *data;
 		};
 
 		// Function calls
 		struct {
 			struct Expression **inputs;
-			const Component *cmp;
+			Component const *cmp;
 		};
 
         char *identifier;

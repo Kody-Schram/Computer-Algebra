@@ -12,7 +12,7 @@
 #include "core/utils/type_utils.h"
 
 
-Token *createOperatorToken(const Operation *op) {
+Token *createOperatorToken(Operation const *op) {
     Debug(0, "running dedicated operator creation func\n");
     Token *token = calloc(1, sizeof(Token));
     if (token == NULL) {
@@ -28,7 +28,7 @@ Token *createOperatorToken(const Operation *op) {
 }
 
 
-Token *createFuncCallToken(const Component *cmp) {
+Token *createFuncCallToken(Component const *cmp) {
 	Debug(0, "Creating function call token\n");
 	Token *token = calloc(1, sizeof(Token));
 	if (token == NULL) {
@@ -44,7 +44,7 @@ Token *createFuncCallToken(const Component *cmp) {
 }
 
 
-Token *createToken(TokenType type, const char *value, int l) {
+Token *createToken(TokenType type, char const *value, int l) {
     if (type != TOKEN_OPERATOR) {
         // Allocates new token
         Token *token = (Token*) calloc(1, sizeof(Token));
@@ -69,7 +69,7 @@ Token *createToken(TokenType type, const char *value, int l) {
         return token;
     } else {
         Debug(0, "Creating operator token, %c\n", value[0]);
-		Operation *op = searchOperation(GLOBALCONTEXT->registry, value[0]);
+		const Operation *op = searchOperation(GLOBALCONTEXT->registry, value[0]);
         if (op == NULL) {
             return NULL;
         }
@@ -80,7 +80,7 @@ Token *createToken(TokenType type, const char *value, int l) {
 }
 
 
-static void printToken(const Token *token, FILE *stream) {
+static void printToken(Token const *token, FILE *stream) {
     const char *type = NULL;
 
         switch(token->type) {
@@ -133,11 +133,11 @@ static void printToken(const Token *token, FILE *stream) {
 }
 
 
-FILE *printTokens(const Token *head) {
+FILE *printTokens(Token const *head) {
     FILE *stream = tmpfile();
     if (stream == NULL) return NULL;
 
-    const Token *cur = head;
+    Token const *cur = head;
 
     fprintf(stream, "\n");
     while (cur != NULL) {
@@ -150,7 +150,7 @@ FILE *printTokens(const Token *head) {
 }
 
 
-Expression *createExpression(const Token *token) {
+Expression *createExpression(Token const *token) {
     Expression *expr = calloc(1, sizeof(Expression));
     if (expr == NULL) goto error;
 
@@ -203,7 +203,7 @@ Expression *createExpression(const Token *token) {
 }
 
 
-FILE *printRPN(const RPNList *list) {
+FILE *printRPN(RPNList const *list) {
     FILE *stream = tmpfile();
     if (stream == NULL) return NULL;
 
