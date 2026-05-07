@@ -7,8 +7,8 @@
 typedef struct ObjectRegistry {
 	char *identifier;
 	char *originModule;
-	void (*cleanup) (void *data);
-	int32_t (*compare) (void const *ptr);
+	void (*cleanup)(void *data);
+	int32_t (*compare)(void const *a, void const *b);
 } ObjectRegistry;
 
 

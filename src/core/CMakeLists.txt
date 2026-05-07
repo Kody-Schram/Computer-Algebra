@@ -21,6 +21,8 @@ add_library(Core STATIC
     execution/evaluate.c
     
     primitives/operations.c
+	primitives/objects.c
+	primitives/integers.c
 )
 
 target_link_libraries(Core PRIVATE ${YAML_LIBRARIES})
