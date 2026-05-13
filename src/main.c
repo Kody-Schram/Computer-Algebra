@@ -134,7 +134,7 @@ int main(int argc, char *argv[]) {
     }
     
     Debug(0, "Project name: " PROJECT_NAME "\n");
-    
+
     if (!initPrimitiveOperations()) {
         freeContext(GLOBALCONTEXT);
         return 1;

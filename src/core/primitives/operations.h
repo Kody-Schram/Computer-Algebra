@@ -5,10 +5,10 @@
 #include "types.h"
 
 
-Operation *createOperation(const char symbol, associativity a, bool c, uint32_t operands);
+bool createOperation(Operation *out, const char symbol, Associativity a, bool c, uint32_t operands);
 
 
 void freeOperation(Operation *op);
 
 
-int initPrimitiveOperations();
+bool initPrimitiveOperations();

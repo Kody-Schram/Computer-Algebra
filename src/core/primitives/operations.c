@@ -8,6 +8,7 @@
 #include "core/context/context.h"
 #include "core/context/registry.h"
 #include "core/primitives/types.h"
+#include "core/utils/log.h"
 #include "core/utils/type_utils.h"
 
 
@@ -210,29 +211,25 @@ BuiltinResult divide(uint32_t nArgs, Expression **operands) {
 }
 
 
-Operation *createOperation(const char symbol, associativity a, bool c, uint32_t precedence) {
-	Operation *op = malloc(sizeof(Operation));
-	if (op == NULL) {
+bool createOperation(Operation *out, const char symbol, Associativity a, bool c, uint32_t precedence) {
+	BuiltinImplementation *implementations = malloc(sizeof(BuiltinImplementation) * DEFAULT_IMPLEMENTATIONS);
+	if (implementations == NULL) {
 		perror("Error creating operation");
-		return NULL;
+		return false;
 	}
 
-	op->symbol = symbol;
-	op->associativity = a;
-	op->commutative = c;
-	op->arity = 2;
-	op->precedence = precedence;
-
-	op->implementationSize = DEFAULT_IMPLEMENTATIONS;
-	op->nImplementations = 0;
-	op->implementations = malloc(sizeof(BuiltinImplementation) * op->implementationSize);
-	if (op == NULL) {
-		perror("Error creating operation");
-		free(op);
-		return NULL;
-	}
+	(*out) = (Operation) {
+		.symbol = symbol,
+		.associativity = a,
+		.commutative = c,
+		.arity = 2,
+		.precedence = precedence,
+		.implementationSize = DEFAULT_IMPLEMENTATIONS,
+		.nImplementations = 0,
+		.implementations = implementations
+	};
 	
-	return op;
+	return true;
 }
 
 
@@ -242,30 +239,32 @@ void freeOperation(Operation *op) {
 }
 
 
-int initPrimitiveOperations() {
-	Operation *add = createOperation('+', ASSOC_BOTH, true, 1); 
-	if (add == NULL) goto error;
-	registerOperation(GLOBALCONTEXT->registry, add);
+bool initPrimitiveOperations() {
+	Debug(0, "initing primitive ops\n");
+	Operation add;
+	if (!createOperation(&add, '+', ASSOC_BOTH, true, 1)) return false;
+	if (!registerOperation(GLOBALCONTEXT->registry, add)) return false;
 
-	Operation *mult = createOperation('*', ASSOC_BOTH, true, 2); 
-	if (mult == NULL) goto error;
-	registerOperation(GLOBALCONTEXT->registry, mult);
+	Debug(0, "mult\n");
+	Operation mult;
+	if (!createOperation(&mult, '*', ASSOC_BOTH, true, 2)) return false;
+	if (!registerOperation(GLOBALCONTEXT->registry, mult)) return false;
 
-	Operation *expo = createOperation('^', ASSOC_RIGHT, false, 3); 
-	if (expo == NULL) goto error;
-	registerOperation(GLOBALCONTEXT->registry, expo);
+	Debug(0, "expo\n");
+	Operation expo;
+	if (!createOperation(&expo, '^', ASSOC_RIGHT, false, 3)) return false;
+	if (!registerOperation(GLOBALCONTEXT->registry, expo)) return false;
 
-   	Operation *div = createOperation('/', ASSOC_LEFT, false, 2); 
-	if (div == NULL) goto error;
-	registerOperation(GLOBALCONTEXT->registry, div);
+	Debug(0, "div\n");
+   	Operation div;
+	if (!createOperation(&div, '/', ASSOC_LEFT, false, 2)) return false;
+	if (!registerOperation(GLOBALCONTEXT->registry, div)) return false;
 
-	Operation *sub = createOperation('-', ASSOC_LEFT, false, 1); 
-	if (sub == NULL) goto error;
-	registerOperation(GLOBALCONTEXT->registry, sub);
+	Debug(0, "sub\n");
+	Operation sub;
+	if (!createOperation(&sub, '-', ASSOC_LEFT, false, 1)) return false;
+	if (!registerOperation(GLOBALCONTEXT->registry, sub)) return false;
 
-    return 1;
-    
-    error:
-        perror("Error initializing axioms");
-        return 0;
+	Debug(0, "return from op init\n");
+    return true;
 }

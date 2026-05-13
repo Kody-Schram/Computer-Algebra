@@ -39,16 +39,16 @@ enum ExpressionType {
     EXPRESSION_OPERATOR
 };
 
-typedef enum associativity {
+typedef enum Associativity {
 	ASSOC_LEFT,
 	ASSOC_RIGHT,
 	ASSOC_BOTH
-} associativity;
+} Associativity;
 
 
 struct Operation {
 
-	associativity associativity;
+	Associativity associativity;
 
     bool commutative;
     char symbol;

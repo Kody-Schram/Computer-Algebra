@@ -11,15 +11,16 @@
 
 
 Registry *initRegistry() {
+	printf("Initializing registry\n");
 	Registry *registry = NULL;
-	Operation **operations = NULL;
+	Operation *operations = NULL;
 
 	registry = malloc(sizeof(Registry));
 	if (registry == NULL) goto error;
 
 	registry->operationsSize = DEFAULT_OPERATIONS;
 	registry->registeredOperations = 0;
-	operations = malloc(sizeof(Operation *) * DEFAULT_OPERATIONS); 
+	operations = malloc(sizeof(Operation) * DEFAULT_OPERATIONS); 
 	if (operations == NULL) goto error;
 	registry->operations = operations;
 
@@ -34,10 +35,10 @@ Registry *initRegistry() {
 }
 
 
-bool registerOperation(Registry *registry, Operation *op) {
+bool registerOperation(Registry *registry, Operation op) {
 	if (registry->registeredOperations >= registry->operationsSize) {
 		registry->operationsSize ++;
-		Operation **tmp = realloc(registry->operations, registry->operationsSize);
+		Operation *tmp = realloc(registry->operations, registry->operationsSize);
 		if (tmp == NULL) {
 			perror("Error registering operation");
 			return false;
@@ -49,13 +50,15 @@ bool registerOperation(Registry *registry, Operation *op) {
 	registry->operations[registry->registeredOperations] = op;
 	registry->registeredOperations ++;
 
+	printf("registered operation\n");
+
 	return true;
 }
 
 
-Operation *_searchOperation(Registry const *registry, char symbol) {
+static Operation *_searchOperation(Registry const *registry, char symbol) {
 	for (unsigned int i = 0; i < registry->registeredOperations; i ++) {
-		if (registry->operations[i]->symbol == symbol) return registry->operations[i];
+		if (registry->operations[i].symbol == symbol) return &registry->operations[i];
 	}
 
 	return NULL;
@@ -90,13 +93,10 @@ bool addOperationImplementation(Registry *registry, char symbol, BuiltinImplemen
 }
 
 
-bool registerObject(
-		Registry *registry, char const *identifier, char const *originModule,
-		void (*cleanup) (void *data), int32_t (*compare) (void const *ptr)
-) {
+bool registerObject(Registry *registry, Object obj) {
 	if (registry->registeredObjects >= registry->objectsSize) {
 		registry->objectsSize ++;
-		ObjectRegistry *tmp = realloc(registry->objects, registry->objectsSize);
+		Object *tmp = realloc(registry->objects, registry->objectsSize);
 		if (tmp == NULL) {
 			perror("Error registering object");
 			return false;
@@ -105,13 +105,7 @@ bool registerObject(
 		registry->objects = tmp;
 	}
 
-	ObjectRegistry reg = {
-		.identifier	= strdup(identifier),
-		.cleanup = cleanup,
-		.compare = compare
-	};
-
-	registry->objects[registry->registeredObjects] = reg;
+	registry->objects[registry->registeredObjects] = obj;
 	registry->registeredObjects ++;
 
 	return true;
@@ -129,10 +123,7 @@ const Object *searchObject(const Registry *registry, const char *id) {
 
 
 void freeRegistry(Registry *registry) {
-	for (unsigned int i = 0; i < registry->registeredOperations; i ++) {
-		free(registry->operations[i]->implementations);
-		free(registry->operations[i]);
-	}
+	free(registry->objects);
 	free(registry->operations);
 
 	free(registry);

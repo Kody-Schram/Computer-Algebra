@@ -5,8 +5,9 @@
 
 
 bool createObject(
-		char const identifier[REFERENCE_LENGTH], char const originModule[REFERENCE_LENGTH],
-		void (*cleanup)(void *data), uint32_t (*compare)(void const *a, void const *b)
+		Object *out,
+		char const *identifier, char const *originModule,
+		void (*cleanup)(void *data), int32_t (*compare)(void const *a, void const *b)
 ); 
 
 
