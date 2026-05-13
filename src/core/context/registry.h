@@ -15,7 +15,6 @@ typedef struct Registry {
 } Registry;
 
 
-
 Registry *initRegistry();
 
 
@@ -28,4 +27,10 @@ bool registerOperation(Registry *registry, Operation op);
 bool registerObject(Registry *registry, Object obj);
 
 
+Object const *searchObject(Registry const *registry, uint64_t obj_id);
+
+
 void freeRegistry(Registry *registry);
+
+
+bool initPrimitives(Registry *registry);

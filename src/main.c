@@ -10,7 +10,6 @@
 #include "core/utils/input.h"
 
 #include "core/utils/type_utils.h"
-#include "core/primitives/operations.h"
 
 #include "core/parsing/parser.h"
 #include "core/execution/executor.h"
@@ -19,7 +18,8 @@
 static int handleKeywords(char *buffer) {
     for (int i = 0; i < sizeof(GLOBALCONTEXT->config->MAPPING) / sizeof(KeywordMapping); i ++) {
 
-        if (strncmp(buffer, GLOBALCONTEXT->config->MAPPING[i].keyword, fmin(strlen(buffer), strlen(GLOBALCONTEXT->config->MAPPING[i].keyword)))) continue;
+		if (strlen(buffer) != strlen(GLOBALCONTEXT->config->MAPPING[i].keyword)) continue;
+        if (strcmp(buffer, GLOBALCONTEXT->config->MAPPING[i].keyword)) continue;
         Debug(0, "Found keyword '%s'\n", buffer);
         switch (GLOBALCONTEXT->config->MAPPING[i].cmd) {
             case K_QUIT:
@@ -135,11 +135,6 @@ int main(int argc, char *argv[]) {
     
     Debug(0, "Project name: " PROJECT_NAME "\n");
 
-    if (!initPrimitiveOperations()) {
-        freeContext(GLOBALCONTEXT);
-        return 1;
-    }
-    
     Debug(0, "Context created.\n");
     Info(1, printConfig(GLOBALCONTEXT->config));
     Info(1, printEnvironment(GLOBALCONTEXT->env));

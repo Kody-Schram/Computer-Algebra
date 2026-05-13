@@ -1,6 +1,6 @@
 #pragma once
 
-#include "types.h"
-#include "operations.h"
+#define INTEGER_ID 0x72656765746e695f
+
 
 bool initIntegers();

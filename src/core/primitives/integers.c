@@ -1,8 +1,11 @@
 #include <stdint.h>
-#include <stddef.h>
+#include <string.h>
+#include <stdlib.h>
 
 #include "integers.h"
 #include "core/primitives/types.h"
+#include "core/utils/type_utils.h"
+
 
 BuiltinResult add_int(Context const *ctx, uint32_t nArgs, Expression **operands) {
     BuiltinResult result = {.type = BUILTIN_NEUTRAL, NULL};
@@ -10,13 +13,29 @@ BuiltinResult add_int(Context const *ctx, uint32_t nArgs, Expression **operands)
     Expression *a = operands[0];
     Expression *b = operands[1];
 
-	uint32_t intId = getObjectId(ctx->registry, "integer");
+ 
 
-	if (a->objectId != intId || b->objectId != intId) return result;
+	if (a->objectId != INTEGER_ID || b->objectId != INTEGER_ID) return result;
 
 	return result;
 }
 
+void cleanup(void *integer) {
+	free(integer);
+}
+
+int32_t compare(void const *a, void const *b) {
+	int64_t ia = *(int64_t const *) a;
+	int64_t ib = *(int64_t const *) b;
+
+	if (a > b) return 1;
+	if (a < b) return -1;
+	return 0;
+}
+
 bool initIntegers() {
-	
+	Object intger_obj;
+	if (!createObject(&intger_obj, "_integer", "coremath", cleanup, compare)) return false;
+
+	return true;
 }

@@ -24,8 +24,8 @@ Context *createContext(Config *config, Environment *env, Registry *registry) {
 }
 
 
-int initContext(char *cpath) {
-    if (GLOBALCONTEXT != NULL) return 0;
+bool initContext(char *cpath) {
+    if (GLOBALCONTEXT != NULL) return false;
 
     Config *config = loadConfig(cpath);
     Environment *env = createEnvironment(ENV_LIST); // will change to hash map later
@@ -35,7 +35,7 @@ int initContext(char *cpath) {
         freeConfig(config);
         freeEnvironment(env);
 		freeRegistry(registry);
-        return 0;
+        return false;
     }
     
     GLOBALCONTEXT = createContext(config, env, registry);
@@ -43,15 +43,20 @@ int initContext(char *cpath) {
         freeConfig(config);
         freeEnvironment(env);
 		freeRegistry(registry);
-        return 0;
+        return false;
     }
+
+	if (!initPrimitives(registry)) {
+		freeContext(GLOBALCONTEXT);
+		return false;
+	}
 
     if (!initOutputVariables(env)) {
         freeContext(GLOBALCONTEXT);
-        return 0;
+        return false;
     }
 
-    return 1;
+    return true;
 }
 
 void freeContext(Context *context) {

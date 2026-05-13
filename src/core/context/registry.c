@@ -4,7 +4,9 @@
 #include <string.h>
 
 #include "registry.h"
+#include "core/utils/log.h"
 #include "core/primitives/types.h"
+#include "core/utils/type_utils.h"
 
 // +, -, *, /, ^
 #define DEFAULT_OPERATIONS 5
@@ -112,12 +114,11 @@ bool registerObject(Registry *registry, Object obj) {
 }
 
 
-static const Object *searchObjectID(const Registry *registry, uint32_t id) {
-	return NULL;
-}
-
-
-const Object *searchObject(const Registry *registry, const char *id) {
+static Object const *searchObjectID(Registry const *registry, uint64_t obj_id) {
+	for (uint32_t i = 0; i < registry->registeredObjects; i ++) {
+		if (registry->objects[i].id == obj_id) return &registry->objects[i];
+	}
+	
 	return NULL;
 }
 
@@ -127,4 +128,31 @@ void freeRegistry(Registry *registry) {
 	free(registry->operations);
 
 	free(registry);
+}
+
+
+bool initPrimitives(Registry *registry) {
+	Info(0, "Initalizing Primitives\n");
+	Debug(0, "Initializing primitive operations\n");
+	Operation add;
+	if (!createOperation(&add, '+', ASSOC_BOTH, true, 1)) return false;
+	if (!registerOperation(registry, add)) return false;
+
+	Operation mult;
+	if (!createOperation(&mult, '*', ASSOC_BOTH, true, 2)) return false;
+	if (!registerOperation(registry, mult)) return false;
+
+	Operation expo;
+	if (!createOperation(&expo, '^', ASSOC_RIGHT, false, 3)) return false;
+	if (!registerOperation(registry, expo)) return false;
+
+   	Operation div;
+	if (!createOperation(&div, '/', ASSOC_LEFT, false, 2)) return false;
+	if (!registerOperation(registry, div)) return false;
+
+	Operation sub;
+	if (!createOperation(&sub, '-', ASSOC_LEFT, false, 1)) return false;
+	if (!registerOperation(registry, sub)) return false;
+
+	return true;
 }

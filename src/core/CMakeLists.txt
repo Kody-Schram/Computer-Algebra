@@ -20,8 +20,6 @@ add_library(Core STATIC
     execution/simplify.c
     execution/evaluate.c
     
-    primitives/operations.c
-	primitives/objects.c
 	primitives/integers.c
 )
 
