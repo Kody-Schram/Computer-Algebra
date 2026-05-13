@@ -33,4 +33,13 @@ Object const *searchObject(Registry const *registry, uint64_t obj_id);
 void freeRegistry(Registry *registry);
 
 
+bool createOperation(Operation *out, const char symbol, Associativity a, bool c, uint32_t operands);
+
+
+bool createObject(
+		Object *out,
+		char const *identifier, char const *originModule,
+		void (*cleanup)(void *data), int32_t (*compare)(void const *a, void const *b)
+);
+
 bool initPrimitives(Registry *registry);

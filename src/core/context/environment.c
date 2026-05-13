@@ -9,6 +9,17 @@
 #include "core/utils/type_utils.h"
 
 
+static void freeFunction(Function *func) {
+    if (func == NULL) return;
+    if (func->parameters != NULL) {
+        for (int i = 0; i < func->nParameters; i ++) free(func->parameters[i]);
+    }
+    free(func->parameters);
+    if (func->type == DEFINED) freeExpression(func->definition);
+    free(func);
+} 
+
+
 static void freeComponent(Component *cmp) {
     switch (cmp->type) {
         case COMP_FUNCTION:

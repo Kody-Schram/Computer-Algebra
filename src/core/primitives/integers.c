@@ -4,7 +4,6 @@
 
 #include "integers.h"
 #include "core/primitives/types.h"
-#include "core/utils/type_utils.h"
 
 
 BuiltinResult add_int(Context const *ctx, uint32_t nArgs, Expression **operands) {
@@ -20,22 +19,19 @@ BuiltinResult add_int(Context const *ctx, uint32_t nArgs, Expression **operands)
 	return result;
 }
 
-void cleanup(void *integer) {
+
+
+
+void cleanup_int(void *integer) {
 	free(integer);
 }
 
-int32_t compare(void const *a, void const *b) {
+
+int32_t compare_int(void const *a, void const *b) {
 	int64_t ia = *(int64_t const *) a;
 	int64_t ib = *(int64_t const *) b;
 
 	if (a > b) return 1;
 	if (a < b) return -1;
 	return 0;
-}
-
-bool initIntegers() {
-	Object intger_obj;
-	if (!createObject(&intger_obj, "_integer", "coremath", cleanup, compare)) return false;
-
-	return true;
 }

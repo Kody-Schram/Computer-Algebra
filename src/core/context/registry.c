@@ -6,14 +6,12 @@
 #include "registry.h"
 #include "core/utils/log.h"
 #include "core/primitives/types.h"
-#include "core/utils/type_utils.h"
 
 // +, -, *, /, ^
 #define DEFAULT_OPERATIONS 5
-
+#define DEFAULT_OPERATION_IMPLEMENTATIONS 2
 
 Registry *initRegistry() {
-	printf("Initializing registry\n");
 	Registry *registry = NULL;
 	Operation *operations = NULL;
 
@@ -51,8 +49,6 @@ bool registerOperation(Registry *registry, Operation op) {
 
 	registry->operations[registry->registeredOperations] = op;
 	registry->registeredOperations ++;
-
-	printf("registered operation\n");
 
 	return true;
 }
@@ -130,6 +126,27 @@ void freeRegistry(Registry *registry) {
 	free(registry);
 }
 
+
+bool createOperation(Operation *out, const char symbol, Associativity a, bool c, uint32_t precedence) {
+	BuiltinImplementation *implementations = malloc(sizeof(BuiltinImplementation) * DEFAULT_OPERATION_IMPLEMENTATIONS);
+	if (implementations == NULL) {
+		perror("Error creating operation");
+		return false;
+	}
+
+	(*out) = (Operation) {
+		.symbol = symbol,
+		.associativity = a,
+		.commutative = c,
+		.arity = 2,
+		.precedence = precedence,
+		.implementationSize = DEFAULT_OPERATION_IMPLEMENTATIONS,
+		.nImplementations = 0,
+		.implementations = implementations
+	};
+	
+	return true;
+}
 
 bool initPrimitives(Registry *registry) {
 	Info(0, "Initalizing Primitives\n");

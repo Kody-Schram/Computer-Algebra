@@ -9,7 +9,6 @@
 
 
 #define DEFUALT_STRING_SIZE 64
-#define DEFAULT_OPERATION_IMPLEMENTATIONS 2
 
 
 Expression *dummyExpression(ExpressionType type) {
@@ -262,35 +261,6 @@ char *expressionToString(Expression const *expr) {
 }
 
 
-void freeFunction(Function *func) {
-    if (func == NULL) return;
-    if (func->parameters != NULL) {
-        for (int i = 0; i < func->nParameters; i ++) free(func->parameters[i]);
-    }
-    free(func->parameters);
-    if (func->type == DEFINED) freeExpression(func->definition);
-    free(func);
-} 
 
 
 
-bool createOperation(Operation *out, const char symbol, Associativity a, bool c, uint32_t precedence) {
-	BuiltinImplementation *implementations = malloc(sizeof(BuiltinImplementation) * DEFAULT_OPERATION_IMPLEMENTATIONS);
-	if (implementations == NULL) {
-		perror("Error creating operation");
-		return false;
-	}
-
-	(*out) = (Operation) {
-		.symbol = symbol,
-		.associativity = a,
-		.commutative = c,
-		.arity = 2,
-		.precedence = precedence,
-		.implementationSize = DEFAULT_OPERATION_IMPLEMENTATIONS,
-		.nImplementations = 0,
-		.implementations = implementations
-	};
-	
-	return true;
-}

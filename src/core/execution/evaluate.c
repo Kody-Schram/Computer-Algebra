@@ -22,12 +22,14 @@ static bool evaluateRecur(Expression **ptr, Environment *env) {
         case EXPRESSION_OPERATOR:
             Debug(0, "\nOperands %d\n", expr->nOperands);
             Debug(1, printExpression(expr));
-            
+
+			bool valid = true;
             for (uint32_t i = 0; i < expr->nOperands; i ++) {
                 if (!evaluateRecur(&(expr->operands[i]), env)) return false;
+				if (expr->operands[i]->type != EXPRESSION_OBJECT) valid = false;
             }
         
-            if (expr->nOperands != expr->op->arity) return true; // Unexpected number of operands, leave symbolic
+            if (!valid || expr->nOperands != expr->op->arity) return true; // Unexpected number of operands, leave symbolic
 			BuiltinResult result = callImplementations(
 									expr->op->nImplementations, 
 									expr->op->implementations,
