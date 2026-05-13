@@ -6,6 +6,7 @@
     #define PROJECT_NAME "project"
 #endif
 
+#define REFERENCE_LENGTH 8
 
 typedef enum ComponentType ComponentType;
 typedef struct Component Component;
@@ -60,6 +61,15 @@ struct Operation {
     uint32_t nImplementations;
 	BuiltinImplementation *implementations;
 };
+
+
+struct Object {
+	uint64_t id;
+	uint64_t module;
+	void (*cleanup)(void *data);
+	int32_t (*compare)(void const *a, void const *b);
+};
+
 
 struct Expression {
     ExpressionType type;

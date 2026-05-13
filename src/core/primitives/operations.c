@@ -210,11 +210,11 @@ BuiltinResult divide(uint32_t nArgs, Expression **operands) {
 }
 
 
-bool createOperation(const char symbol, associativity a, bool c, uint32_t precedence) {
+Operation *createOperation(const char symbol, associativity a, bool c, uint32_t precedence) {
 	Operation *op = malloc(sizeof(Operation));
 	if (op == NULL) {
 		perror("Error creating operation");
-		return false;
+		return NULL;
 	}
 
 	op->symbol = symbol;
@@ -229,10 +229,10 @@ bool createOperation(const char symbol, associativity a, bool c, uint32_t preced
 	if (op == NULL) {
 		perror("Error creating operation");
 		free(op);
-		return false;
+		return NULL;
 	}
-
-	return registerOperation(GLOBALCONTEXT->registry, op);
+	
+	return op;
 }
 
 
@@ -243,11 +243,25 @@ void freeOperation(Operation *op) {
 
 
 int initPrimitiveOperations() {
-	if (!createOperation('+', ASSOC_BOTH, true, 1)) goto error;
-	if (!createOperation('*', ASSOC_BOTH, true, 2)) goto error;
-	if (!createOperation('^', ASSOC_RIGHT, false, 3)) goto error;
-   	if (!createOperation('/', ASSOC_LEFT, false, 2)) goto error;
-	if (!createOperation('-', ASSOC_LEFT, false, 1)) goto error;
+	Operation *add = createOperation('+', ASSOC_BOTH, true, 1); 
+	if (add == NULL) goto error;
+	registerOperation(GLOBALCONTEXT->registry, add);
+
+	Operation *mult = createOperation('*', ASSOC_BOTH, true, 2); 
+	if (mult == NULL) goto error;
+	registerOperation(GLOBALCONTEXT->registry, mult);
+
+	Operation *expo = createOperation('^', ASSOC_RIGHT, false, 3); 
+	if (expo == NULL) goto error;
+	registerOperation(GLOBALCONTEXT->registry, expo);
+
+   	Operation *div = createOperation('/', ASSOC_LEFT, false, 2); 
+	if (div == NULL) goto error;
+	registerOperation(GLOBALCONTEXT->registry, div);
+
+	Operation *sub = createOperation('-', ASSOC_LEFT, false, 1); 
+	if (sub == NULL) goto error;
+	registerOperation(GLOBALCONTEXT->registry, sub);
 
     return 1;
     

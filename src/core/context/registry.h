@@ -4,14 +4,6 @@
 #include <stdint.h>
 
 
-typedef struct ObjectRegistry {
-	char *identifier;
-	char *originModule;
-	void (*cleanup)(void *data);
-	int32_t (*compare)(void const *a, void const *b);
-} ObjectRegistry;
-
-
 typedef struct Registry {
 	uint32_t operationsSize;
 	uint32_t registeredOperations;
@@ -19,7 +11,7 @@ typedef struct Registry {
 
 	uint32_t objectsSize;
 	uint32_t registeredObjects;
-	ObjectRegistry *objects;
+	Object *objects;
 } Registry;
 
 
@@ -37,9 +29,6 @@ bool registerObject(
 		Registry *registry, char const *identifier, char const *originModule,
 		void (*cleanup) (void *data), int32_t (*compare) (void const *ptr)
 );
-
-
-uint32_t getObjectId(char const *identifier);
 
 
 void freeRegistry(Registry *registry);
