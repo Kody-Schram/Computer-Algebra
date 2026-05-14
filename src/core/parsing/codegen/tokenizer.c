@@ -80,7 +80,7 @@ static int getNumber(char const *c) {
 
 
 static Operation const *getOperator(char const *c) {
-    Debug(0, "Getting operator component, '%c'\n", (char) c[0]);
+    Debug(0, "Checking for operator, '%c'\n", (char) c[0]);
     if (isalnum(c[0])) return NULL;
     
     Debug(0, "getting cmp\n");
@@ -100,7 +100,7 @@ static Operation const *getOperator(char const *c) {
  * @return int Length of largest component found or length of contiuguous valid identifier characters
  */
 static uint32_t getComponent(char *c, Component const **out) {
-    Debug(0, "Checking component.\n");
+    Debug(0, "Checking for component.\n");
     
     // If not valid character type for variable name, automatically skip check
     if (!isalpha(c[0])) return 0;
@@ -212,7 +212,10 @@ Token *tokenize(char *buffer) {
             //if (cRet.cmp != NULL) printf("largest component found was %s\n", cRet.cmp->identifier);
             end += matchLen;
 
-            if (cmp == NULL || cmp->type == COMP_VARIABLE) type = TOKEN_IDENTIFIER;
+            if (cmp == NULL || cmp->type == COMP_VARIABLE) {
+				type = TOKEN_IDENTIFIER;
+				Debug(0, "found identifier\n");
+			}
             else type = TOKEN_FUNC_CALL_PLACEHOLDER;
         }
         
@@ -249,6 +252,8 @@ Token *tokenize(char *buffer) {
 		if (type == TOKEN_OPERATOR) newToken = createOperatorToken(op);
 		else if (type == TOKEN_FUNC_CALL_PLACEHOLDER) newToken = createFuncCallToken(cmp);
 		else newToken = createToken(type, buffer + i, end - i);
+
+		cmp = NULL;
 
 		Debug(0, "type = %d\n", newToken->type);
 		if (newToken == NULL) {
