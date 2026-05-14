@@ -10,10 +10,12 @@
 // +, -, *, /, ^
 #define DEFAULT_OPERATIONS 5
 #define DEFAULT_OPERATION_IMPLEMENTATIONS 2
+#define DEFAULT_OBJECTS 3
 
 Registry *initRegistry() {
 	Registry *registry = NULL;
 	Operation *operations = NULL;
+	Object *objects = NULL;
 
 	registry = malloc(sizeof(Registry));
 	if (registry == NULL) goto error;
@@ -24,12 +26,19 @@ Registry *initRegistry() {
 	if (operations == NULL) goto error;
 	registry->operations = operations;
 
+	registry->objectsSize = DEFAULT_OBJECTS;
+	registry->registeredObjects = 0;
+	objects = malloc(sizeof(Object) * DEFAULT_OBJECTS);
+	if (objects == NULL) goto error;
+	registry->objects = objects;
+
 	return registry;
 
 	error:
 		perror("Error initializing registry");
 		free(registry);
 		free(operations);
+		free(objects);
 
 		return NULL;
 }
@@ -121,6 +130,10 @@ static Object const *searchObjectID(Registry const *registry, uint64_t obj_id) {
 
 void freeRegistry(Registry *registry) {
 	free(registry->objects);
+
+	for (uint32_t i = 0; i < registry->registeredOperations; i ++) {
+		free(registry->operations[i].implementations);
+	}
 	free(registry->operations);
 
 	free(registry);

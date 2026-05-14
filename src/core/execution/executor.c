@@ -78,6 +78,7 @@ static bool resolveSymbols(Expression **ptr, Environment *env) {
 				)) return false;
 			}
 
+			freeExpression(expr);
 			*ptr = deepCopyExpression(func->definition);
 			Debug(1, printExpression(*ptr));
 			if (!resolveSymbols(ptr, tmpEnv)) return false;

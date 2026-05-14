@@ -158,9 +158,9 @@ void freeExpression(Expression *expr) {
 
     switch (expr->type) {
         case EXPRESSION_FUNCTION_CALL:
-			for (uint32_t i = 0; i < expr->nInputs; i ++) {
-				freeExpression(expr->inputs[i]);
-			}
+			// for (uint32_t i = 0; i < expr->nInputs; i ++) {
+			// 	freeExpression(expr->inputs[i]);
+			// }
 			free(expr->inputs);
             break;
 

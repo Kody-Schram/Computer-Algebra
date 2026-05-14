@@ -28,9 +28,9 @@ static bool evaluateRecur(Expression **ptr, Environment *env) {
                 if (!evaluateRecur(&(expr->operands[i]), env)) return false;
 				if (expr->operands[i]->type != EXPRESSION_OBJECT) valid = false;
             }
-        
-            if (!valid || expr->nOperands != expr->op->arity) return true; // Unexpected number of operands, leave symbolic
-			BuiltinResult result = callImplementations(
+
+			// Unexpected number of operands, leave symbolic
+            if (!valid || expr->nOperands != expr->op->arity) return true; 			BuiltinResult result = callImplementations(
 									expr->op->nImplementations, 
 									expr->op->implementations,
 									GLOBALCONTEXT,

@@ -184,6 +184,7 @@ Expression *createExpression(Token const *token) {
             if (expr->operands == NULL) goto error;
             break;
             
+			freeExpression(expr);
         case TOKEN_FUNC_CALL:
 			free(expr);
 			expr = token->finalizedCall;
