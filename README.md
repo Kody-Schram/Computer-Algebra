@@ -1,4 +1,4 @@
-# COMPUTER ALGEBRA
+# COMPUTR ALGEBRA
 
 *A system which parses and executes mathematical expressions and equations.*
 
@@ -64,22 +64,22 @@ Some implicit assumptions are made by the parser in the interest of a simpler us
 Function calls can be implicit. When a function call is identified with no parenthesis, the call will consume all tokens until the first user defined operation.
 
 Ex. 
-'''
+```
 f:x->2x
 fa*3a becomes f(a)*3a
-'''
+```
 
 #### Multiplication
 Implicit multiplication is supported in some cases
 Ex.
-'''
+```
 2x becomes 2*x
 2sin(x) becomes 2*sin(x)
 3(x-1) becomes 3*(x-1)
-'''
+```
 
 ## Program Details
-*Information on algorithms used and sources of research can be found in [](ALGORITHMS.md)*
+*Information on algorithms used and sources of research can be found in [ALGORITHMS.md](ALGORITHMS.md)*
 
 ### Parsing
 1. Tokenization (Splits input into parts)
