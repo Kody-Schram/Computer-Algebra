@@ -3,6 +3,7 @@
 #include <yaml.h>
 #include <string.h>
 
+#include "core/context.h"
 #include "config.h"
 
 
@@ -468,7 +469,7 @@ static void initConfig(Config *config) {
 }
 
 
-Config *loadConfig(char *cpath) {
+Config *loadConfig(char const *cpath) {
     Config *config = calloc(1, sizeof(Config));
     if (config == NULL) {
         perror("Error in config");
@@ -568,7 +569,7 @@ Config *loadConfig(char *cpath) {
 }
 
 
-FILE *printConfig(Config *config) {
+FILE *printConfig(Config const *config) {
     FILE *stream = tmpfile();
     if (stream == NULL) return NULL;
 

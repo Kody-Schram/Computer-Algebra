@@ -2,7 +2,7 @@
 #include <stdarg.h>
 
 #include "log.h"
-#include "core/context/context.h"
+#include "core/context.h"
 
 #define DEFAULT_BUFFER 128
 
@@ -45,6 +45,7 @@ void Debug(const int fileStream, const void *stream, ...) {
 
 
 void Info(const int fileStream, const void *stream, ...) {
+	if (GLOBALCONTEXT == NULL) printf("thing\n");
     if (GLOBALCONTEXT->config->LOG_LEVEL < INFO) {
         if (fileStream) fclose((FILE *) stream);
         return;

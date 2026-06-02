@@ -3,13 +3,10 @@
 #include <string.h>
 #include <math.h>
 
-#include "core/context/context.h"
-#include "core/context/environment.h"
+#include "core/context.h"
 #include "core/primitives/types.h"
 #include "core/utils/log.h"
 #include "core/utils/input.h"
-
-#include "core/utils/type_utils.h"
 
 #include "core/parsing/parser.h"
 #include "core/execution/executor.h"
@@ -32,9 +29,7 @@ static int handleKeywords(char *buffer) {
             case K_RELOAD:
                 printf("Reloading config.\n");
 
-                freeConfig(GLOBALCONTEXT->config);
-                GLOBALCONTEXT->config = loadConfig(NULL);
-                if (GLOBALCONTEXT->config == NULL) return -1;
+				if (!reloadConfig(GLOBALCONTEXT)) return -1;
 
                 Info(1, printConfig(GLOBALCONTEXT->config));
                 return 1;
@@ -71,9 +66,7 @@ static int process(char *buffer) {
     printf("%s\n\n", out);
 	free(out);
 
-    if (GLOBALCONTEXT->config->OUTPUTS > 0) {
-        if (!updateOutputVariables(GLOBALCONTEXT->env, expr)) return 0;
-    } else freeExpression(expr);
+    if (!updateOutputVariables(GLOBALCONTEXT, expr)) return 0;
 
 	return 1;
 }

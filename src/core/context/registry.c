@@ -3,14 +3,16 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "core/context.h"
 #include "registry.h"
 #include "core/utils/log.h"
 #include "core/primitives/types.h"
 
-// +, -, *, /, ^
-#define DEFAULT_OPERATIONS 5
+
+#define DEFAULT_OPERATIONS 5 // +, -, *, /, ^
 #define DEFAULT_OPERATION_IMPLEMENTATIONS 2
 #define DEFAULT_OBJECTS 3
+
 
 Registry *initRegistry() {
 	Registry *registry = NULL;
@@ -164,6 +166,7 @@ bool createOperation(Operation *out, const char symbol, Associativity a, bool c,
 bool initPrimitives(Registry *registry) {
 	Info(0, "Initalizing Primitives\n");
 	Debug(0, "Initializing primitive operations\n");
+
 	Operation add;
 	if (!createOperation(&add, '+', ASSOC_BOTH, true, 1)) return false;
 	if (!registerOperation(registry, add)) return false;

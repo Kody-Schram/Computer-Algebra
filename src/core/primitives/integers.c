@@ -4,22 +4,33 @@
 
 #include "integers.h"
 #include "core/primitives/types.h"
+#include "core/utils/type_utils.h"
 
 
 BuiltinResult add_int(Context const *ctx, uint32_t nArgs, Expression **operands) {
-    BuiltinResult result = {.type = BUILTIN_NEUTRAL, NULL};
-
     Expression *a = operands[0];
     Expression *b = operands[1];
 
- 
+	if (a->objectId != INTEGER_ID || b->objectId != INTEGER_ID) return (BuiltinResult) {.type = BUILTIN_NEUTRAL, .output = NULL};
 
-	if (a->objectId != INTEGER_ID || b->objectId != INTEGER_ID) return result;
+	Expression *out = dummyExpression(EXPRESSION_OBJECT);
+	out->integer = a->integer + b->integer;
 
-	return result;
+	return (BuiltinResult) {.type = BUILTIN_SUCCESS, .output = out};
 }
 
+BuiltinResult mult_int(Context const *ctx, uint32_t nArgs, Expression **operands) {
+    Expression *a = operands[0];
+    Expression *b = operands[1];
 
+	if (a->objectId != INTEGER_ID || b->objectId != INTEGER_ID) return (BuiltinResult) {.type = BUILTIN_NEUTRAL, .output = NULL};
+
+	Expression *out = dummyExpression(EXPRESSION_OBJECT);
+	out->integer = a->integer * b->integer;
+
+	return (BuiltinResult) {.type = BUILTIN_SUCCESS, .output = out};
+
+}
 
 
 void cleanup_int(void *integer) {
