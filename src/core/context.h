@@ -115,16 +115,16 @@ FILE *printEnvironment(Environment const *env);
 //                   Registry
 // ============================================
 
-Operation const *searchOperation(Registry const *ctx, char symbol);
+Operation const *searchOperation(Registry const *registry, char symbol);
 
 
-bool registerOperation(Registry *ctx, Operation op);
+bool registerOperation(Registry *registry, Operation op);
 
 
-bool registerObject(Registry *ctx, Object obj);
+bool registerObject(Registry *registry, Object obj);
 
 
-Object const *searchObject(Registry const *ctx, uint64_t obj_id);
+Object const *searchObject(Registry const *registry, uint64_t obj_id);
 
 
 bool createOperation(Operation *out, const char symbol, Associativity a, bool c, uint32_t operands);
@@ -135,3 +135,6 @@ bool createObject(
 		char const *identifier, char const *originModule,
 		void (*cleanup)(void *data), int32_t (*compare)(void const *a, void const *b)
 );
+
+
+bool addOperationImplementation(Registry *registry, char symbol, BuiltinImplementation fn);

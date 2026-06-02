@@ -1,6 +1,7 @@
 #include <stdint.h>
-#include <string.h>
 #include <stdlib.h>
+#include <inttypes.h>
+#include <string.h>
 
 #include "integers.h"
 #include "core/primitives/types.h"
@@ -45,4 +46,10 @@ int32_t compare_int(void const *a, void const *b) {
 	if (a > b) return 1;
 	if (a < b) return -1;
 	return 0;
+}
+
+
+bool initIntegers() {
+		
+	
 }

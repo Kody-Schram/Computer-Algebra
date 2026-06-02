@@ -3,7 +3,7 @@
 
 #include "core/utils/log.h"
 #include "core/utils/type_utils.h"
-#include "context.h"
+#include "core/context.h"
 #include "config.h"
 #include "environment.h"
 #include "registry.h"
@@ -57,7 +57,7 @@ bool initContext(char const *cpath) {
     if (GLOBALCONTEXT != NULL) return false;
 
     Config *config = loadConfig(cpath);
-    Environment *env = createEnvironment(ENV_LIST); // will change to hash map later
+    Environment *env = createEnvironment(); // will change to hash map later
 	Registry *registry = initRegistry();
 
     if (config == NULL || env == NULL || registry == NULL) {

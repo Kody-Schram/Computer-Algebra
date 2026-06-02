@@ -5,9 +5,8 @@
 #include <string.h>
 
 #include "tokenizer.h"
-#include "core/context/context.h"
+#include "core/context.h"
 #include "core/context/environment.h"
-#include "core/context/registry.h"
 #include "core/primitives/types.h"
 #include "core/utils/log.h"
 

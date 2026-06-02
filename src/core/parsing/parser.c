@@ -4,8 +4,7 @@
 #include <string.h>
 
 #include "parser.h"
-#include "core/context/context.h"
-#include "core/context/environment.h"
+#include "core/context.h"
 #include "core/parsing/parser_types.h"
 #include "core/primitives/types.h"
 #include "core/utils/log.h"

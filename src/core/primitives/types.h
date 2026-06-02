@@ -8,11 +8,18 @@
 
 #define REFERENCE_LENGTH 8
 
+#define CREATE_REF_ID(a, b, c, d, e, f, g, h) \
+	((uint64_t)(a) | ((uint64_t)(b) << 8) | \
+	 ((uint64_t)(c) << 16) | ((uint64_t)(d) << 24) | \
+	 ((uint64_t)(e) << 32) | ((uint64_t)(f) << 40) | \
+	 ((uint64_t)(g) << 48) | ((uint64_t)(h) << 56))
+
+
 typedef enum ComponentType ComponentType;
 typedef struct Component Component;
 
 // Forward declaring types
-typedef struct Object Object;
+typedef struct Object Object; 
 
 typedef enum OperationType OperationType;
 typedef struct Operation Operation;

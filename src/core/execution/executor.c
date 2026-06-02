@@ -2,7 +2,7 @@
 #include <inttypes.h>
 
 #include "executor.h"
-#include "core/context/context.h"
+#include "core/context.h"
 #include "core/primitives/types.h"
 #include "simplify.h"
 #include "evaluate.h"
@@ -64,7 +64,7 @@ static bool resolveSymbols(Expression **ptr, Environment *env) {
 
 			// For user defined functions, can resolve identifier into the expression
 			// tree from environment
-			Environment *tmpEnv = createEnvironment(ENV_LIST);
+			Environment *tmpEnv = createEnvironment();
 			if (tmpEnv == NULL) {
 				perror("Error resolving symbols");
 				return false;

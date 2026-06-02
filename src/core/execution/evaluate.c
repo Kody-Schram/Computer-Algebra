@@ -3,7 +3,7 @@
 #include <inttypes.h>
 
 #include "evaluate.h"
-#include "core/context/context.h"
+#include "core/context.h"
 #include "core/context/environment.h"
 #include "core/utils/log.h"
 #include "core/primitives/types.h"

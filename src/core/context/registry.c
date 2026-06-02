@@ -5,6 +5,7 @@
 
 #include "core/context.h"
 #include "registry.h"
+#include "core/primitives/integers.h"
 #include "core/utils/log.h"
 #include "core/primitives/types.h"
 
@@ -186,6 +187,8 @@ bool initPrimitives(Registry *registry) {
 	Operation sub;
 	if (!createOperation(&sub, '-', ASSOC_LEFT, false, 1)) return false;
 	if (!registerOperation(registry, sub)) return false;
+
+	initIntegers();
 
 	return true;
 }

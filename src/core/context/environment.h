@@ -9,7 +9,7 @@ typedef enum {
 } EnvironmentType; 
 
 
-typedef struct {
+typedef struct Environment {
     EnvironmentType type;
     
     union {

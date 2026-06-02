@@ -3,7 +3,7 @@
 #include <string.h>
 
 #include "normalizer.h"
-#include "core/context/context.h"
+#include "core/context.h"
 #include "core/context/environment.h"
 #include "core/parsing/parser_types.h"
 #include "core/utils/log.h"
