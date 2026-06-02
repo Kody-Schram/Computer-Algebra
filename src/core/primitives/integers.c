@@ -1,9 +1,10 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <inttypes.h>
-#include <string.h>
 
 #include "integers.h"
+#include "core/context.h"
+#include "core/context/registry.h"
 #include "core/primitives/types.h"
 #include "core/utils/type_utils.h"
 
@@ -20,7 +21,9 @@ BuiltinResult add_int(Context const *ctx, uint32_t nArgs, Expression **operands)
 	return (BuiltinResult) {.type = BUILTIN_SUCCESS, .output = out};
 }
 
+
 BuiltinResult mult_int(Context const *ctx, uint32_t nArgs, Expression **operands) {
+	printf("int mult\n");
     Expression *a = operands[0];
     Expression *b = operands[1];
 
@@ -30,7 +33,6 @@ BuiltinResult mult_int(Context const *ctx, uint32_t nArgs, Expression **operands
 	out->integer = a->integer * b->integer;
 
 	return (BuiltinResult) {.type = BUILTIN_SUCCESS, .output = out};
-
 }
 
 
@@ -49,7 +51,9 @@ int32_t compare_int(void const *a, void const *b) {
 }
 
 
-bool initIntegers() {
-		
-	
+bool initIntegers(Registry *registry) {
+	if (!addOperationImplementation(registry, '+', add_int)) return false;
+	if (!addOperationImplementation(registry, '*', mult_int)) return false;
+
+	return true;
 }

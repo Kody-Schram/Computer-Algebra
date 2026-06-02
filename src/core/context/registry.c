@@ -92,14 +92,14 @@ bool addOperationImplementation(Registry *registry, char symbol, BuiltinImplemen
 		BuiltinImplementation *temp = realloc(op->implementations, sizeof(BuiltinImplementation) * op->implementationSize);
 		if (temp == NULL) {
 			perror("Error registering operation implementation");
-			return 0;
+			return false;
 		}
 
 		op->implementations = temp;
 	}
 	op->implementations[op->nImplementations] = fn;
 	op->nImplementations ++;
-	return 1;
+	return true;
 }
 
 
@@ -188,7 +188,7 @@ bool initPrimitives(Registry *registry) {
 	if (!createOperation(&sub, '-', ASSOC_LEFT, false, 1)) return false;
 	if (!registerOperation(registry, sub)) return false;
 
-	initIntegers();
+	initIntegers(registry);
 
 	return true;
 }

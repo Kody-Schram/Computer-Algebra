@@ -361,7 +361,6 @@ PARSER_RESULT normalize(Token** head) {
 
     while (*ptr != NULL) {
         if ((result = handleNegative(ptr, prev)) != PARSER_SUCCESS) return result;
-		Debug(1, printTokens(*head));
         if ((result = handleFunctionParens(*ptr)) != PARSER_SUCCESS) return result;
         if ((result = handleImplicitMul(*ptr, prev)) != PARSER_SUCCESS) return result;
         if ((result = handleExponentRewrite(ptr)) != PARSER_SUCCESS) return result;
@@ -371,8 +370,6 @@ PARSER_RESULT normalize(Token** head) {
 			//Empty parens, what are we doing gang 
 			if ((*ptr)->next->type == TOKEN_RIGHT_PAREN) {
                 printf("Empty parenthesis.\n");
-                Debug(0, "Empty parens\n");
-                Debug(1, printTokens(*head));
                 return PARSER_SYNTAX_ERROR;
             }
             openParenthesis ++;
@@ -396,7 +393,6 @@ PARSER_RESULT normalize(Token** head) {
         return PARSER_SYNTAX_ERROR;
     } 
 
-    Debug(0, "Updated Tokens\n");
     Debug(1, printTokens(*head));
 
     return PARSER_SUCCESS;

@@ -79,10 +79,7 @@ static int getNumber(char const *c) {
 
 
 static Operation const *getOperator(char const *c) {
-    Debug(0, "Checking for operator, '%c'\n", (char) c[0]);
     if (isalnum(c[0])) return NULL;
-    
-    Debug(0, "getting cmp\n");
     
     Operation const *op = searchOperation(GLOBALCONTEXT->registry, (char) c[0]);
     if (op == NULL) return NULL;
@@ -99,8 +96,6 @@ static Operation const *getOperator(char const *c) {
  * @return int Length of largest component found or length of contiuguous valid identifier characters
  */
 static uint32_t getComponent(char *c, Component const **out) {
-    Debug(0, "Checking for component.\n");
-    
     // If not valid character type for variable name, automatically skip check
     if (!isalpha(c[0])) return 0;
     Environment *env = GLOBALCONTEXT->env;
@@ -118,7 +113,6 @@ static uint32_t getComponent(char *c, Component const **out) {
         c[length - i] = temp;
 
         if (cmp != NULL) {
-            Debug(0, "found left side component: %s\n", cmp->identifier);
 			*out = cmp;
 			result = length - i;
         }
@@ -134,7 +128,6 @@ static uint32_t getComponent(char *c, Component const **out) {
         c[length] = temp;
 
         if (cmp != NULL && result < length - i) {
-            Debug(0, "found right side component: %s, %d characters in.\n", cmp->identifier, i);
 			*out = cmp;
             result = i;
         }
@@ -148,7 +141,6 @@ static uint32_t getComponent(char *c, Component const **out) {
             c[end] = temp;
 
             if (cmp != NULL && result < end - i) {
-                Debug(0, "found nested component: %s\n", cmp->identifier);
 				*out = cmp;
                 result = i;
             }
@@ -213,7 +205,6 @@ Token *tokenize(char *buffer) {
 
             if (cmp == NULL || cmp->type == COMP_VARIABLE) {
 				type = TOKEN_IDENTIFIER;
-				Debug(0, "found identifier\n");
 			}
             else type = TOKEN_FUNC_CALL_PLACEHOLDER;
         }
@@ -254,26 +245,22 @@ Token *tokenize(char *buffer) {
 
 		cmp = NULL;
 
-		Debug(0, "type = %d\n", newToken->type);
 		if (newToken == NULL) {
             perror("Error in tokenizer");
             return NULL;
         }
 
-		Debug(0, "updating list\n");
         // Updates linked list
         if (prev != NULL) {
             prev->next = newToken;
         } else {
-			Debug(0, "setting head token\n");
             head = newToken;
         }
         prev = newToken;
 
         i = end;
-		Debug(1, printTokens(head));
-
     }
+	Debug(1, printTokens(head));
     
-    return head;
+	return head;
 }
