@@ -1,5 +1,4 @@
 # Enables configuring logging settings
-# Enables configuring logging settings
 log:
   # Valid levels are:
   # - None/0
@@ -11,88 +10,6 @@ log:
   # Set the location for logs to appear
   # Default is the terminal
   location: log.txt
-  
-  # Determines if operations like + and * are printed when running ENV command
-  # Default is false
-  printAxiomaticOperations: false
-
-# Enables the use of scripts to run during startup
-# Can be inline commands or define a file with the startup script
-# startup: |
-#   FILE
-#   (file path).txt
-# No default startup script is provided
-
-startup: |
-  f:x->2x
-  g:y->2f(y)
-
-keywords:
-  # Input string to exit the program
-  # Default is "quit"
-  QUIT: quit
-
-  # Input string to show the environment
-  # Default is "env"
-  ENV: env
-
-  # Input string to reload the config
-  # Default is "reload"
-  RELOAD: reload
-
-  # Identifier of previous output
-  # Default is "ans" 
-  OUTPUT: ans
-
-# Enables configuring runtime settings
-runtime:
-  # Determiens which errors cause the program to exit
-  # On false, only system errors will cause the program to exit 
-  # On true, syntax or system errors will cause the program to exit
-  # Default is false
-  strict: false
-  
-  # Defines how many previous outputs are saved
-  # For one output, the most recent output is stored under the variable OUTPUT as defined in keywords
-  # For more outputs than 1, most recent output is stored under variable OUTPUT_0, and subsequent outputs are OUTPUT_(n-1)
-  # (REQUIRES FULL RESTART)
-  # Default is 1
-  saveOutputs: 1
-
-  # Determines whether fractions are evaluated into floating point values
-  # Default is true
-  preserveFractions: true
-
-  # Determines whether constants are evaluated into floating point values
-  # Default is true
-  preserveConstants: true
-
-  # Determines whether function calls are "lazy". These lazy calls will be evaluated when executing
-  # For example, having a function call within a function definition will preserve the call until a call to that new function is made
-  # Otherwise, the call will be replaced with the definition of the other function
-  # ```
-  # f:x->2x
-  # g:y,z->yf(z)
-  # ```
-  # Lazy: g(y,z) = y * f(z)
-  # Not lazy: g(y,z) = y * (2 * z)
-  # Default is true
-  lazyFunctionCalls: true
-log:
-  # Valid levels are:
-  # - None/0
-  # - Info/1
-  # - Debug/2 (Debug logs only work on Develop build, Release build nullifys debugs for far lower memory usage)
-  # Default is None
-  level: Debug
-
-  # Set the location for logs to appear
-  # Default is the terminal
-  location: log.txt
-  
-  # Determines if operations like + and * are printed when running ENV command
-  # Default is false
-  printAxiomaticOperations: false
 
 # Enables the use of scripts to run during startup
 # Can be inline commands or define a file with the startup script

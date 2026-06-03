@@ -16,7 +16,6 @@ typedef enum {
     STATE_LOG,
     STATE_LOG_LEVEL,
     STATE_LOG_LOCATION,
-    STATE_LOG_PRINT_OPS,
 
     STATE_STARTUP,
 
@@ -143,7 +142,6 @@ static int consumeEvent(State *state, yaml_event_t *event, Config *config) {
                 value = (char *) event->data.scalar.value;
                 if (!strcmp(value, "level")) *state = STATE_LOG_LEVEL;
                 else if (!strcmp(value, "location")) *state = STATE_LOG_LOCATION;
-                else if (!strcmp(value, "printAxiomaticOperations")) *state = STATE_LOG_PRINT_OPS;
                 else {
                     printf("Unexpected scalar: %s\n", value);
                     return 0;
@@ -206,28 +204,6 @@ static int consumeEvent(State *state, yaml_event_t *event, Config *config) {
                 printf("Unexpected event %d in state %d.\n", event->type, *state);
                 return 0;
                 
-        }
-        break;
-        
-    case STATE_LOG_PRINT_OPS:
-        switch (event->type) {
-            case YAML_MAPPING_END_EVENT:
-                *state = STATE_LOG;
-                break;
-                
-            case YAML_SCALAR_EVENT:
-                value = (char *) event->data.scalar.value;
-                int b = get_boolean(value);
-                
-                if (b == -1) return 0;
-                config->PRINT_OPS = b;
-                *state = STATE_LOG;
-                
-                break;
-                
-            default:
-                printf("Unexpected event %d in state %d.\n", event->type, *state);
-                return 0;
         }
         break;
 
@@ -451,7 +427,6 @@ static void initConfig(Config *config) {
     
     config->LOG_LEVEL = 0;
     config->LOG_STREAM = stdout;
-    config->PRINT_OPS = false;
     
     config->STARTUP = NULL;
 
