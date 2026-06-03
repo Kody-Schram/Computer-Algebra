@@ -5,9 +5,9 @@
 #include <string.h>
 
 #include "tokenizer.h"
+#include "core/common.h"
 #include "core/context.h"
 #include "core/context/environment.h"
-#include "core/primitives/types.h"
 #include "core/utils/log.h"
 
 #include "core/parsing/parser_types.h"

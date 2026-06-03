@@ -3,11 +3,10 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "core/context.h"
 #include "registry.h"
+#include "core/context.h"
 #include "core/primitives/integers.h"
 #include "core/utils/log.h"
-#include "core/primitives/types.h"
 
 
 #define DEFAULT_OPERATIONS 5 // +, -, *, /, ^

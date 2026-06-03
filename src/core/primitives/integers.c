@@ -5,8 +5,7 @@
 #include "integers.h"
 #include "core/context.h"
 #include "core/context/registry.h"
-#include "core/primitives/types.h"
-#include "core/utils/type_utils.h"
+#include "core/utils/expr_utils.h"
 
 
 BuiltinResult add_int(Context const *ctx, uint32_t nArgs, Expression **operands) {

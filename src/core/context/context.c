@@ -2,7 +2,7 @@
 #include <string.h>
 
 #include "core/utils/log.h"
-#include "core/utils/type_utils.h"
+#include "core/utils/expr_utils.h"
 #include "core/context.h"
 #include "config.h"
 #include "environment.h"

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/primitives/types.h"
+#include "core/common.h"
 
 
 bool simplify(Expression **expr);

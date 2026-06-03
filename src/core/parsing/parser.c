@@ -6,9 +6,8 @@
 #include "parser.h"
 #include "core/context.h"
 #include "core/parsing/parser_types.h"
-#include "core/primitives/types.h"
 #include "core/utils/log.h"
-#include "core/utils/type_utils.h"
+#include "core/utils/expr_utils.h"
 
 #include "core/parsing/codegen/tokenizer.h"
 #include "core/parsing/codegen/normalizer.h"

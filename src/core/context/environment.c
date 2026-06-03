@@ -4,8 +4,7 @@
 
 #include "environment.h"
 #include "core/utils/log.h"
-#include "core/primitives/types.h" 
-#include "core/utils/type_utils.h"
+#include "core/utils/expr_utils.h"
 
 
 static void freeFunction(Function *func) {

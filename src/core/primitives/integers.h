@@ -1,6 +1,6 @@
 #pragma once
 
-#include "types.h"
+#include "core/common.h"
 
 #define INTEGER "core_int"
 #define INTEGER_ID CREATE_REF_8(INTEGER) 

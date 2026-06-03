@@ -4,9 +4,8 @@
 #include <string.h>
 #include <inttypes.h>
 
-#include "type_utils.h"
+#include "expr_utils.h"
 #include "core/context.h"
-#include "core/primitives/types.h"
 #include "core/utils/log.h"
 
 

@@ -1,8 +1,7 @@
 #include <stdlib.h>
 
 #include "simplify.h"
-#include "core/primitives/types.h"
-#include "core/utils/type_utils.h"
+#include "core/utils/expr_utils.h"
 #include "core/utils/log.h"
 
 #define DEFAULT_FLATTEN_SIZE 2

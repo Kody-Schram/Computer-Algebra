@@ -1,8 +1,8 @@
 #pragma once
 
 #include <stdint.h>
+#include "core/common.h"
 
-#include "core/primitives/types.h"
 
 // Forward declaring types
 typedef enum TokenType TokenType;

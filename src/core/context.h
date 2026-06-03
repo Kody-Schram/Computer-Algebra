@@ -2,7 +2,7 @@
 
 #include <stdint.h>
 #include <stdio.h>
-#include "core/primitives/types.h"
+#include "core/common.h"
 
 
 typedef enum LOG_LEVEL LOG_LEVEL;

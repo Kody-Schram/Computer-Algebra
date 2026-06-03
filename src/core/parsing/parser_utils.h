@@ -2,7 +2,7 @@
 
 #include <stdio.h>
 
-#include "core/primitives/types.h"
+#include "core/common.h"
 #include "parser_types.h"
 
 

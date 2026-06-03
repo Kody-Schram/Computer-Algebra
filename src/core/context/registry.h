@@ -1,7 +1,7 @@
 #pragma once
 
 #include <stdint.h>
-#include "core/primitives/types.h"
+#include "core/common.h"
 
 
 // Mapping lists make lookups have better cache locality and vectorization
