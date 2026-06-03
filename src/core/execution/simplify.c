@@ -1,5 +1,4 @@
 #include <stdlib.h>
-#include <string.h>
 
 #include "simplify.h"
 #include "core/primitives/types.h"

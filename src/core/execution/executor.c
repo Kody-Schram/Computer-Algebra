@@ -5,7 +5,6 @@
 #include "core/context.h"
 #include "core/primitives/types.h"
 #include "simplify.h"
-#include "evaluate.h"
 
 #include "core/utils/type_utils.h"
 #include "core/utils/log.h"
@@ -175,7 +174,6 @@ EXECUTOR_RESULT execute(Expression **ptr, char **output) {
 	if (result != EXECUTOR_SUCCESS) goto error;
 
 	if (!simplify(ptr)) goto error;
-	if (!evaluate(ptr)) goto error;
 
 	*output = expressionToString(*ptr);
 

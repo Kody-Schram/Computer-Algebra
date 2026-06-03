@@ -281,7 +281,7 @@ PARSER_RESULT handleLocalVariables(Token **ptr, char **parameters, int nParamete
                 for (int i = 0; i < nParameters; i ++) {
                     if (!strcmp(id, parameters[i])) local = parameters[i];
                 }
-                Component *global = searchEnvironment(env, id);
+                Component const *global = searchEnvironment(env, id);
                 id[i + 1] = temp;
 
                 // Any subsequent iterations will always yeild a larger char size if found, so no check required
