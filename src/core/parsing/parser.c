@@ -66,11 +66,43 @@ static PARSER_RESULT parseFunctionCalls(Token **head) {
             uint32_t size = callPlaceholder->cmp->func->nParameters;
 			Debug(0, "%d parameters\n", size);
             uint32_t nParameters = 0;
-            Expression **paramExprs = malloc(sizeof(Expression *) * size);
+            Expression **paramExprs = calloc(1, sizeof(Expression *) * size);
             if (paramExprs == NULL) goto error;
+
+			uint32_t depth = 0;
 
             // Selects opening paren to be freed
             Token *seperator = cur->next;
+
+            // skips to start of parameter
+            cur = seperator->next;
+
+			// Checks for validity before working through parsing
+            while (cur != NULL && cur->type != TOKEN_RIGHT_PAREN) {
+                while (!(depth == 0 && cur->type == TOKEN_SEPARATOR) && !(depth == 0 && cur->type == TOKEN_RIGHT_PAREN)) {
+                    if (cur->type == TOKEN_LEFT_PAREN) depth ++;
+                    if (cur->type == TOKEN_RIGHT_PAREN) depth --;
+                    
+                    cur = cur->next;
+                }
+
+				nParameters ++;
+				if (nParameters > size) {
+					printf("Invalid number of parameters for function %s\n", callPlaceholder->value);	
+					nParameters = 0;
+					goto syntax_error;
+				}
+				
+				cur = cur->next;
+			}
+
+			// Resets vars for parsing
+			nParameters = 0;
+			cur = callPlaceholder;
+			depth = 0;
+	
+            // Selects opening paren to be freed
+            seperator = cur->next;
 
             // skips to start of parameter
             cur = seperator->next;
@@ -80,15 +112,10 @@ static PARSER_RESULT parseFunctionCalls(Token **head) {
             // Loops through function call
             while (cur != NULL && cur->type != TOKEN_RIGHT_PAREN) {
                 Token *paramHead = cur;
-                uint32_t depth = 0;
+				RPNList *rpn = NULL;
 
 				free(seperator->value);
 				free(seperator);
-
-				if (nParameters + 1 > size) {
-					printf("Invalid number of parameters for function %s\n", callPlaceholder->value);	
-					goto parameter_syntax_error;
-				}
 
                 // Loops until end of parameter
                 while (!(depth == 0 && cur->type == TOKEN_SEPARATOR) && !(depth == 0 && cur->type == TOKEN_RIGHT_PAREN)) {
@@ -117,17 +144,13 @@ static PARSER_RESULT parseFunctionCalls(Token **head) {
                 // ===========================================================
 
                 // Generates ast for parameter
-                RPNList *rpn = shuntingYard(paramHead);
+                rpn = shuntingYard(paramHead);
                 if (rpn == NULL) goto parameter_error;
                 
                 Expression *expr = expressionFromRPN(rpn);
                 free(rpn->items);
                 free(rpn);
                 if (expr == NULL) goto parameter_error;
-                
-                // ==================
-                // Simplify parameter
-                // ==================
 
 				Debug(0, "Parameter expr\n");
 				Debug(1, printExpression(expr));
@@ -189,20 +212,22 @@ static PARSER_RESULT parseFunctionCalls(Token **head) {
             continue; 
 			
 			syntax_error:
-                freeTokens(*head);
+                //freeTokens(*head);
                 
-                for (int i = 0; i < nParameters; i ++) {
-                    freeExpression(paramExprs[i]);
-                }
+				if (paramExprs != NULL) {
+					for (int i = 0; i < nParameters; i ++) {
+						freeExpression(paramExprs[i]);
+					}
+				}
                 free(paramExprs);
-                freeTokens(cur);
-                freeTokens(callToken);
+                //freeTokens(cur);
+                //freeTokens(callToken);
 
 				return PARSER_SYNTAX_ERROR;
 
             error:
                 perror("Error in parsing function call");
-                freeTokens(*head);
+                //freeTokens(*head);
                 
                 for (int i = 0; i < nParameters; i ++) {
                     freeExpression(paramExprs[i]);
@@ -360,7 +385,7 @@ static PARSER_RESULT parseFunctionAssignment(Token *head) {
 
 	
 	syntax_error:
-        freeTokens(head);
+		freeTokens(head);
         free(identifier);
         if (parameters != NULL) {
             for (int i = 0; i < nParameters; i ++) free(parameters[i]);
@@ -374,7 +399,7 @@ static PARSER_RESULT parseFunctionAssignment(Token *head) {
 
     
     error:
-        freeTokens(head);
+		freeTokens(head);
         free(identifier);
         if (parameters != NULL) {
             for (int i = 0; i < nParameters; i ++) free(parameters[i]);
