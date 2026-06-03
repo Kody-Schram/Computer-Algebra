@@ -102,7 +102,7 @@ Environment *createEnvironment();
 bool bindComponent(Environment *env, ComponentType type, char const *identifier, void const *data);
 
 
-Component *searchEnvironment(Environment const *env, char const *identifier);
+Component const *searchEnvironment(Environment const *env, char const *identifier);
 
 
 void freeEnvironment(Environment *env);

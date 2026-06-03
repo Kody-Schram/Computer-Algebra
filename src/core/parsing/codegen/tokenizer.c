@@ -109,7 +109,7 @@ static uint32_t getComponent(char *c, Component const **out) {
     for (uint32_t i = 0; i < length; i ++) {
         char temp = c[length - i];
         c[length - i] = '\0';
-        Component *cmp = searchEnvironment(env, c);
+        Component const *cmp = searchEnvironment(env, c);
         c[length - i] = temp;
 
         if (cmp != NULL) {
@@ -124,7 +124,7 @@ static uint32_t getComponent(char *c, Component const **out) {
     for (uint32_t i = 1; i < length; i ++) {
         char temp = c[length];
         c[length] = '\0';
-        Component *cmp = searchEnvironment(env, c + i);
+        Component const *cmp = searchEnvironment(env, c + i);
         c[length] = temp;
 
         if (cmp != NULL && result < length - i) {
@@ -137,7 +137,7 @@ static uint32_t getComponent(char *c, Component const **out) {
         for (int end = i + 1; end < length; end ++) {
             char temp = c[end];
             c[end] = '\0';
-            Component *cmp = searchEnvironment(env, c + i);
+            Component const *cmp = searchEnvironment(env, c + i);
             c[end] = temp;
 
             if (cmp != NULL && result < end - i) {

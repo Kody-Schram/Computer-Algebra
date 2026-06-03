@@ -20,11 +20,11 @@ static bool resolveSymbols(Expression **ptr, Environment *env) {
 	switch (expr->type) {
 		case EXPRESSION_VARIABLE:
 			Debug(0, "Updating variable '%s'\n", expr->identifier);
-			Component *cmp = NULL;
-			const Environment *curEnv = env;
+			Environment const *curEnv = env;
+			Component *cmp = searchEnvironment(curEnv, expr->identifier);
 
 			// Checks inner to outer environments
-			while (cmp == NULL && curEnv != NULL) {
+			/*while (cmp == NULL && curEnv != NULL) {
 				if (expr->type != EXPRESSION_VARIABLE) break;
 				cmp = searchEnvironment(curEnv, expr->identifier);
 
@@ -36,7 +36,8 @@ static bool resolveSymbols(Expression **ptr, Environment *env) {
 					return true;
 				}
 				curEnv = curEnv->parent;
-			}
+			}*/
+				
 
 			Debug(0, "Couldnt resolve symbol %s, leaving as symbolic\n", expr->identifier);
 			return true;
@@ -73,9 +74,7 @@ static bool resolveSymbols(Expression **ptr, Environment *env) {
 
 			for (uint32_t i = 0; i < expr->nInputs; i ++) {
 				if (!resolveSymbols(&expr->inputs[i], env)) return false;
-				if (!bindComponent(
-						tmpEnv, COMP_VARIABLE, func->parameters[i], expr->inputs[i]
-				)) return false;
+				if (!bindComponent(tmpEnv, COMP_VARIABLE, func->parameters[i], expr->inputs[i])) return false;
 			}
 
 			freeExpression(expr);

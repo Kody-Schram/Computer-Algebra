@@ -4,6 +4,7 @@
 #include "core/primitives/types.h"
 
 
+// Mapping lists make lookups have better cache locality and vectorization
 typedef struct Registry {
 	uint32_t operationsSize;
 	uint32_t registeredOperations;

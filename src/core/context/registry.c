@@ -160,7 +160,7 @@ void freeRegistry(Registry *registry) {
 		free(registry->operations[i].implementations);
 	}
 	free(registry->operations);
-	free(registry->object_mapping);
+	free(registry->operation_mapping);
 
 	free(registry);
 }

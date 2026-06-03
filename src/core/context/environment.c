@@ -107,17 +107,17 @@ bool bindComponent(Environment *env, ComponentType type, char const *identifier,
 }
 
 
-Component *searchEnvironment(Environment const *env, char const *identifier) {
+Component *_searchEnvironment(Environment const *env, char const *identifier) {
     if (identifier == NULL) return NULL;
     //printf("searching environment for '%s'\n", identifier);
-    
     switch (env->type) {
         case ENV_LIST:
             //("Checking linked list env\n");
             Component *cmp = env->compList;
-            while (cmp != NULL) {
-                if (!strcmp(cmp->identifier, identifier)) return cmp;
+            while (cmp != NULL && env != NULL) {
+				if (!strcmp(cmp->identifier, identifier)) return cmp;
                 cmp = cmp->next;
+				if (cmp == NULL) env = env->parent;
             }
             
             return NULL;
@@ -128,6 +128,11 @@ Component *searchEnvironment(Environment const *env, char const *identifier) {
     }
 
     return NULL;
+}
+
+
+Component const *searchEnvironment(Environment const *env, char const *identifier) {
+	return _searchEnvironment(env, identifier);
 }
 
 

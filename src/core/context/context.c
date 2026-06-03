@@ -127,7 +127,7 @@ bool updateOutputVariables(Context *ctx, Expression *output) {
 
     Debug(0, "Updating output variable(s).\n");
     if (ctx->config->OUTPUTS == 1) {
-        Component *cmp = searchEnvironment(ctx->env, ctx->config->OUTPUT_ID);
+        Component *cmp = _searchEnvironment(ctx->env, ctx->config->OUTPUT_ID);
         if (cmp == NULL) return false;
 
         freeExpression(cmp->value);
@@ -139,7 +139,7 @@ bool updateOutputVariables(Context *ctx, Expression *output) {
         if (str == NULL) return false;
         snprintf(str, size, "%s_%d", ctx->config->OUTPUT_ID, ctx->config->OUTPUTS - 1);
 
-        Component *last = searchEnvironment(ctx->env, str);
+        Component *last = _searchEnvironment(ctx->env, str);
         if (last == NULL) {
             free(str);
             return false;
@@ -153,7 +153,7 @@ bool updateOutputVariables(Context *ctx, Expression *output) {
             if (str == NULL) return false;
             snprintf(str, size, "%s_%d", ctx->config->OUTPUT_ID, i);
 
-            Component *cmp = searchEnvironment(ctx->env, str);
+            Component *cmp = _searchEnvironment(ctx->env, str);
             if (cmp == NULL) {
                 free(str);
                 return false;
@@ -169,7 +169,7 @@ bool updateOutputVariables(Context *ctx, Expression *output) {
         if (str == NULL) return false;
         snprintf(str, size, "%s_0", ctx->config->OUTPUT_ID);
 
-        Component *first = searchEnvironment(ctx->env, str);
+        Component *first = _searchEnvironment(ctx->env, str);
         if (first == NULL) {
             free(str);
             return false;

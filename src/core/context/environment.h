@@ -23,4 +23,7 @@ typedef struct Environment {
 Environment *createHashEnvironment();
 
 
+Component *_searchEnvironment(Environment const *env, char const *identifier);
+
+
 void freeEnvironment(Environment *env);
