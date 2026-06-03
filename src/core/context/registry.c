@@ -19,21 +19,29 @@ Registry *initRegistry() {
 	Registry *registry = NULL;
 	Operation *operations = NULL;
 	Object *objects = NULL;
+	uint64_t *mapping = NULL;
 
 	registry = malloc(sizeof(Registry));
 	if (registry == NULL) goto error;
 
 	registry->operationsSize = DEFAULT_OPERATIONS;
 	registry->registeredOperations = 0;
+
 	operations = malloc(sizeof(Operation) * DEFAULT_OPERATIONS); 
 	if (operations == NULL) goto error;
+
 	registry->operations = operations;
 
 	registry->objectsSize = DEFAULT_OBJECTS;
 	registry->registeredObjects = 0;
+
 	objects = malloc(sizeof(Object) * DEFAULT_OBJECTS);
-	if (objects == NULL) goto error;
+	mapping = malloc(sizeof(uint64_t) * DEFAULT_OBJECTS);
+
+	if (objects == NULL || mapping == NULL) goto error;
+
 	registry->objects = objects;
+	registry->object_mapping = mapping;
 
 	return registry;
 
@@ -42,6 +50,7 @@ Registry *initRegistry() {
 		free(registry);
 		free(operations);
 		free(objects);
+		free(mapping);
 
 		return NULL;
 }
@@ -103,28 +112,33 @@ bool addOperationImplementation(Registry *registry, char symbol, BuiltinImplemen
 }
 
 
-bool registerObject(Registry *registry, Object obj) {
+bool registerObject(Registry *registry, Object obj, uint64_t id) {
 	if (registry->registeredObjects >= registry->objectsSize) {
 		registry->objectsSize ++;
-		Object *tmp = realloc(registry->objects, registry->objectsSize);
-		if (tmp == NULL) {
+
+		Object *obj_tmp = realloc(registry->objects, registry->objectsSize);
+		uint64_t *id_tmp = realloc(registry->object_mapping, registry->objectsSize);
+		
+		if (obj_tmp == NULL || id_tmp == NULL) {
 			perror("Error registering object");
 			return false;
 		}
 
-		registry->objects = tmp;
+		registry->objects = obj_tmp;
+		registry->object_mapping = id_tmp;
 	}
 
 	registry->objects[registry->registeredObjects] = obj;
+	registry->object_mapping[registry->registeredObjects] = id;
 	registry->registeredObjects ++;
 
 	return true;
 }
 
 
-static Object const *searchObjectID(Registry const *registry, uint64_t obj_id) {
+Object const *searchObject(Registry const *registry, uint64_t obj_id) {
 	for (uint32_t i = 0; i < registry->registeredObjects; i ++) {
-		if (registry->objects[i].id == obj_id) return &registry->objects[i];
+		if (registry->object_mapping[i] == obj_id) return &(registry->objects[i]);
 	}
 	
 	return NULL;
@@ -133,6 +147,7 @@ static Object const *searchObjectID(Registry const *registry, uint64_t obj_id) {
 
 void freeRegistry(Registry *registry) {
 	free(registry->objects);
+	free(registry->object_mapping);
 
 	for (uint32_t i = 0; i < registry->registeredOperations; i ++) {
 		free(registry->operations[i].implementations);
@@ -163,6 +178,22 @@ bool createOperation(Operation *out, const char symbol, Associativity a, bool c,
 	
 	return true;
 }
+
+
+bool createObject(Object *out, uint64_t originModule,
+	void (*cleanup)(void *data), int32_t (*compare)(void const *a,
+	void const *b), void *(*copy)(void const *src)) 
+{
+	(*out) = (Object) {
+		.module = originModule,
+		.cleanup = cleanup,
+		.compare = compare,
+		.copy = copy
+	};
+
+	return true;
+}
+
 
 bool initPrimitives(Registry *registry) {
 	Info(0, "Initalizing Primitives\n");

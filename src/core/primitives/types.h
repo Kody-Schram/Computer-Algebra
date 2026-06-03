@@ -6,13 +6,15 @@
     #define PROJECT_NAME "project"
 #endif
 
+#define LIB_CORE_8 CREATE_REF_8("lib_core")
+
 #define REFERENCE_LENGTH 8
 
-#define CREATE_REF_ID(a, b, c, d, e, f, g, h) \
-	((uint64_t)(a) | ((uint64_t)(b) << 8) | \
-	 ((uint64_t)(c) << 16) | ((uint64_t)(d) << 24) | \
-	 ((uint64_t)(e) << 32) | ((uint64_t)(f) << 40) | \
-	 ((uint64_t)(g) << 48) | ((uint64_t)(h) << 56))
+#define CREATE_REF_8(s) \
+	((uint64_t)(s[0]) | ((uint64_t)(s[1]) << 8) | \
+	 ((uint64_t)(s[2]) << 16) | ((uint64_t)(s[3]) << 24) | \
+	 ((uint64_t)(s[4]) << 32) | ((uint64_t)(s[5]) << 40) | \
+	 ((uint64_t)(s[6]) << 48) | ((uint64_t)(s[7]) << 56))
 
 
 typedef enum ComponentType ComponentType;
@@ -71,10 +73,10 @@ struct Operation {
 
 
 struct Object {
-	uint64_t id;
 	uint64_t module;
 	void (*cleanup)(void *data);
 	int32_t (*compare)(void const *a, void const *b);
+	void *(*copy)(void const *src);
 };
 
 
@@ -95,7 +97,7 @@ struct Expression {
 
 		// Mathematical objects
 		struct {
-			uint64_t const objectId;
+			uint64_t objectId;
 			void *data;
 		};
 

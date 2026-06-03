@@ -122,7 +122,7 @@ Operation const *searchOperation(Registry const *registry, char symbol);
 bool registerOperation(Registry *registry, Operation op);
 
 
-bool registerObject(Registry *registry, Object obj);
+bool registerObject(Registry *registry, Object obj, uint64_t id);
 
 
 Object const *searchObject(Registry const *registry, uint64_t obj_id);
@@ -131,11 +131,8 @@ Object const *searchObject(Registry const *registry, uint64_t obj_id);
 bool createOperation(Operation *out, const char symbol, Associativity a, bool c, uint32_t operands);
 
 
-bool createObject(
-		Object *out,
-		uint64_t id, uint64_t originModule,
-		void (*cleanup)(void *data), 
-		int32_t (*compare)(void const *a, void const *b),
+bool createObject(Object *out, uint64_t originModule,
+		void (*cleanup)(void *data), int32_t (*compare)(void const *a, void const *b),
 		void *(*copy)(void const *src)
 );
 

@@ -11,6 +11,7 @@ typedef struct Registry {
 
 	uint32_t objectsSize;
 	uint32_t registeredObjects;
+	uint64_t *object_mapping;
 	Object *objects;
 } Registry;
 

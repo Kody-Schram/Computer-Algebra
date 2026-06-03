@@ -65,8 +65,8 @@ void *copy_int(void const *src) {
 bool initIntegers(Registry *registry) {
 	Object integer;
 
-	if (!createObject(&integer, INTEGER_ID, LIB_CORE_8, cleanup_int, compare_int, copy_int)) return false;
-	if (!registerObject(registry, integer)) return false;
+	if (!createObject(&integer, LIB_CORE_8, cleanup_int, compare_int, copy_int)) return false;
+	if (!registerObject(registry, integer, INTEGER_ID)) return false;
 
 	if (!addOperationImplementation(registry, '+', add_int)) return false;
 	if (!addOperationImplementation(registry, '*', mult_int)) return false;
