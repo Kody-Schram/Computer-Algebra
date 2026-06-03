@@ -8,7 +8,23 @@
 #include "core/utils/log.h"
 #include "core/primitives/types.h"
 #include "core/utils/type_utils.h"
-#include "core/execution/execution_utils.h"
+
+
+static BuiltinResult callImplementations(
+		uint32_t nImplementations, BuiltinImplementation const * const implementations,
+		Context const *ctx, uint32_t nArgs, Expression **exprs
+) {
+	if (nImplementations == 0) return (BuiltinResult) {.type = BUILTIN_NEUTRAL, .output=NULL };
+
+	BuiltinResult result;
+	for (uint32_t i = 0; i < nImplementations; i ++) {
+		result = implementations[i](ctx, nArgs, exprs);
+		if (result.type == BUILTIN_NEUTRAL) continue;
+		break;
+	}
+	
+	return result;
+}
 
 
 static bool evaluateRecur(Expression **ptr, Environment *env) {
@@ -30,13 +46,14 @@ static bool evaluateRecur(Expression **ptr, Environment *env) {
             }
 
 			// Unexpected number of operands, leave symbolic
-            if (!valid || expr->nOperands != expr->op->arity) return true; 			BuiltinResult result = callImplementations(
-									expr->op->nImplementations, 
-									expr->op->implementations,
-									GLOBALCONTEXT,
-									expr->nOperands,
-									expr->operands
-									);
+            if (!valid || expr->nOperands != expr->op->arity) return true; 			
+			BuiltinResult result = callImplementations(
+				expr->op->nImplementations, 
+				expr->op->implementations,
+				GLOBALCONTEXT,
+				expr->nOperands,
+				expr->operands
+			);
 
 			if (result.type == BUILTIN_ERROR) return false;
 			else if (result.type == BUILTIN_NEUTRAL) return true;
@@ -47,27 +64,9 @@ static bool evaluateRecur(Expression **ptr, Environment *env) {
  
 
         case EXPRESSION_FUNCTION_CALL:
+			printf("running evaluate call handler\n");
 			const Function *func = expr->cmp->func;
-            if (expr->nInputs != func->nParameters) {
-                printf("Expected %" PRIu32 " parameters for '%s', %" PRIu32 " parameters were passed.\n", func->nParameters, expr->cmp->identifier, expr->nInputs);
-                return false;
-            }
 
-			if (GLOBALCONTEXT->config->LAZY_CALLS) return true;
-
-            // Goes up call stack, if global environment is found, then this is evaluating rather than like binding a new variable/function
-            bool evaluating = false;
-            Environment *tempEnv = env;
-            while (tempEnv != NULL) {
-                if (tempEnv == GLOBALCONTEXT->env) { 
-                    evaluating = true;
-                    break;
-                }
-                tempEnv = tempEnv->parent;
-            }
-
-            if (!evaluating) return true;
-           
 
 			for (uint32_t i = 0; i < expr->nInputs; i ++) {
 				if (!evaluateRecur(&expr->inputs[i], env)) return false;

@@ -12,6 +12,8 @@ config.yaml
 startup.txt
 log.txt
 
+vgcore*
+
 tests/logs/*
 
 *.ps1

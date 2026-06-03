@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <math.h>
 
 #include "core/context.h"
 #include "core/primitives/types.h"
@@ -51,17 +50,21 @@ static int process(char *buffer) {
     else if (keyword == 1) return 1;
 
 	Expression *expr = NULL;
-    PARSER_RESULT result = parse(buffer, &expr);
-	if (result != PARSER_SUCCESS) {
+    PARSER_RESULT p_result = parse(buffer, &expr);
+	if (p_result != PARSER_SUCCESS) {
 		free(expr);
-		if (GLOBALCONTEXT->config->STRICT || result == PARSER_ERROR) return 0;
+		if (GLOBALCONTEXT->config->STRICT || p_result == PARSER_ERROR) return 0;
 		return 1;
 	}
 
 	if (expr == NULL) return 1;
     char *out = NULL;
 
-	if (!execute(&expr, &out)) return 1;
+	EXECUTOR_RESULT e_result = execute(&expr, &out);
+	if (e_result != EXECUTOR_SUCCESS) {
+		if (e_result == EXECUTOR_ERROR) return 0;
+		return 1;
+	}
 
     printf("%s\n\n", out);
 	free(out);

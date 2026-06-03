@@ -149,6 +149,10 @@ static void printExpressionRec(Expression const *expr, int level, FILE *stream) 
             for (int p = 0; p < expr->nInputs; p ++) printExpressionRec(expr->inputs[p], level + 1, stream);
             break;
 
+		case EXPRESSION_OBJECT:
+			fprintf(stream, "obj\n");	
+			break;
+
         default:
             fprintf(stream, "no %d\n", expr->type);
     }
