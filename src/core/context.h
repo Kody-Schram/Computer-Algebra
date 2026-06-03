@@ -1,5 +1,6 @@
 #pragma once
 
+#include <stdint.h>
 #include <stdio.h>
 #include "core/primitives/types.h"
 
@@ -132,8 +133,10 @@ bool createOperation(Operation *out, const char symbol, Associativity a, bool c,
 
 bool createObject(
 		Object *out,
-		char const *identifier, char const *originModule,
-		void (*cleanup)(void *data), int32_t (*compare)(void const *a, void const *b)
+		uint64_t id, uint64_t originModule,
+		void (*cleanup)(void *data), 
+		int32_t (*compare)(void const *a, void const *b),
+		void *(*copy)(void const *src)
 );
 
 

@@ -5,6 +5,8 @@
 #include <inttypes.h>
 
 #include "type_utils.h"
+#include "core/context.h"
+#include "core/primitives/types.h"
 #include "core/utils/log.h"
 
 
@@ -35,7 +37,17 @@ Expression *deepCopyExpression(Expression const *expr) {
         case EXPRESSION_VARIABLE:
             new->identifier = strdup(expr->identifier);
             if (new->identifier == NULL) goto error;
+
             break;
+
+		case EXPRESSION_OBJECT:
+			new->objectId = expr->objectId;
+			Object const *obj = searchObject(GLOBALCONTEXT->registry, new->objectId);
+			if (obj == NULL) goto error;
+
+			new->data = obj->copy(expr->data);
+
+			break;
 
         case EXPRESSION_INTEGER:
             new->integer = expr->integer;
@@ -174,6 +186,10 @@ void freeExpression(Expression *expr) {
             }
             free(expr->operands);
             break;
+
+		case EXPRESSION_OBJECT:
+			free(expr->data);
+			break;
             
         default:
             break;
@@ -222,6 +238,11 @@ static void expressionToStringRecur(Expression const *expr, FILE *stream) {
             expressionToStringRecur(expr->inputs[expr->nInputs - 1], stream);
             fprintf(stream, ")");
             break;
+
+		case EXPRESSION_OBJECT:
+			//fprintf(stream, "%p\n", expr->data);
+			fprintf(stream, "%lld", *(long long *) expr->data);
+			break;
             
         default:
             fprintf(stream, "How'd we get here? %d\n", expr->type);

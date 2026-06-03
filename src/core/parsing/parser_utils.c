@@ -9,6 +9,7 @@
 #include "core/utils/log.h"
 #include "core/primitives/types.h"
 #include "core/utils/type_utils.h"
+#include "core/primitives/integers.h"
 
 
 Token *createOperatorToken(Operation const *op) {
@@ -166,8 +167,12 @@ Expression *createExpression(Token const *token) {
             double value = strtod(token->value, &end);
             
             if (value == (long long) value) {
-                expr->type = EXPRESSION_INTEGER;
-                expr->integer = (long long) value;
+                expr->type = EXPRESSION_OBJECT;
+				expr->objectId = INTEGER_ID;
+
+                expr->data = malloc(sizeof(long long));
+				*(long long*)expr->data = (long long) value;
+
                 break;
             }
     

@@ -42,7 +42,7 @@ static bool resolveSymbols(Expression **ptr, Environment *env) {
 			return true;
 
 		case EXPRESSION_FUNCTION_CALL:
-			const Function *func = expr->cmp->func;
+			Function const *func = expr->cmp->func;
 
 			if (expr->nInputs != func->nParameters) {
                 printf(

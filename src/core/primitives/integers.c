@@ -16,28 +16,31 @@ BuiltinResult add_int(Context const *ctx, uint32_t nArgs, Expression **operands)
 	if (a->objectId != INTEGER_ID || b->objectId != INTEGER_ID) return (BuiltinResult) {.type = BUILTIN_NEUTRAL, .output = NULL};
 
 	Expression *out = dummyExpression(EXPRESSION_OBJECT);
-	out->integer = a->integer + b->integer;
+	long long value = (*(long long*) a->data) + (*(long long*) b->data);
+	out->data = malloc(sizeof(long long));
+	*(long long*)out->data = (long long) value;
 
 	return (BuiltinResult) {.type = BUILTIN_SUCCESS, .output = out};
 }
 
 
 BuiltinResult mult_int(Context const *ctx, uint32_t nArgs, Expression **operands) {
-	printf("int mult\n");
     Expression *a = operands[0];
     Expression *b = operands[1];
 
 	if (a->objectId != INTEGER_ID || b->objectId != INTEGER_ID) return (BuiltinResult) {.type = BUILTIN_NEUTRAL, .output = NULL};
 
 	Expression *out = dummyExpression(EXPRESSION_OBJECT);
-	out->integer = a->integer * b->integer;
+	long long value = (*(long long*) a->data) * (*(long long*) b->data);
+	out->data = malloc(sizeof(long long));
+	*(long long*)out->data = (long long) value;
 
 	return (BuiltinResult) {.type = BUILTIN_SUCCESS, .output = out};
 }
 
 
-void cleanup_int(void *integer) {
-	free(integer);
+void cleanup_int(void *data) {
+	free(data);
 }
 
 
@@ -50,8 +53,21 @@ int32_t compare_int(void const *a, void const *b) {
 	return 0;
 }
 
+void *copy_int(void const *src) {
+	long long *new = malloc(sizeof(long long));
+	if (new == NULL) return NULL;
+
+	*new = *(long long*) src;
+	return new;
+}
+
 
 bool initIntegers(Registry *registry) {
+	Object integer;
+
+	if (!createObject(&integer, INTEGER_ID, LIB_CORE_8, cleanup_int, compare_int, copy_int)) return false;
+	if (!registerObject(registry, integer)) return false;
+
 	if (!addOperationImplementation(registry, '+', add_int)) return false;
 	if (!addOperationImplementation(registry, '*', mult_int)) return false;
 
