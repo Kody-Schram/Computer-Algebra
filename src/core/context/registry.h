@@ -7,6 +7,7 @@
 typedef struct Registry {
 	uint32_t operationsSize;
 	uint32_t registeredOperations;
+	char *operation_mapping;
 	Operation *operations;
 
 	uint32_t objectsSize;

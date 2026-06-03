@@ -18,8 +18,9 @@
 Registry *initRegistry() {
 	Registry *registry = NULL;
 	Operation *operations = NULL;
+	char *op_mapping = NULL;
 	Object *objects = NULL;
-	uint64_t *mapping = NULL;
+	uint64_t *obj_mapping = NULL;
 
 	registry = malloc(sizeof(Registry));
 	if (registry == NULL) goto error;
@@ -28,20 +29,22 @@ Registry *initRegistry() {
 	registry->registeredOperations = 0;
 
 	operations = malloc(sizeof(Operation) * DEFAULT_OPERATIONS); 
-	if (operations == NULL) goto error;
+	op_mapping = malloc(sizeof(char) * DEFAULT_OPERATIONS);
+	if (operations == NULL || op_mapping == NULL) goto error;
 
 	registry->operations = operations;
+	registry->operation_mapping = op_mapping;
 
 	registry->objectsSize = DEFAULT_OBJECTS;
 	registry->registeredObjects = 0;
 
 	objects = malloc(sizeof(Object) * DEFAULT_OBJECTS);
-	mapping = malloc(sizeof(uint64_t) * DEFAULT_OBJECTS);
+	obj_mapping = malloc(sizeof(uint64_t) * DEFAULT_OBJECTS);
 
-	if (objects == NULL || mapping == NULL) goto error;
+	if (objects == NULL || obj_mapping == NULL) goto error;
 
 	registry->objects = objects;
-	registry->object_mapping = mapping;
+	registry->object_mapping = obj_mapping;
 
 	return registry;
 
@@ -49,8 +52,9 @@ Registry *initRegistry() {
 		perror("Error initializing registry");
 		free(registry);
 		free(operations);
+		free(op_mapping);
 		free(objects);
-		free(mapping);
+		free(obj_mapping);
 
 		return NULL;
 }
@@ -59,16 +63,19 @@ Registry *initRegistry() {
 bool registerOperation(Registry *registry, Operation op) {
 	if (registry->registeredOperations >= registry->operationsSize) {
 		registry->operationsSize ++;
-		Operation *tmp = realloc(registry->operations, registry->operationsSize);
-		if (tmp == NULL) {
+		Operation *op_tmp = realloc(registry->operations, sizeof(Operation) * registry->operationsSize);
+		char *map_tmp = realloc(registry->operation_mapping, sizeof(char) * registry->operationsSize);
+		if (op_tmp == NULL || map_tmp == NULL) {
 			perror("Error registering operation");
 			return false;
 		}
 
-		registry->operations = tmp;
+		registry->operations = op_tmp;
+		registry->operation_mapping = map_tmp;
 	}
 
 	registry->operations[registry->registeredOperations] = op;
+	registry->operation_mapping[registry->registeredOperations] = op.symbol;
 	registry->registeredOperations ++;
 
 	return true;
@@ -77,7 +84,7 @@ bool registerOperation(Registry *registry, Operation op) {
 
 static Operation *_searchOperation(Registry const *registry, char symbol) {
 	for (unsigned int i = 0; i < registry->registeredOperations; i ++) {
-		if (registry->operations[i].symbol == symbol) return &registry->operations[i];
+		if (registry->operation_mapping[i] == symbol) return &registry->operations[i];
 	}
 
 	return NULL;
@@ -116,8 +123,8 @@ bool registerObject(Registry *registry, Object obj, uint64_t id) {
 	if (registry->registeredObjects >= registry->objectsSize) {
 		registry->objectsSize ++;
 
-		Object *obj_tmp = realloc(registry->objects, registry->objectsSize);
-		uint64_t *id_tmp = realloc(registry->object_mapping, registry->objectsSize);
+		Object *obj_tmp = realloc(registry->objects, sizeof(Object) * registry->objectsSize);
+		uint64_t *id_tmp = realloc(registry->object_mapping, sizeof(uint64_t) * registry->objectsSize);
 		
 		if (obj_tmp == NULL || id_tmp == NULL) {
 			perror("Error registering object");
@@ -153,6 +160,7 @@ void freeRegistry(Registry *registry) {
 		free(registry->operations[i].implementations);
 	}
 	free(registry->operations);
+	free(registry->object_mapping);
 
 	free(registry);
 }
