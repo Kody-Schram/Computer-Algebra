@@ -1,4 +1,4 @@
-# COMPUTR ALGEBRA
+# COMPUTER ALGEBRA
 
 *A system which parses and executes mathematical expressions and equations.*
 
