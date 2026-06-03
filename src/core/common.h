@@ -77,6 +77,7 @@ struct Object {
 	void (*cleanup)(void *data);
 	int32_t (*compare)(void const *a, void const *b);
 	void *(*copy)(void const *src);
+	char *(*print)(void const *data);
 };
 
 

@@ -317,7 +317,7 @@ static int consumeEvent(State *state, yaml_event_t *event, Config *config) {
                 if (!strcmp(value, "saveOutputs")) *state = STATE_OUTPUTS;
                 else if (!strcmp(value, "preserveFractions")) *state = STATE_PRESERVE_FRACS;
                 else if (!strcmp(value, "lazyFunctionCalls")) *state = STATE_LAZY_CALLS;
-				else if (!strcmp(value, "strict")) * state = STATE_STRICT;
+				else if (!strcmp(value, "strict")) *state = STATE_STRICT;
                 else {
                     printf("Unexpected keyword: %s.\n", value);
                     return 0;
@@ -447,7 +447,7 @@ static void initConfig(Config *config) {
 Config *loadConfig(char const *cpath) {
     Config *config = calloc(1, sizeof(Config));
     if (config == NULL) {
-        perror("Error in config");
+        perror("Error creating config");
         return NULL;
     }
 
@@ -472,7 +472,7 @@ Config *loadConfig(char const *cpath) {
         int path = 0;
 
         while (cfile == NULL && path < npaths) {
-            printf("trying to load from %s\n", paths[path]);
+            printf("Loading config from: %s\n", paths[path]);
             cfile = fopen(paths[path], "rb");
             if (cfile == NULL) {
                 path ++;

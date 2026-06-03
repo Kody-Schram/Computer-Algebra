@@ -1,3 +1,4 @@
+#include <math.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -149,7 +150,15 @@ static void printExpressionRec(Expression const *expr, int level, FILE *stream) 
             break;
 
 		case EXPRESSION_OBJECT:
-			fprintf(stream, "obj\n");	
+			Object const *obj = searchObject(GLOBALCONTEXT->registry, expr->objectId);
+			if (obj != NULL && obj->print != NULL) {
+				char *out = obj->print(expr->data);
+				fprintf(stream, "<type: OBJECT, data: %s>", out);
+				free(out);
+			}
+
+			else fprintf(stream, "<type: OBJECT, data: ?>\n");
+
 			break;
 
         default:
@@ -191,7 +200,9 @@ void freeExpression(Expression *expr) {
             break;
 
 		case EXPRESSION_OBJECT:
-			free(expr->data);
+			Object const *obj = searchObject(GLOBALCONTEXT->registry, expr->objectId);
+			if (obj != NULL && obj->cleanup != NULL) obj->cleanup(expr->data);	
+
 			break;
             
         default:
@@ -243,8 +254,15 @@ static void expressionToStringRecur(Expression const *expr, FILE *stream) {
             break;
 
 		case EXPRESSION_OBJECT:
-			//fprintf(stream, "%p\n", expr->data);
-			fprintf(stream, "%lld", *(long long *) expr->data);
+			Object const *obj = searchObject(GLOBALCONTEXT->registry, expr->objectId);
+			if (obj != NULL && obj->print != NULL) {
+				char *out = obj->print(expr->data);
+				fprintf(stream, "%s", out);
+				free(out);
+			}
+
+			else fprintf(stream, "(object)");
+
 			break;
             
         default:

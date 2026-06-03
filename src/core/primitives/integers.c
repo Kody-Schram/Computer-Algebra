@@ -160,10 +160,23 @@ void *copy_int(void const *src) {
 }
 
 
+char *print_int(void const *data) {
+	if (data == NULL) return NULL;
+
+    int64_t val = *(int64_t const *)data;
+    char *result = NULL;
+
+    if (asprintf(&result, "%" PRId64, val) < 0) {
+        return NULL; 
+    }
+
+    return result;
+}
+
 bool initIntegers(Registry *registry) {
 	Object integer;
 
-	if (!createObject(&integer, LIB_CORE_8, cleanup_int, compare_int, copy_int)) return false;
+	if (!createObject(&integer, LIB_CORE_8, cleanup_int, compare_int, copy_int, print_int)) return false;
 	if (!registerObject(registry, integer, INTEGER_ID)) return false;
 
 	if (!addOperationImplementation(registry, '+', add_int)) return false;

@@ -81,19 +81,16 @@ bool initContext(char const *cpath) {
 
 	GLOBALCONTEXT = ctx;
 
-	printf("setting primitives\n");
 	if (!initPrimitives(registry)) {
 		freeContext(ctx);
 		return false;
 	}
 
-	printf("initting output vars\n");
     if (!initOutputVariables(ctx)) {
         freeContext(ctx);
         return false;
     }
 
-	printf("done ctx init\n");
     return true;
 }
 

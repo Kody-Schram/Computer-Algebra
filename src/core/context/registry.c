@@ -188,14 +188,15 @@ bool createOperation(Operation *out, const char symbol, Associativity a, bool c,
 
 
 bool createObject(Object *out, uint64_t originModule,
-	void (*cleanup)(void *data), int32_t (*compare)(void const *a,
-	void const *b), void *(*copy)(void const *src)) 
+	void (*cleanup)(void *data), int32_t (*compare)(void const *a, void const *b), 
+	void *(*copy)(void const *src), char *(*print)(void const *data)) 
 {
 	(*out) = (Object) {
 		.module = originModule,
 		.cleanup = cleanup,
 		.compare = compare,
-		.copy = copy
+		.copy = copy,
+		.print = print
 	};
 
 	return true;
