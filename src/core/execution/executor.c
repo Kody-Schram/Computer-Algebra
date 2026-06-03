@@ -71,7 +71,24 @@ static EXECUTOR_RESULT resolveSymbols(Expression **ptr, Environment *env) {
 				for (uint32_t i = 0; i < expr->nInputs; i ++) {
 					result = resolveSymbols(&expr->inputs[i], env);
 					if (result != EXECUTOR_SUCCESS) return result;
+
+					result = simplify(&expr->inputs[i]);
+					if (result != EXECUTOR_SUCCESS) return result;
 				}
+
+				BuiltinResult b_result = callImplementations(
+						expr->cmp->func->nImplementations,
+						expr->cmp->func->implementations,
+						GLOBALCONTEXT,
+						expr->nInputs,	
+						expr->inputs
+				);
+
+				if (b_result.type == BUILTIN_ERROR) return EXECUTOR_ERROR;
+				else if (b_result.type == BUILTIN_NEUTRAL) return EXECUTOR_SUCCESS;
+
+				freeExpression(expr);
+				*ptr = b_result.output;
 
 				return EXECUTOR_SUCCESS;
 			}
@@ -120,57 +137,9 @@ static EXECUTOR_RESULT resolveSymbols(Expression **ptr, Environment *env) {
 }
 
 
-static EXECUTOR_RESULT evaluateBuiltins(Expression **ptr) {
-	Info(0, "Pre-Evaluating Functions\n");
-	if (ptr == NULL || *ptr == NULL) return EXECUTOR_SUCCESS;
-	Expression *expr = *ptr;
-
-	EXECUTOR_RESULT result;
-	switch (expr->type) {
-		case EXPRESSION_FUNCTION_CALL:
-			for (uint32_t i = 0; i < expr->nInputs; i ++) {
-				result = simplify(&(expr->inputs[i]));
-				if (result != EXECUTOR_SUCCESS) return result;
-			}
-
-			BuiltinResult b_result = callImplementations(
-					expr->cmp->func->nImplementations,
-					expr->cmp->func->implementations,
-					GLOBALCONTEXT,
-					expr->nInputs,	
-					expr->inputs
-			);
-
-			if (b_result.type == BUILTIN_ERROR) return EXECUTOR_ERROR;
-			else if (b_result.type == BUILTIN_NEUTRAL) return EXECUTOR_SUCCESS;
-
-			freeExpression(expr);
-			*ptr = b_result.output;
-
-			break;
-
-		case EXPRESSION_OPERATOR:
-			for (uint32_t i = 0; i < expr->nOperands; i ++) {
-				result = evaluateBuiltins(&(expr->operands[i]));
-				if (result != EXECUTOR_SUCCESS) return result;
-			}
-
-			break;
-
-		default:
-			break;
-	}
-
-	return EXECUTOR_SUCCESS;
-}
-
-
 EXECUTOR_RESULT execute(Expression **ptr, char **output) {
 	EXECUTOR_RESULT result;
 	result = resolveSymbols(ptr, GLOBALCONTEXT->env);
-	if (result != EXECUTOR_SUCCESS) goto error;
-
-	result = evaluateBuiltins(ptr);
 	if (result != EXECUTOR_SUCCESS) goto error;
 
 	if (!simplify(ptr)) goto error;
