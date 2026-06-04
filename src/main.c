@@ -52,6 +52,7 @@ static int process(char *buffer) {
 	Expression *expr = NULL;
     PARSER_RESULT p_result = parse(buffer, &expr);
 	if (p_result != PARSER_SUCCESS) {
+		printf("\n");
 		free(expr);
 		if (GLOBALCONTEXT->config->STRICT || p_result == PARSER_ERROR) return 0;
 		return 1;
@@ -62,6 +63,7 @@ static int process(char *buffer) {
 
 	EXECUTOR_RESULT e_result = execute(&expr, &out);
 	if (e_result != EXECUTOR_SUCCESS) {
+		printf("\n");
 		if (e_result == EXECUTOR_ERROR) return 0;
 		return 1;
 	}

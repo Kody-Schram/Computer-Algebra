@@ -13,7 +13,6 @@
 
 
 Token *createOperatorToken(Operation const *op) {
-    Debug(0, "running dedicated operator creation func\n");
     Token *token = calloc(1, sizeof(Token));
     if (token == NULL) {
         perror("Error creating token");
@@ -23,13 +22,11 @@ Token *createOperatorToken(Operation const *op) {
     token->type = TOKEN_OPERATOR;
 	token->op = op;
     
-	Debug(0, "returning new operator token\n");
     return token;
 }
 
 
 Token *createFuncCallToken(Component const *cmp) {
-	Debug(0, "Creating function call token\n");
 	Token *token = calloc(1, sizeof(Token));
 	if (token == NULL) {
 		perror("Error creating token");
@@ -38,7 +35,6 @@ Token *createFuncCallToken(Component const *cmp) {
 
 	token->type = TOKEN_FUNC_CALL_PLACEHOLDER;
 	token->cmp = cmp;
-	Debug(0, "new token fn nparams %d\n", cmp->func->nParameters);
 
 	return token;
 }

@@ -113,6 +113,7 @@ static uint32_t getComponent(char *c, Component const **out) {
         c[length - i] = temp;
 
         if (cmp != NULL) {
+			Debug(0, "found left cmp %s\n", cmp->identifier);
 			*out = cmp;
 			result = length - i;
         }
@@ -128,6 +129,7 @@ static uint32_t getComponent(char *c, Component const **out) {
         c[length] = temp;
 
         if (cmp != NULL && result < length - i) {
+			Debug(0, "found right cmp %s\n", cmp->identifier);
 			*out = cmp;
             result = i;
         }
@@ -141,7 +143,8 @@ static uint32_t getComponent(char *c, Component const **out) {
             c[end] = temp;
 
             if (cmp != NULL && result < end - i) {
-				*out = cmp;
+				Debug(0, "found center cmp %s\n", cmp->identifier);
+				*out = NULL;
                 result = i;
             }
         }

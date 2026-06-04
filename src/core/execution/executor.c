@@ -56,14 +56,6 @@ static EXECUTOR_RESULT resolveSymbols(Expression **ptr, Environment *env) {
 			printf("running sym res call handler\n");
 			Function const *func = expr->cmp->func;
 
-			if (expr->nInputs != func->nParameters) {
-                printf(
-					"Expected %" PRIu32 " parameters for '%s', %" PRIu32 " parameters were passed.\n", 
-					func->nParameters, expr->cmp->identifier, expr->nInputs
-				);
-                return EXECUTOR_RUNTIME_ERROR;
-			}
-
 			// Handles builtin functions
 			// Is called now so that the outputs are ready for simplification step
 			if (func->type == BUILTIN) {

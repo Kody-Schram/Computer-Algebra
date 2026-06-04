@@ -1,3 +1,4 @@
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -5,6 +6,7 @@
 #include "normalizer.h"
 #include "core/context.h"
 #include "core/context/environment.h"
+#include "core/parsing/parser.h"
 #include "core/parsing/parser_types.h"
 #include "core/utils/log.h"
 #include "core/parsing/parser_utils.h"
@@ -84,7 +86,7 @@ static PARSER_RESULT handleImplicitMul(Token *cur, Token *prev) {
  *
  */
 static PARSER_RESULT handleExponentRewrite(Token **cur) {
-    if ((*cur) == NULL || (*cur)->type != TOKEN_OPERATOR || (*cur)->op->symbol != '*') return PARSER_SUCCESS;
+    if ((*cur)->type != TOKEN_OPERATOR || (*cur)->op->symbol != '*') return PARSER_SUCCESS;
 	if ((*cur)->next == NULL || (*cur)->next->type != TOKEN_OPERATOR || (*cur)->next->op->symbol != '*') return PARSER_SUCCESS; 
 
 	Debug(0, "Rewriting exponent\n");
@@ -114,7 +116,7 @@ static PARSER_RESULT handleExponentRewrite(Token **cur) {
  *  1: Success or no work done
  *
  */
-static PARSER_RESULT checkInvalidBinop(const Token *cur, const Token *prev) {
+static PARSER_RESULT checkBinop(const Token *cur, const Token *prev) {
     if (cur->type != TOKEN_OPERATOR) return PARSER_SUCCESS; // no work to do
     if (cur->next == NULL) {
         printf("Operator must be followed by another token.\n");
@@ -133,11 +135,9 @@ static PARSER_RESULT checkInvalidBinop(const Token *cur, const Token *prev) {
     if (cur->op->symbol == '-' && (cur->next == NULL || cur->next->type == TOKEN_OPERATOR)) {
         if (prev->type != TOKEN_OPERATOR && cur->next->type != TOKEN_OPERATOR) {
 			printf("Invalid operation \"%s %c %s\".\n", prev->value, cur->op->symbol, cur->next->value);
-		}
-		else if (prev->type != TOKEN_OPERATOR) {
+		} else if (prev->type != TOKEN_OPERATOR) {
 			printf("Invalid operation \"%s %c %c\".\n", prev->value, cur->op->symbol, cur->next->op->symbol);
-		}
-		else if (cur->next->type != TOKEN_OPERATOR) {
+		} else if (cur->next->type != TOKEN_OPERATOR) {
 			printf("Invalid operation \"%c %c %s\".\n", prev->op->symbol, cur->op->symbol, cur->next->value);
 		}
 
@@ -147,11 +147,9 @@ static PARSER_RESULT checkInvalidBinop(const Token *cur, const Token *prev) {
     if (cur->next->type != TOKEN_IDENTIFIER && cur->next->type != TOKEN_NUMBER && cur->next->type != TOKEN_FUNC_CALL_PLACEHOLDER && cur->next->type != TOKEN_LEFT_PAREN) {
         if (prev->type != TOKEN_OPERATOR && cur->next->type != TOKEN_OPERATOR) {
 			printf("Invalid operation \"%s %c %s\".\n", prev->value, cur->op->symbol, cur->next->value);
-		}
-		else if (prev->type != TOKEN_OPERATOR) {
+		} else if (prev->type != TOKEN_OPERATOR) {
 			printf("Invalid operation \"%s %c %c\".\n", prev->value, cur->op->symbol, cur->next->op->symbol);
-		}
-		else if (cur->next->type != TOKEN_OPERATOR) {
+		} else if (cur->next->type != TOKEN_OPERATOR) {
 			printf("Invalid operation \"%c %c %s\".\n", prev->op->symbol, cur->op->symbol, cur->next->value);
 		}
 
@@ -172,7 +170,7 @@ static PARSER_RESULT checkInvalidBinop(const Token *cur, const Token *prev) {
  *
  */
 static PARSER_RESULT handleFunctionParens(Token *cur) {
-	if (cur == NULL || cur->type != TOKEN_FUNC_CALL_PLACEHOLDER) return PARSER_SUCCESS;
+	if (cur->type != TOKEN_FUNC_CALL_PLACEHOLDER) return PARSER_SUCCESS;
 
 	// Assume since theres opening paren that the parameters are explicit
 	if (cur->next == NULL || cur->next->type == TOKEN_LEFT_PAREN) return PARSER_SUCCESS;
@@ -339,6 +337,56 @@ PARSER_RESULT handleLocalVariables(Token **ptr, char **parameters, int nParamete
     return PARSER_SUCCESS;
 }
 
+
+static PARSER_RESULT checkFunctionCall(Token *cur) {
+	if (cur->type != TOKEN_FUNC_CALL_PLACEHOLDER) return PARSER_SUCCESS;
+
+	Token *callToken = cur;
+	Debug(0, "Checking call to '%s'\n", cur->cmp->identifier);
+
+	uint32_t nParams = 0;
+	uint16_t depth = 0;
+	bool isParam = false;
+
+	cur = cur->next;
+
+	while (cur != NULL && !(depth == 1 && cur->type == TOKEN_RIGHT_PAREN)) {
+		if (cur->type == TOKEN_LEFT_PAREN) depth ++;
+		else if (cur->type == TOKEN_RIGHT_PAREN) depth --;
+
+		if (depth == 1 && (cur->type == TOKEN_SEPARATOR || cur->type == TOKEN_RIGHT_PAREN)) {
+			if (!isParam) {
+				printf("Invalid function call syntax for '%s', invalid parameter.\n", callToken->cmp->identifier);
+				return PARSER_SYNTAX_ERROR;	
+			}
+
+			nParams ++;
+		}
+
+		else if (cur->type != TOKEN_LEFT_PAREN && cur->type != TOKEN_RIGHT_PAREN && cur->type != TOKEN_SEPARATOR) isParam = true;
+		
+		cur = cur->next;
+	}
+
+	if (!isParam) {
+		printf("Invalid function call syntax for '%s', invalid parameter.\n", callToken->cmp->identifier);
+		return PARSER_SYNTAX_ERROR;	
+	}
+
+	nParams ++;
+
+	if (nParams != callToken->cmp->func->nParameters) {
+		if (nParams == 1) printf("Function '%s' takes %d parameters, %d was provided\n",
+				callToken->cmp->identifier, callToken->cmp->func->nParameters, nParams);
+
+		else printf("Function '%s' takes %d parameters, %d were provided\n",
+				callToken->cmp->identifier, callToken->cmp->func->nParameters, nParams);
+		return PARSER_SYNTAX_ERROR;
+	}
+
+	return PARSER_SUCCESS;
+}
+
 /**
  * Normalizes input tokens
  *
@@ -364,7 +412,8 @@ PARSER_RESULT normalize(Token** head) {
         if ((result = handleFunctionParens(*ptr)) != PARSER_SUCCESS) return result;
         if ((result = handleImplicitMul(*ptr, prev)) != PARSER_SUCCESS) return result;
         if ((result = handleExponentRewrite(ptr)) != PARSER_SUCCESS) return result;
-        if ((result = checkInvalidBinop(*ptr, prev)) != PARSER_SUCCESS) return result;
+        if ((result = checkBinop(*ptr, prev)) != PARSER_SUCCESS) return result;
+		if ((result = checkFunctionCall(*ptr)) != PARSER_SUCCESS) return result;
 		// Counts open parenthesis 
 		if ((*ptr)->type == TOKEN_LEFT_PAREN) { 
 			//Empty parens, what are we doing gang 

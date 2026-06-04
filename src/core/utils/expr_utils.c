@@ -153,7 +153,7 @@ static void printExpressionRec(Expression const *expr, int level, FILE *stream) 
 			Object const *obj = searchObject(GLOBALCONTEXT->registry, expr->objectId);
 			if (obj != NULL && obj->print != NULL) {
 				char *out = obj->print(expr->data);
-				fprintf(stream, "<type: OBJECT, data: %s>", out);
+				fprintf(stream, "<type: OBJECT, data: %s>\n", out);
 				free(out);
 			}
 
@@ -301,8 +301,3 @@ char *expressionToString(Expression const *expr) {
     fclose(stream);
     return string;
 }
-
-
-
-
-
