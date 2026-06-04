@@ -60,7 +60,7 @@ Environment *createHashEnvironment() {
 }
 
 
-bool bindComponent(Environment *env, ComponentType type, char const *identifier, void const *data) {
+bool bindComponent(Environment *env, ComponentType type, char *identifier, void const *data) {
     Component *new = calloc(1, sizeof(Component));
     if (new == NULL) {
         perror("Error in binding component");
@@ -68,7 +68,7 @@ bool bindComponent(Environment *env, ComponentType type, char const *identifier,
     }
     
     new->type = type;
-    new->identifier = strdup(identifier);
+    new->identifier = identifier;
     if (new->identifier == NULL) {
         perror("Error binding component");
         freeComponent(new);
@@ -107,19 +107,18 @@ bool bindComponent(Environment *env, ComponentType type, char const *identifier,
 
 
 Component *_searchEnvironment(Environment const *env, char const *identifier) {
-    if (identifier == NULL) return NULL;
+    if (identifier == NULL || env == NULL) return NULL;
     //printf("searching environment for '%s'\n", identifier);
     switch (env->type) {
         case ENV_LIST:
             //("Checking linked list env\n");
             Component *cmp = env->compList;
-            while (cmp != NULL && env != NULL) {
+            while (cmp != NULL) {
 				if (!strcmp(cmp->identifier, identifier)) return cmp;
                 cmp = cmp->next;
-				if (cmp == NULL) env = env->parent;
             }
-            
-            return NULL;
+
+			return _searchEnvironment(env->parent, identifier);
             
         case ENV_HASH:
             printf("Stop trying bro.\n");

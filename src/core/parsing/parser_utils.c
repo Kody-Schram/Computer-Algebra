@@ -153,7 +153,7 @@ Expression *createExpression(Token const *token) {
     switch (token->type) {
         case TOKEN_IDENTIFIER:
             expr->type = EXPRESSION_VARIABLE;
-            expr->identifier = strdup(token->value);
+            expr->identifier = token->value;
             if (expr->identifier == NULL) goto error;
             break;
             
@@ -169,10 +169,13 @@ Expression *createExpression(Token const *token) {
                 expr->data = malloc(sizeof(long long));
 				*(long long*)expr->data = (long long) value;
 
+				free(token->value);
                 break;
             }
     
             expr->value = value;
+
+			free(token->value);
             break;
             
         case TOKEN_OPERATOR:
@@ -227,17 +230,19 @@ void freeTokens(Token *head) {
     Token* current = head;
     while (current != NULL) {
         Token *next = current->next;
-        
-        if (current->type != TOKEN_FUNC_CALL_PLACEHOLDER 
-			&&current->type != TOKEN_FUNC_CALL 
-			&& current->type != TOKEN_OPERATOR) 
-		{
+        free(current);
+        current = next;
+    }
+}
 
-            Debug(0, "Freeing '%s'\n", current->value);
-            free(current->value);
-        }
-        else Debug(0, "Freeing function call or operator\n");
 
+void deepFreeTokens(Token *head) {
+    Debug(0, "Freeing tokens.\n");
+
+    Token* current = head;
+    while (current != NULL) {
+        Token *next = current->next;
+		free(current->value);
         free(current);
         current = next;
     }

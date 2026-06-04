@@ -99,7 +99,7 @@ bool reloadConfig(Context *ctx);
 Environment *createEnvironment();
 
 
-bool bindComponent(Environment *env, ComponentType type, char const *identifier, void const *data);
+bool bindComponent(Environment *env, ComponentType type, char *identifier, void const *data);
 
 
 Component const *searchEnvironment(Environment const *env, char const *identifier);

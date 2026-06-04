@@ -229,7 +229,7 @@ static PARSER_RESULT parseFunctionAssignment(Token *head) {
                     printf("Invalid function declaration.\n");
                     goto syntax_error;
                 }
-                identifier = strdup(cur->value);
+                identifier = cur->value;
                 if (identifier == NULL) {
                     perror("Error parsing function assignment");
                     goto syntax_error;
@@ -259,7 +259,7 @@ static PARSER_RESULT parseFunctionAssignment(Token *head) {
                     parameters = temp;
                 }
                 
-                parameters[nParameters] = strdup(cur->value);
+                parameters[nParameters] = cur->value;
                 nParameters ++;
             }
         }
@@ -325,7 +325,6 @@ static PARSER_RESULT parseFunctionAssignment(Token *head) {
     freeTokens(head);
     free(rpn->items);
     free(rpn);
-    free(identifier);
 
 	Debug(0, "Successfully parsed function assignment, %d\n", function->nParameters);
 

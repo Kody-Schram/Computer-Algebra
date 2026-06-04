@@ -200,8 +200,10 @@ static PARSER_RESULT handleFunctionParens(Token *cur) {
 
 	error:
 		perror("Error handling function parentheses");
-		freeTokens(opening);
-		freeTokens(closing);
+		free(opening->value);
+		free(opening);
+		free(closing->value);
+		free(closing);
 
 		return PARSER_ERROR;
 }
@@ -242,8 +244,10 @@ static PARSER_RESULT handleNegative(Token **cur, Token *prev) {
 
 	error:
 		perror("Error handling negative");
-		freeTokens(negative);
-		freeTokens(mult);
+		free(negative->value);
+		free(negative);
+		free(mult->value);
+		free(mult);
 
 		return PARSER_ERROR;
 }

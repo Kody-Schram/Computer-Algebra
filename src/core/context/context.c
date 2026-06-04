@@ -21,7 +21,7 @@ bool initOutputVariables(Context *ctx) {
 		if (temp == NULL) return false;
 		temp->value = 0;
 
-		if (!bindComponent(ctx->env, COMP_VARIABLE, ctx->config->OUTPUT_ID, temp)) {
+		if (!bindComponent(ctx->env, COMP_VARIABLE, strdup(ctx->config->OUTPUT_ID), temp)) {
 			free(temp);
 			return false;
 		}

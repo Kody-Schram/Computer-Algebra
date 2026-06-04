@@ -1,5 +1,6 @@
 #include <stdint.h>
 #include <inttypes.h>
+#include <string.h>
 
 #include "executor.h"
 #include "core/common.h"
@@ -91,7 +92,7 @@ static EXECUTOR_RESULT resolveSymbols(Expression **ptr, Environment *env) {
 				result = resolveSymbols(&expr->inputs[i], env);
 				if (result != EXECUTOR_SUCCESS) return result;
 
-				if (!bindComponent(tmpEnv, COMP_VARIABLE, func->parameters[i], expr->inputs[i])) return EXECUTOR_ERROR;
+				if (!bindComponent(tmpEnv, COMP_VARIABLE, strdup(func->parameters[i]), expr->inputs[i])) return EXECUTOR_ERROR;
 			}
 
 			freeExpression(expr);
