@@ -139,12 +139,7 @@ struct Function {
 
     union {
         Expression *definition;
-
-		struct {
-			uint32_t implementationSize;
-			uint32_t nImplementations;
-			BuiltinImplementation *implementations;
-		};
+		BuiltinImplementation implementation;
     };
 };
 

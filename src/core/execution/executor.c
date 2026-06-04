@@ -2,6 +2,7 @@
 #include <inttypes.h>
 
 #include "executor.h"
+#include "core/common.h"
 #include "core/context.h"
 #include "simplify.h"
 
@@ -53,7 +54,6 @@ static EXECUTOR_RESULT resolveSymbols(Expression **ptr, Environment *env) {
 			break;
 
 		case EXPRESSION_FUNCTION_CALL:
-			printf("running sym res call handler\n");
 			Function const *func = expr->cmp->func;
 
 			// Handles builtin functions
@@ -67,13 +67,7 @@ static EXECUTOR_RESULT resolveSymbols(Expression **ptr, Environment *env) {
 					if (result != EXECUTOR_SUCCESS) return result;
 				}
 
-				BuiltinResult b_result = callImplementations(
-						expr->cmp->func->nImplementations,
-						expr->cmp->func->implementations,
-						GLOBALCONTEXT,
-						expr->nInputs,	
-						expr->inputs
-				);
+				BuiltinResult b_result = func->implementation(GLOBALCONTEXT, expr->nInputs, expr->inputs);
 
 				if (b_result.type == BUILTIN_ERROR) return EXECUTOR_ERROR;
 				else if (b_result.type == BUILTIN_NEUTRAL) return EXECUTOR_SUCCESS;
@@ -100,7 +94,6 @@ static EXECUTOR_RESULT resolveSymbols(Expression **ptr, Environment *env) {
 				if (!bindComponent(tmpEnv, COMP_VARIABLE, func->parameters[i], expr->inputs[i])) return EXECUTOR_ERROR;
 			}
 
-			printf("freeing func expr\n");
 			freeExpression(expr);
 			*ptr = deepCopyExpression(func->definition);
 			Debug(1, printExpression(*ptr));
