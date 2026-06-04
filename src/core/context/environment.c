@@ -7,7 +7,15 @@
 #include "core/utils/expr_utils.h"
 
 
-static void freeFunction(Function *func) {
+static inline void freeFunction(Function *func) {
+    if (func == NULL) return;
+    free(func->parameters);
+    if (func->type == DEFINED) freeExpression(func->definition);
+    free(func);
+} 
+
+
+static inline void deepFreeFunction(Function *func) {
     if (func == NULL) return;
     if (func->parameters != NULL) {
         for (int i = 0; i < func->nParameters; i ++) free(func->parameters[i]);
@@ -15,10 +23,27 @@ static void freeFunction(Function *func) {
     free(func->parameters);
     if (func->type == DEFINED) freeExpression(func->definition);
     free(func);
-} 
+}
 
 
-static void freeComponent(Component *cmp) {
+static inline void freeComponent(Component *cmp) {
+    switch (cmp->type) {
+        case COMP_FUNCTION:
+            Debug(0, "Freeing func '%s'\n", cmp->identifier);
+            freeFunction(cmp->func);
+            break;
+            
+        case COMP_VARIABLE:
+            Debug(0, "Freeing variable '%s'\n", cmp->identifier);
+            freeExpression(cmp->value);
+            break;
+    }
+
+    free(cmp);
+}
+
+
+static inline void deepFreeComponent(Component *cmp) {
     switch (cmp->type) {
         case COMP_FUNCTION:
             Debug(0, "Freeing func '%s'\n", cmp->identifier);
@@ -207,4 +232,26 @@ void freeEnvironment(Environment *env) {
     Debug(0, "\n");
 }
 
+
+void deepFreeEnvironment(Environment *env) {
+    Debug(0, "Deep Freeing environment\n");
+    switch (env->type) {
+        case ENV_LIST:
+            Component *cmp = env->compList;
+            while (cmp != NULL) {
+                Component *temp = cmp->next;
+                deepFreeComponent(cmp);
+                cmp = temp;
+            }
+            break;
+            
+        case ENV_HASH:
+            printf("Hashing not implemented!.\n");
+            break;
+    }
+
+    free(env);
+    Debug(0, "\n");
+
+}
 

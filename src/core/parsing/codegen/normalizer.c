@@ -315,6 +315,7 @@ PARSER_RESULT handleLocalVariables(Token **ptr, char **parameters, int nParamete
                 Token *right = createToken(TOKEN_IDENTIFIER, id + max, strlen(id) - max);
                 if (right == NULL) {
                     perror("Error handling local variables");
+					free(left->value);
                     free(left);
                     return PARSER_ERROR;
                 }

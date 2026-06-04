@@ -613,6 +613,6 @@ void freeConfig(Config *config) {
     }
 
     free(config->STARTUP);
-    free(config->OUTPUT_ID);
+    free(config->OUTPUT_ID); 
     free(config);
 }

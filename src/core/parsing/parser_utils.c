@@ -147,8 +147,12 @@ FILE *printTokens(Token const *head) {
 
 
 Expression *createExpression(Token const *token) {
-    Expression *expr = calloc(1, sizeof(Expression));
-    if (expr == NULL) goto error;
+	Expression *expr;
+
+	if (token->type != TOKEN_FUNC_CALL) {
+		expr = calloc(1, sizeof(Expression));
+		if (expr == NULL) goto error;
+	}
 
     switch (token->type) {
         case TOKEN_IDENTIFIER:
@@ -189,7 +193,6 @@ Expression *createExpression(Token const *token) {
             
 			freeExpression(expr);
         case TOKEN_FUNC_CALL:
-			free(expr);
 			expr = token->finalizedCall;
 			Debug(0, "new expr fn nparams %d\n", expr->cmp->func->nParameters);
             break;

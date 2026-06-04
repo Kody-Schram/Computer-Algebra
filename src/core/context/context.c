@@ -45,8 +45,6 @@ bool initOutputVariables(Context *ctx) {
 			free(str);
 			return false;
 		}
-
-		free(str);
 	}
 
     return true;
@@ -96,7 +94,7 @@ bool initContext(char const *cpath) {
 
 
 void freeContext(Context *ctx) {
-	freeEnvironment(ctx->env);
+	deepFreeEnvironment(ctx->env);
 	freeConfig(ctx->config);
 	freeRegistry(ctx->registry);
 
