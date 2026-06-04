@@ -29,11 +29,14 @@ enum TokenType {
 struct Token {
     TokenType type;
 
+	// Pack bools for contains assignment, contains function assignment, contains function calls
+	// Removes need for parser to run a check over the token list to determine this information
+
     union {
         char *value;
 		Expression *finalizedCall;
-		const Component *cmp;
-        const Operation *op;
+		Component const *cmp;
+        Operation const *op;
     };
 
     struct Token *next;

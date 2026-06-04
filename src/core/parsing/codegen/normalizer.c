@@ -348,13 +348,13 @@ static PARSER_RESULT checkFunctionCall(Token *cur) {
 	uint16_t depth = 0;
 	bool isParam = false;
 
-	cur = cur->next;
+	cur = cur->next->next;
 
-	while (cur != NULL && !(depth == 1 && cur->type == TOKEN_RIGHT_PAREN)) {
+	while (cur != NULL && !(depth == 0 && cur->type == TOKEN_RIGHT_PAREN)) {
 		if (cur->type == TOKEN_LEFT_PAREN) depth ++;
 		else if (cur->type == TOKEN_RIGHT_PAREN) depth --;
 
-		if (depth == 1 && (cur->type == TOKEN_SEPARATOR || cur->type == TOKEN_RIGHT_PAREN)) {
+		if ((depth == 0 && cur->type == TOKEN_SEPARATOR) || (depth == 1 && cur->type == TOKEN_RIGHT_PAREN)) {
 			if (!isParam) {
 				printf("Invalid function call syntax for '%s', invalid parameter.\n", callToken->cmp->identifier);
 				return PARSER_SYNTAX_ERROR;	
@@ -379,8 +379,7 @@ static PARSER_RESULT checkFunctionCall(Token *cur) {
 		if (nParams == 1) printf("Function '%s' takes %d parameters, %d was provided\n",
 				callToken->cmp->identifier, callToken->cmp->func->nParameters, nParams);
 
-		else printf("Function '%s' takes %d parameters, %d were provided\n",
-				callToken->cmp->identifier, callToken->cmp->func->nParameters, nParams);
+		else printf("Function '%s' takes %d parameters, %d were provided\n", callToken->cmp->identifier, callToken->cmp->func->nParameters, nParams);
 		return PARSER_SYNTAX_ERROR;
 	}
 

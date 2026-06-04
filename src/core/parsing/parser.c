@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include "parser.h"
+#include "core/common.h"
 #include "core/context.h"
 #include "core/parsing/parser_types.h"
 #include "core/utils/log.h"
@@ -49,204 +50,152 @@ static int containsAssignment(Token const *head) {
 }
 
 
+// parseFunctionCalls fragments the list and is now responsible for cleaning up its mess
 static PARSER_RESULT parseFunctionCalls(Token **head) {
-    Token *cur = *head;
-    Token *funcPrev = NULL;
+	Debug(0, "parsing function calls\n");
+	Token *cur = *head;
+	Token *placeholderToken= NULL;
+	Token *funcPrev = NULL;
 
-    while (cur != NULL) {
-        // Recursively parses nested function calls
-        if (cur->type == TOKEN_FUNC_CALL_PLACEHOLDER) {
-            Token *callPlaceholder = cur;
-            Token *prev = NULL;
+	while (cur != NULL) {
+		if (cur->type != TOKEN_FUNC_CALL_PLACEHOLDER) {
+			funcPrev = cur;
+			cur = cur->next;
 
-            Token *callToken = NULL;
+			continue;
+		}
 
-            // Prepares list of parameters
-            uint32_t size = callPlaceholder->cmp->func->nParameters;
-			Debug(0, "%d parameters\n", size);
-            uint32_t nParameters = 0;
-            Expression **paramExprs = calloc(1, sizeof(Expression *) * size);
-            if (paramExprs == NULL) goto error;
+		placeholderToken = cur;
 
-			uint32_t depth = 0;
+		// skips past opening ( and frees it
+		cur = cur->next->next; 
+		free(placeholderToken->next->value);
+		free(placeholderToken->next);
 
-            // Selects opening paren to be freed
-            Token *seperator = cur->next;
+		Token *tmp = NULL;
 
-            // skips to start of parameter
-            cur = seperator->next;
+		uint16_t depth = 0;
+		Token *paramHead = cur; 
+		Function *func = placeholderToken->cmp->func;
 
-			// Checks for validity before working through parsing
-            while (cur != NULL && cur->type != TOKEN_RIGHT_PAREN) {
-                while (!(depth == 0 && cur->type == TOKEN_SEPARATOR) && !(depth == 0 && cur->type == TOKEN_RIGHT_PAREN)) {
-                    if (cur->type == TOKEN_LEFT_PAREN) depth ++;
-                    if (cur->type == TOKEN_RIGHT_PAREN) depth --;
-                    
-                    cur = cur->next;
-                }
+		Token **params = calloc(1, sizeof(Token *) * func->nParameters);
+		Expression **paramExprs = calloc(1, sizeof(Expression *) * func->nParameters);
+		if (params == NULL || paramExprs == NULL) {
+			free(params);
+			free(paramExprs);
 
-				nParameters ++;
-				if (nParameters > size) {
-					printf("Invalid number of parameters for function %s\n", callPlaceholder->value);	
-					nParameters = 0;
-					goto syntax_error;
-				}
-				
-				cur = cur->next;
+			perror("Error parsing function call");
+			return PARSER_ERROR;
+		}
+
+		uint32_t nParams = 0;
+
+		while (!(depth == 0 && cur->next->type == TOKEN_RIGHT_PAREN)) {
+			if (cur->next->type == TOKEN_LEFT_PAREN) depth ++;
+			else if (cur->next->type == TOKEN_RIGHT_PAREN) depth --;
+
+			if (depth == 0 && cur->next->type == TOKEN_SEPARATOR) {
+				// Skips seperator, frees the seperator, and severs parameter for overall list, then adds it to parameters list
+				tmp = cur->next->next;
+
+				free(cur->next->value);
+				free(cur->next);
+				cur->next = NULL;
+
+				cur = tmp;
+
+				params[nParams] = paramHead;
+				nParams ++;
+
+				paramHead = cur;
+
+				continue;
 			}
 
-			// Resets vars for parsing
-			nParameters = 0;
-			cur = callPlaceholder;
-			depth = 0;
-	
-            // Selects opening paren to be freed
-            seperator = cur->next;
-
-            // skips to start of parameter
-            cur = seperator->next;
-
-            callPlaceholder->next = NULL;
-
-            // Loops through function call
-            while (cur != NULL && cur->type != TOKEN_RIGHT_PAREN) {
-                Token *paramHead = cur;
-				RPNList *rpn = NULL;
-
-				free(seperator->value);
-				free(seperator);
-
-                // Loops until end of parameter
-                while (!(depth == 0 && cur->type == TOKEN_SEPARATOR) && !(depth == 0 && cur->type == TOKEN_RIGHT_PAREN)) {
-                    if (cur->type == TOKEN_LEFT_PAREN) depth ++;
-                    if (cur->type == TOKEN_RIGHT_PAREN) depth --;
-                    
-                    prev = cur;
-                    cur = cur->next;
-                }
-
-                // Cur is now at either ',' or ')', so prev is last token in parameter
-                prev->next = NULL;
-                seperator = cur;
-				cur = cur->next;
+			cur = cur->next;
+		}
 
 
-                // Recursively parses calls
-				PARSER_RESULT callOut = parseFunctionCalls(&paramHead);
-                if (callOut != PARSER_SUCCESS) {
-					if (callOut == PARSER_ERROR) goto parameter_error;
-					goto parameter_syntax_error;
-				}
+		// Skips seperator, frees the seperator, and severs parameter for overall list, then adds it to parameters list
+		tmp = cur->next->next;
 
-                // ===========================================================
-                // Look into ways to reduce recursive calls to these functions
-                // ===========================================================
+		free(cur->next->value);
+		free(cur->next);
+		cur->next = NULL;
 
-                // Generates ast for parameter
-                rpn = shuntingYard(paramHead);
-                if (rpn == NULL) goto parameter_error;
-                
-                Expression *expr = expressionFromRPN(rpn);
-                free(rpn->items);
-                free(rpn);
-                if (expr == NULL) goto parameter_error;
+		cur = tmp;
 
-				Debug(0, "Parameter expr\n");
-				Debug(1, printExpression(expr));
-
-                paramExprs[nParameters] = expr;
-                nParameters ++;
-
-                freeTokens(paramHead);
-
-                continue;
-				
-				parameter_syntax_error:
-                    if (rpn != NULL) free(rpn->items);
-                    free(rpn);
-
-					goto syntax_error;
-
-                parameter_error:
-                    if (rpn != NULL) free(rpn->items);
-                    free(rpn);
-                    
-                    goto error;
-            }
-           
-
-            // Creates new function call token
-            Debug(0, "Creating new function call token.\n");
-            callToken = calloc(1, sizeof(Token));
-            if (callToken == NULL) goto error;
-            
-            callToken->type = TOKEN_FUNC_CALL;
-            callToken->next = seperator->next;
-
-            Expression *callExpr = dummyExpression(EXPRESSION_FUNCTION_CALL);
-			if (callExpr == NULL) goto error;
-			callExpr->nInputs = nParameters;
-			callExpr->inputs = paramExprs;
-			callExpr->cmp = callPlaceholder->cmp;
-			Debug(0, "end of call nparams %d\n", callExpr->cmp->func->nParameters);
-
-            callToken->finalizedCall = callExpr;
+		params[nParams] = paramHead;
+		nParams ++;
 
 
-            Debug(0, "Replacing old call token with new one.\n");
+		for (uint32_t i = 0; i < nParams; i ++) {
+			Debug(0, "Recursively parsing calls\n");
+			// Recursively parses calls
+			PARSER_RESULT callOut = parseFunctionCalls(&params[i]);
+			if (callOut != PARSER_SUCCESS) goto error;
 
-            if (funcPrev != NULL) funcPrev->next = callToken;
-            else *head = callToken;
-
-
-            Debug(0, "Freeing old tokens.\n");
-
-            free(callPlaceholder);
+			RPNList *rpn = shuntingYard(params[i]);	
+			if (rpn == NULL) goto error;
 			
-			free(seperator->value);
-			free(seperator);
+			Expression *expr = expressionFromRPN(rpn);
+			free(rpn->items);
+			free(rpn);
+			if (expr == NULL) goto error;
+
+			paramExprs[i] = expr;
+		}
+
+		
+		// Creates new function call token
+		Debug(0, "Creating new function call token.\n");
+		Token *callToken = calloc(1, sizeof(Token));
+		if (callToken == NULL) goto error;
+		
+		callToken->type = TOKEN_FUNC_CALL;
+		callToken->next = cur;
+
+		Expression *callExpr = dummyExpression(EXPRESSION_FUNCTION_CALL);
+		if (callExpr == NULL) goto error;
+		callExpr->nInputs = nParams;
+		callExpr->inputs = paramExprs;
+		callExpr->cmp = placeholderToken->cmp;
+		Debug(0, "end of call nparams %d\n", nParams);
+
+		callToken->finalizedCall = callExpr;
 
 
-            Debug(0, "Finished with handling call to: %s.\n", callExpr->cmp->identifier);
-            continue; 
-			
-			syntax_error:
-                //freeTokens(*head);
-                
-				if (paramExprs != NULL) {
-					for (int i = 0; i < nParameters; i ++) {
-						freeExpression(paramExprs[i]);
-					}
-				}
-                free(paramExprs);
-                //freeTokens(cur);
-                //freeTokens(callToken);
+		Debug(0, "Replacing old call token with new one.\n");
 
-				return PARSER_SYNTAX_ERROR;
+		if (funcPrev != NULL) funcPrev->next = callToken;
+		else *head = callToken;
 
-            error:
-                perror("Error in parsing function call");
-                //freeTokens(*head);
-                
-                for (int i = 0; i < nParameters; i ++) {
-                    freeExpression(paramExprs[i]);
-                }
-                free(paramExprs);
-                freeTokens(cur);
-                freeTokens(callToken);
-                
-                return PARSER_ERROR;
-        }
+		free(placeholderToken);
 
-        if (cur != NULL) {
-            funcPrev = cur;
-            cur = cur->next;
-        }
-    }
+		for (uint32_t i = 0; i < nParams; i ++) {
+			freeTokens(params[i]);
+		}
 
-    Debug(0, "Finished parsing all calls, returning.\n");
-	Debug(1, printTokens(*head));
-    return PARSER_SUCCESS;
+		free(params);
+
+		funcPrev = callToken;
+
+		continue;
+
+
+		error:
+			for (uint32_t i = 0; i < nParams; i ++) {
+				freeTokens(params[i]);
+				freeExpression(paramExprs[i]);
+			}
+
+			free(params);
+			free(paramExprs);
+
+			return PARSER_ERROR;
+	}
+
+	return PARSER_SUCCESS;
 }
 
 
@@ -338,14 +287,14 @@ static PARSER_RESULT parseFunctionAssignment(Token *head) {
 
 	result = normalize(&asgn->next);
 	if (result != PARSER_SUCCESS) {
-		if (result == PARSER_SUCCESS) goto error;
-		goto syntax_error;
+		if (result == PARSER_SYNTAX_ERROR) goto syntax_error;
+		goto error;
 	}
 
 	result = parseFunctionCalls(&asgn->next);
 	if (result != PARSER_SUCCESS) {
-		if (result == PARSER_ERROR) goto error;
-		goto syntax_error;
+		if (result == PARSER_SYNTAX_ERROR) goto syntax_error;
+		goto error;
 	}
 
     rpn = shuntingYard(asgn->next);
@@ -514,10 +463,7 @@ PARSER_RESULT parse(char *buffer, Expression **expr) {
     }
 
 	result = parseFunctionCalls(&head);
-	if (result != PARSER_SUCCESS) {
-		if (result == PARSER_ERROR) goto error;
-		goto syntax_error;
-	}
+	if (result != PARSER_SUCCESS) return result; 
 
     rpn = shuntingYard(head);
     if (rpn == NULL) goto error;
