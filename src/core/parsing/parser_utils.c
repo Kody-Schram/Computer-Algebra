@@ -52,17 +52,23 @@ Token *createToken(TokenType type, char const *value, int l) {
         // Populates newToken attributes
         token->type = type;
         
-        token->value = malloc(l + 1);
-        if (token->value == NULL) {
-            perror("Error creating token");
-            free(token);
-            return NULL;
-        } 
-    
-        memcpy(token->value, value, l);
-        token->value[l] = '\0';
+		if (token->type != TOKEN_LEFT_PAREN  && token->type != TOKEN_RIGHT_PAREN
+				&& token->type != TOKEN_ASSIGNMENT && token->type != TOKEN_MAPPING) {
+
+			token->value = malloc(l + 1);
+			if (token->value == NULL) {
+				perror("Error creating token");
+				free(token);
+				return NULL;
+			} 
+		
+			memcpy(token->value, value, l);
+			token->value[l] = '\0';
+
+		}
+
+		return token;
         
-        return token;
     } else {
         Debug(0, "Creating operator token, %c\n", value[0]);
 		const Operation *op = searchOperation(GLOBALCONTEXT->registry, value[0]);
@@ -115,7 +121,7 @@ static void printToken(Token const *token, FILE *stream) {
 				break;
         }
 
-        if (token->type == TOKEN_FUNC_CALL || token->type == TOKEN_FUNC_CALL_PLACEHOLDER) {
+        if (token->type == TOKEN_FUNC_CALL || token->type == TOKEN_FUNC_CALL_PLACEHOLDER ) {
             fprintf(stream, "<type: %s>\n", type);
             //printf("<type: %s>\n", type);
         }
@@ -146,7 +152,7 @@ FILE *printTokens(Token const *head) {
 }
 
 
-Expression *createExpression(Token const *token) {
+Expression *createExpression(Token *token) {
 	Expression *expr;
 
 	if (token->type != TOKEN_FUNC_CALL) {
@@ -158,7 +164,6 @@ Expression *createExpression(Token const *token) {
         case TOKEN_IDENTIFIER:
             expr->type = EXPRESSION_VARIABLE;
             expr->identifier = token->value;
-            if (expr->identifier == NULL) goto error;
             break;
             
         case TOKEN_NUMBER:
@@ -189,9 +194,9 @@ Expression *createExpression(Token const *token) {
             
             expr->operands = malloc(sizeof(Expression *) * expr->nOperands);
             if (expr->operands == NULL) goto error;
+
             break;
             
-			freeExpression(expr);
         case TOKEN_FUNC_CALL:
 			expr = token->finalizedCall;
 			Debug(0, "new expr fn nparams %d\n", expr->cmp->func->nParameters);
@@ -200,6 +205,8 @@ Expression *createExpression(Token const *token) {
         default:
             return NULL;
     }
+
+	token->value = NULL;
 
     return expr;
     

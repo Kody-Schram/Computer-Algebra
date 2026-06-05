@@ -32,7 +32,7 @@ Token *createToken(TokenType type, char const *value, int l);
 FILE *printTokens(Token const *head);
 
 
-Expression *createExpression(Token const *token);
+Expression *createExpression(Token *token);
 
 
 FILE *printRPN(RPNList const *list);
@@ -43,3 +43,6 @@ FILE *printRPN(RPNList const *list);
  * @param head Head of linked list
  */
 void freeTokens(Token *head);
+
+
+void deepFreeTokens(Token *head);
