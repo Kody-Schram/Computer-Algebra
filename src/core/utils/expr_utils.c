@@ -7,7 +7,6 @@
 
 #include "expr_utils.h"
 #include "core/context.h"
-#include "core/utils/log.h"
 
 
 #define DEFUALT_STRING_SIZE 64
@@ -271,9 +270,6 @@ void freeExpression(Expression *expr) {
 
     switch (expr->type) {
         case EXPRESSION_FUNCTION_CALL:
-			for (uint32_t i = 0; i < expr->nInputs; i ++) {
-				free(expr->inputs[i]);
-			}
 			free(expr->inputs);
             break;
 
@@ -300,8 +296,4 @@ void freeExpression(Expression *expr) {
     }
 
     free(expr);
-
-
 }
-
-

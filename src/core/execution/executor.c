@@ -1,6 +1,5 @@
 #include <stdint.h>
 #include <inttypes.h>
-#include <string.h>
 
 #include "executor.h"
 #include "core/common.h"
@@ -29,16 +28,28 @@ static BuiltinResult callImplementations(
 }
 
 
+static inline bool isExecuting(Environment const *env) {
+	while (env != NULL) {
+		if (env == GLOBALCONTEXT->env) return true;
+		env = env->parent;
+	}
+
+	return false;
+}
+
+
 static EXECUTOR_RESULT resolveSymbols(Expression **ptr, Environment *env) {
 	Info(0, "Resolving symbols\n");
 	if (ptr == NULL || *ptr == NULL) return EXECUTOR_SUCCESS;
+	if (GLOBALCONTEXT->config->LAZY_RESOLUTIONS && !isExecuting(env)) return EXECUTOR_SUCCESS;
+
 	Expression *expr = *ptr;
 
 	EXECUTOR_RESULT result;
 
 	switch (expr->type) {
 		case EXPRESSION_VARIABLE:
-			Debug(0, "Updating variable '%s'\n", expr->identifier);
+			Debug(0, "Trying to resolve variable '%s'\n", expr->identifier);
 			Component const *cmp = searchEnvironment(env, expr->identifier);
 			if (cmp != NULL && cmp->type == COMP_VARIABLE) {
 				freeExpression(expr);
@@ -56,6 +67,7 @@ static EXECUTOR_RESULT resolveSymbols(Expression **ptr, Environment *env) {
 
 		case EXPRESSION_FUNCTION_CALL:
 			Function const *func = expr->cmp->func;
+
 
 			// Handles builtin functions
 			// Is called now so that the outputs are ready for simplification step
@@ -99,10 +111,10 @@ static EXECUTOR_RESULT resolveSymbols(Expression **ptr, Environment *env) {
 			*ptr = deepCopyExpression(func->definition);
 			Debug(1, printExpression(*ptr));
 			result = resolveSymbols(ptr, tmpEnv);
+			freeEnvironment(tmpEnv);
 			if (result != EXECUTOR_SUCCESS) return result;
 
 			Debug(1, printExpression(*ptr));
-			freeEnvironment(tmpEnv);
 
 			break;
 
@@ -122,14 +134,12 @@ static EXECUTOR_RESULT resolveSymbols(Expression **ptr, Environment *env) {
 }
 
 
-EXECUTOR_RESULT execute(Expression **ptr, char **output) {
+EXECUTOR_RESULT execute(Expression **ptr) {
 	EXECUTOR_RESULT result;
 	result = resolveSymbols(ptr, GLOBALCONTEXT->env);
 	if (result != EXECUTOR_SUCCESS) goto error;
 
-	if (!simplify(ptr)) goto error;
-
-	*output = expressionToString(*ptr);
+	//if (!simplify(ptr)) goto error;
 
 	return EXECUTOR_SUCCESS;
 

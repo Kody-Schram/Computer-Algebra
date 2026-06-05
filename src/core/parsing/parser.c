@@ -6,6 +6,7 @@
 #include "parser.h"
 #include "core/common.h"
 #include "core/context.h"
+#include "core/execution/executor.h"
 #include "core/parsing/parser_types.h"
 #include "core/utils/log.h"
 #include "core/utils/expr_utils.h"
@@ -304,9 +305,8 @@ static PARSER_RESULT parseFunctionAssignment(Token *head) {
     expr = expressionFromRPN(rpn);
     if (expr == NULL) goto error;
     
-    // ===============================================
-    // Run expression through simplification step here
-    // ===============================================
+	EXECUTOR_RESULT e_result = execute(&expr);
+	
 
     Debug(1, printExpression(expr));
 
@@ -320,7 +320,6 @@ static PARSER_RESULT parseFunctionAssignment(Token *head) {
     function->definition = expr;
 
     if (!bindComponent(GLOBALCONTEXT->env, COMP_FUNCTION, identifier, function)) goto error;
-
 
     freeTokens(head);
     free(rpn->items);

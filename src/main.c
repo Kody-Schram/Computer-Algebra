@@ -4,6 +4,7 @@
 
 #include "core/context.h"
 #include "core/common.h"
+#include "core/utils/expr_utils.h"
 #include "core/utils/log.h"
 #include "core/utils/input.h"
 
@@ -59,14 +60,15 @@ static int process(char *buffer) {
 	}
 
 	if (expr == NULL) return 1;
-    char *out = NULL;
 
-	EXECUTOR_RESULT e_result = execute(&expr, &out);
+	EXECUTOR_RESULT e_result = execute(&expr);
 	if (e_result != EXECUTOR_SUCCESS) {
 		printf("\n");
 		if (e_result == EXECUTOR_ERROR) return 0;
 		return 1;
 	}
+
+	char *out = expressionToString(expr);
 
     printf("%s\n\n", out);
 	free(out);
