@@ -31,6 +31,10 @@ struct Token {
 
 	// Pack bools for contains assignment, contains function assignment, contains function calls
 	// Removes need for parser to run a check over the token list to determine this information
+	bool isNegative;
+	bool hasFuncAssignment;
+	bool hasVarAssignment;
+	bool hasFunctionCalls;
 
     union {
         char *value;

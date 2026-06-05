@@ -87,6 +87,10 @@ struct Expression {
 	union {
 		uint32_t nOperands;
 		uint32_t nInputs;
+		struct {
+			uint32_t coreFlags :8;
+			uint32_t flags :24;
+		};
 	};
 
     union {
