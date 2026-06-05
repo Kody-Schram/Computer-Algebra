@@ -61,7 +61,7 @@ static int process(char *buffer) {
 
 	if (expr == NULL) return 1;
 
-	EXECUTOR_RESULT e_result = execute(&expr);
+	EXECUTOR_RESULT e_result = execute(&expr, true);
 	if (e_result != EXECUTOR_SUCCESS) {
 		printf("\n");
 		if (e_result == EXECUTOR_ERROR) return 0;

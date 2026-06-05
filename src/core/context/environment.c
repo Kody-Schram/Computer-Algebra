@@ -9,6 +9,44 @@
 #include "core/utils/expr_utils.h"
 
 
+static void deepFreeExpression(Expression *expr) {
+	if (expr == NULL) return;
+
+    switch (expr->type) {
+        case EXPRESSION_FUNCTION_CALL:
+			for (uint32_t i = 0; i < expr->nInputs; i ++) {
+				deepFreeExpression(expr->inputs[i]);
+			}
+			free(expr->inputs);
+            break;
+
+        case EXPRESSION_VARIABLE:
+            free(expr->identifier);
+            break;
+
+        case EXPRESSION_OPERATOR:
+            for (int i = 0; i < expr->nOperands; i ++) {
+                deepFreeExpression(expr->operands[i]);
+            }
+            free(expr->operands);
+            break;
+
+		case EXPRESSION_OBJECT:
+			Object const *obj = searchObject(GLOBALCONTEXT->registry, expr->objectId);
+			if (obj != NULL && obj->cleanup != NULL) obj->cleanup(expr->data);	
+
+			break;
+            
+        default:
+            break;
+        
+    }
+
+    free(expr);
+
+}
+
+
 
 static inline void freeFunction(Function *func) {
     if (func == NULL) return;
@@ -16,7 +54,7 @@ static inline void freeFunction(Function *func) {
         for (int i = 0; i < func->nParameters; i ++) free(func->parameters[i]);
     }
     free(func->parameters);
-    if (func->type == DEFINED) freeExpression(func->definition);
+    if (func->type == DEFINED) deepFreeExpression(func->definition);
     free(func);
 }
 
@@ -28,7 +66,7 @@ static inline void freeComponent(Component *cmp) {
             break;
             
         case COMP_VARIABLE:
-            freeExpression(cmp->value);
+            deepFreeExpression(cmp->value);
             break;
     }
 

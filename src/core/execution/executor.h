@@ -10,4 +10,4 @@ typedef enum EXECUTOR_RESULT {
 } EXECUTOR_RESULT;
 
 
-EXECUTOR_RESULT execute(Expression **expr);
+EXECUTOR_RESULT execute(Expression **expr, bool isExecuting);

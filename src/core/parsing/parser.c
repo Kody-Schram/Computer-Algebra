@@ -116,7 +116,6 @@ static PARSER_RESULT parseFunctionCalls(Token **head) {
 			cur = cur->next;
 		}
 
-
 		// Skips seperator, frees the seperator, and severs parameter for overall list, then adds it to parameters list
 		tmp = cur->next->next;
 
@@ -305,7 +304,7 @@ static PARSER_RESULT parseFunctionAssignment(Token *head) {
     expr = expressionFromRPN(rpn);
     if (expr == NULL) goto error;
     
-	EXECUTOR_RESULT e_result = execute(&expr);
+	EXECUTOR_RESULT e_result = execute(&expr, false);
 	
 
     Debug(1, printExpression(expr));

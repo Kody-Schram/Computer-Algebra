@@ -28,20 +28,10 @@ static BuiltinResult callImplementations(
 }
 
 
-static inline bool isExecuting(Environment const *env) {
-	while (env != NULL) {
-		if (env == GLOBALCONTEXT->env) return true;
-		env = env->parent;
-	}
-
-	return false;
-}
-
-
-static EXECUTOR_RESULT resolveSymbols(Expression **ptr, Environment *env) {
+static EXECUTOR_RESULT resolveSymbols(Expression **ptr, Environment *env, bool isExecuting) {
 	Info(0, "Resolving symbols\n");
 	if (ptr == NULL || *ptr == NULL) return EXECUTOR_SUCCESS;
-	if (GLOBALCONTEXT->config->LAZY_RESOLUTIONS && !isExecuting(env)) return EXECUTOR_SUCCESS;
+	if (!isExecuting && GLOBALCONTEXT->config->LAZY_RESOLUTIONS) return EXECUTOR_SUCCESS;
 
 	Expression *expr = *ptr;
 
@@ -55,7 +45,7 @@ static EXECUTOR_RESULT resolveSymbols(Expression **ptr, Environment *env) {
 				freeExpression(expr);
 				*ptr = deepCopyExpression(cmp->value);
 
-				result = resolveSymbols(ptr, env);
+				result = resolveSymbols(ptr, env, isExecuting);
 				if (result != EXECUTOR_SUCCESS) return result;
 				
 				return EXECUTOR_SUCCESS;
@@ -73,7 +63,7 @@ static EXECUTOR_RESULT resolveSymbols(Expression **ptr, Environment *env) {
 			// Is called now so that the outputs are ready for simplification step
 			if (func->type == BUILTIN) {
 				for (uint32_t i = 0; i < expr->nInputs; i ++) {
-					result = resolveSymbols(&expr->inputs[i], env);
+					result = resolveSymbols(&expr->inputs[i], env, isExecuting);
 					if (result != EXECUTOR_SUCCESS) return result;
 
 					result = simplify(&expr->inputs[i]);
@@ -101,7 +91,7 @@ static EXECUTOR_RESULT resolveSymbols(Expression **ptr, Environment *env) {
 			tmpEnv->parent = env;
 
 			for (uint32_t i = 0; i < expr->nInputs; i ++) {
-				result = resolveSymbols(&expr->inputs[i], env);
+				result = resolveSymbols(&expr->inputs[i], env, isExecuting);
 				if (result != EXECUTOR_SUCCESS) return result;
 
 				if (!bindComponent(tmpEnv, COMP_VARIABLE, func->parameters[i], expr->inputs[i])) return EXECUTOR_ERROR;
@@ -110,7 +100,7 @@ static EXECUTOR_RESULT resolveSymbols(Expression **ptr, Environment *env) {
 			freeExpression(expr);
 			*ptr = deepCopyExpression(func->definition);
 			Debug(1, printExpression(*ptr));
-			result = resolveSymbols(ptr, tmpEnv);
+			result = resolveSymbols(ptr, tmpEnv, isExecuting);
 			freeEnvironment(tmpEnv);
 			if (result != EXECUTOR_SUCCESS) return result;
 
@@ -120,7 +110,7 @@ static EXECUTOR_RESULT resolveSymbols(Expression **ptr, Environment *env) {
 
 		case EXPRESSION_OPERATOR:
 			for (uint32_t i = 0; i < expr->nOperands; i ++) {
-				result = resolveSymbols(&expr->operands[i], env);
+				result = resolveSymbols(&expr->operands[i], env, isExecuting);
 				if (result != EXECUTOR_SUCCESS) return result;
 			}
 
@@ -134,12 +124,12 @@ static EXECUTOR_RESULT resolveSymbols(Expression **ptr, Environment *env) {
 }
 
 
-EXECUTOR_RESULT execute(Expression **ptr) {
+EXECUTOR_RESULT execute(Expression **ptr, bool isExecuting) {
 	EXECUTOR_RESULT result;
-	result = resolveSymbols(ptr, GLOBALCONTEXT->env);
+	result = resolveSymbols(ptr, GLOBALCONTEXT->env, isExecuting);
 	if (result != EXECUTOR_SUCCESS) goto error;
 
-	//if (!simplify(ptr)) goto error;
+	if (!simplify(ptr)) goto error;
 
 	return EXECUTOR_SUCCESS;
 
