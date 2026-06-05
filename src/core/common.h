@@ -56,12 +56,12 @@ typedef struct Expression Expression;
 
 typedef enum FunctionType FunctionType;
 typedef enum BuiltinResultType BuiltinResultType;
-typedef struct BuiltinResult BuiltinResult;
+typedef enum BuiltinResult BuiltinResult;
 typedef struct Function Function;
 
 
 typedef struct Context Context;
-typedef BuiltinResult (*BuiltinImplementation)(Context const *ctx, uint32_t nArgs, Expression **exprs);
+typedef BuiltinResult (*BuiltinImplementation)(Context const *ctx, Expression **operands, uint32_t nArgs, Expression **out);
 
 // Expression related definitions
 enum ExpressionType { EXPRESSION_OBJECT,
@@ -152,15 +152,10 @@ enum FunctionType {
     DEFINED,
 };
 
-enum BuiltinResultType {
+enum BuiltinResult {
     BUILTIN_SUCCESS,
     BUILTIN_NEUTRAL,
     BUILTIN_ERROR
-};
-
-struct BuiltinResult {
-    BuiltinResultType type;
-    Expression *output;
 };
 
 

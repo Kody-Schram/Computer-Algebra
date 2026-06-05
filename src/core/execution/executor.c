@@ -13,14 +13,14 @@
 
 static BuiltinResult callImplementations(
 		uint32_t nImplementations, BuiltinImplementation const * const implementations,
-		Context const *ctx, uint32_t nArgs, Expression **exprs
+		Context const *ctx, Expression **exprs, uint32_t nArgs, Expression **out
 ) {
-	if (nImplementations == 0) return (BuiltinResult) {.type = BUILTIN_NEUTRAL, .output=NULL };
+	if (nImplementations == 0) return BUILTIN_NEUTRAL; 
 
 	BuiltinResult result;
 	for (uint32_t i = 0; i < nImplementations; i ++) {
-		result = implementations[i](ctx, nArgs, exprs);
-		if (result.type == BUILTIN_NEUTRAL) continue;
+		result = implementations[i](ctx, exprs, nArgs, out);
+		if (result == BUILTIN_NEUTRAL) continue;
 		break;
 	}
 	
@@ -69,14 +69,15 @@ static EXECUTOR_RESULT resolveSymbols(Expression **ptr, Environment *env, bool i
 					result = simplify(&expr->inputs[i]);
 					if (result != EXECUTOR_SUCCESS) return result;
 				}
+				
+				Expression *out;
+				BuiltinResult b_result = func->implementation(GLOBALCONTEXT, expr->inputs, expr->nInputs, &out);
 
-				BuiltinResult b_result = func->implementation(GLOBALCONTEXT, expr->nInputs, expr->inputs);
-
-				if (b_result.type == BUILTIN_ERROR) return EXECUTOR_ERROR;
-				else if (b_result.type == BUILTIN_NEUTRAL) return EXECUTOR_SUCCESS;
+				if (b_result == BUILTIN_ERROR) return EXECUTOR_ERROR;
+				else if (b_result == BUILTIN_NEUTRAL) return EXECUTOR_SUCCESS;
 
 				freeExpression(expr);
-				*ptr = b_result.output;
+				*ptr = out;
 
 				return EXECUTOR_SUCCESS;
 			}

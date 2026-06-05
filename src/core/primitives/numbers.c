@@ -66,6 +66,17 @@ char *print_number(ObjectValue const value, uint32_t flags) {
 }
 
 
+BuiltinResult add_number(Context const *ctx, Expression **operands, uint32_t nArgs, Expression **out) {
+	Expression *a = operands[0];
+	Expression *b = operands[1];
+
+	if (a->objectId != NUMBER_ID || b->objectId != NUMBER_ID) {
+		*out = NULL;
+		return BUILTIN_NEUTRAL;
+	}
+}
+
+
 bool initNumbers(Registry *registry) {
 	Object number;
 	if (!createObject(&number, LIB_CORE_8, cleanup_number, compare_number, copy_number, print_number)) return true;
