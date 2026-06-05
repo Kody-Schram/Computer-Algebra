@@ -90,6 +90,8 @@ BuiltinResult add_number(Context const *ctx, Expression **operands, uint32_t nAr
 	else if (INLINE_INTEGER(b->flags)) result->value.floating = a->value.integer + b->value.floating;
 	else result->value.floating = a->value.floating + b->value.floating;
 
+	*out = result;
+
 	return BUILTIN_SUCCESS;
 }
 
@@ -116,6 +118,8 @@ BuiltinResult sub_number(Context const *ctx, Expression **operands, uint32_t nAr
 	else if (INLINE_INTEGER(b->flags)) result->value.floating = a->value.integer - b->value.floating;
 	else result->value.floating = a->value.floating - b->value.floating;
 
+	*out = result;
+
 	return BUILTIN_SUCCESS;
 }
 
@@ -141,6 +145,8 @@ BuiltinResult mult_number(Context const *ctx, Expression **operands, uint32_t nA
 	else if (!INLINE_INTEGER(a->flags)) result->value.floating = a->value.floating * b->value.integer;
 	else if (INLINE_INTEGER(b->flags)) result->value.floating = a->value.integer * b->value.floating;
 	else result->value.floating = a->value.floating * b->value.floating;
+
+	*out = result;
 
 	return BUILTIN_SUCCESS;
 }
@@ -178,6 +184,8 @@ BuiltinResult div_number(Context const *ctx, Expression **operands, uint32_t nAr
 		if (b->value.floating == 0) goto div_by_zero;
 		result->value.floating = a->value.floating / b->value.floating;
 	}
+
+	*out = result;
 
 	return BUILTIN_SUCCESS;
 
@@ -219,6 +227,8 @@ BuiltinResult exp_number(Context const *ctx, Expression **operands, uint32_t nAr
 	else if (!INLINE_INTEGER(a->flags)) result->value.floating = powf(a->value.floating, b->value.integer); 
 	else if (INLINE_INTEGER(b->flags)) result->value.floating = powf(a->value.integer, b->value.floating); 
 	else result->value.floating = powf(a->value.floating, b->value.floating); 
+
+	*out = result;
 
 	return BUILTIN_SUCCESS;
 }
