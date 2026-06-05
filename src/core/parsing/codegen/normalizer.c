@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include "normalizer.h"
+#include "core/common.h"
 #include "core/context.h"
 #include "core/context/environment.h"
 #include "core/parsing/parser.h"
@@ -20,20 +21,20 @@
  *  1: Success or no work done
  *
  */
-static PARSER_RESULT handleImplicitMul(Token *cur, Token *prev) {
+static PARSER_RESULT handleImplicitMul(Token *cur, Token *prev, Operation const *mult) {
     // Handle implicit multiplcation with left bracket or function
     // x(x-1) => x*(x-1)
     if ((cur->type == TOKEN_LEFT_PAREN || cur->type == TOKEN_FUNC_CALL_PLACEHOLDER) && prev != NULL) {
         //printf("checking for left paren and function\n");
         if (prev->type == TOKEN_NUMBER || prev->type == TOKEN_IDENTIFIER) {
-            Token *mult = createToken(TOKEN_OPERATOR, "*", 1);
-            if (mult == NULL) {
+            Token *multToken = createOperatorToken(mult); 
+            if (multToken == NULL) {
                 perror("Error in implicit multiplication");
                 return PARSER_ERROR;
             }
 
-            prev->next = mult;
-            mult->next = cur;
+            prev->next = multToken;
+            multToken->next = cur;
 
             return PARSER_SUCCESS;
         }
@@ -44,14 +45,14 @@ static PARSER_RESULT handleImplicitMul(Token *cur, Token *prev) {
         //printf("checking for right paren\n");
         Token *nextToken = cur->next;
         if (nextToken->type == TOKEN_NUMBER || nextToken->type == TOKEN_IDENTIFIER || nextToken->type == TOKEN_LEFT_PAREN || nextToken->type == TOKEN_FUNC_CALL_PLACEHOLDER) {
-            Token *mult = createToken(TOKEN_OPERATOR, "*", 1);
-            if (mult == NULL) {
+            Token *multToken = createOperatorToken(mult);
+            if (multToken == NULL) {
                 perror("Error in implicit multiplication");
                 return PARSER_ERROR;
             }
 
-            mult->next = nextToken;
-            cur->next = mult;
+            multToken->next = nextToken;
+            cur->next = multToken;
 
             return PARSER_SUCCESS;
         }
@@ -60,15 +61,14 @@ static PARSER_RESULT handleImplicitMul(Token *cur, Token *prev) {
     // 2x => 2*x
     else if (cur->type == TOKEN_IDENTIFIER && prev != NULL) {
         if (prev->type == TOKEN_NUMBER || prev->type == TOKEN_IDENTIFIER) {
-
-            Token *mult = createToken(TOKEN_OPERATOR, "*", 1);
-            if (mult == NULL) {
+            Token *multToken = createOperatorToken(mult);
+            if (multToken == NULL) {
                 perror("Error in implicit multiplication");
                 return PARSER_ERROR;
             }
 
-            prev->next = mult;
-            mult->next = cur;
+            prev->next = multToken;
+            multToken->next = cur;
 			return PARSER_SUCCESS; 
 		}
     }
@@ -85,26 +85,27 @@ static PARSER_RESULT handleImplicitMul(Token *cur, Token *prev) {
  *  1: Success or no work done
  *
  */
-static PARSER_RESULT handleExponentRewrite(Token **cur) {
-    if ((*cur)->type != TOKEN_OPERATOR || (*cur)->op->symbol != '*') return PARSER_SUCCESS;
-	if ((*cur)->next == NULL || (*cur)->next->type != TOKEN_OPERATOR || (*cur)->next->op->symbol != '*') return PARSER_SUCCESS; 
+static PARSER_RESULT handleExponentRewrite(Token **cur, Operation const *exp, Operation const *mult) {
+    if ((*cur)->type != TOKEN_OPERATOR || (*cur)->op != mult) return PARSER_SUCCESS;
+	if ((*cur)->next == NULL || (*cur)->next->type != TOKEN_OPERATOR || (*cur)->next->op != mult) return PARSER_SUCCESS; 
 
 	Debug(0, "Rewriting exponent\n");
 
-	Token *exponent = createToken(TOKEN_OPERATOR, "^", 1);
-    if (exponent == NULL) {
-		perror("Error in exponent rewrite"); 
-		return PARSER_ERROR; 
-	}
+	Token *expToken = createOperatorToken(exp);
+    if (expToken == NULL) goto error;
 
-	exponent->next = (*cur)->next->next;
+	expToken->next = (*cur)->next->next;
 	
 	free((*cur)->next);
     free(*cur);
 
-    *cur = exponent;
+    *cur = expToken;
 
     return PARSER_SUCCESS;
+
+	error:
+		perror("Error in exponent rewrite");
+		return PARSER_ERROR;
 }
 
 /*
@@ -217,24 +218,24 @@ static PARSER_RESULT handleFunctionParens(Token *cur) {
  *  1: Success or no work done
  *
  */
-static PARSER_RESULT handleNegative(Token **cur, Token *prev) {
+static PARSER_RESULT handleNegative(Token **cur, Token *prev, Operation const *mult) {
 	if ((*cur)->type != TOKEN_OPERATOR || (*cur)->op->symbol != '-') return PARSER_SUCCESS;
 	if (prev != NULL && prev->type != TOKEN_LEFT_PAREN && prev->type != TOKEN_OPERATOR && prev->type != TOKEN_ASSIGNMENT) return PARSER_SUCCESS; // is subtraction
 	
 	Debug(0, "Rewriting subtraction as negation\n");
 
 	Token *negative = NULL;
-	Token *mult = NULL;
+	Token *multToken = NULL;
 
 	negative = createToken(TOKEN_NUMBER, "-1", 2);
 	if (negative == NULL) goto error;
 
-	mult = createToken(TOKEN_OPERATOR, "*", 1);
+	multToken = createOperatorToken(mult);
 	if (mult == NULL) goto error;
 
 
-	negative->next = mult;
-	mult->next = (*cur)->next;
+	negative->next = multToken;
+	multToken->next = (*cur)->next;
 	free(*cur);
 	if (prev == NULL) *cur = negative;
 	else prev->next = negative;
@@ -246,8 +247,7 @@ static PARSER_RESULT handleNegative(Token **cur, Token *prev) {
 		perror("Error handling negative");
 		free(negative->value);
 		free(negative);
-		free(mult->value);
-		free(mult);
+		free(multToken);
 
 		return PARSER_ERROR;
 }
@@ -409,13 +409,17 @@ PARSER_RESULT normalize(Token** head) {
     Token *prev = NULL;
 	PARSER_RESULT result = PARSER_SUCCESS;
 
+	Operation const *mult = searchOperation(GLOBALCONTEXT->registry, '*');
+	Operation const *exp = searchOperation(GLOBALCONTEXT->registry, '^');
+	if (mult == NULL || exp == NULL) return PARSER_ERROR;
+
     int openParenthesis = 0;
 
     while (*ptr != NULL) {
-        if ((result = handleNegative(ptr, prev)) != PARSER_SUCCESS) return result;
+        if ((result = handleNegative(ptr, prev, mult)) != PARSER_SUCCESS) return result;
         if ((result = handleFunctionParens(*ptr)) != PARSER_SUCCESS) return result;
-        if ((result = handleImplicitMul(*ptr, prev)) != PARSER_SUCCESS) return result;
-        if ((result = handleExponentRewrite(ptr)) != PARSER_SUCCESS) return result;
+        if ((result = handleImplicitMul(*ptr, prev, mult)) != PARSER_SUCCESS) return result;
+        if ((result = handleExponentRewrite(ptr, exp, mult)) != PARSER_SUCCESS) return result;
         if ((result = checkBinop(*ptr, prev)) != PARSER_SUCCESS) return result;
 		if ((result = checkFunctionCall(*ptr)) != PARSER_SUCCESS) return result;
 		// Counts open parenthesis 
