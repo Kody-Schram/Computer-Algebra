@@ -26,31 +26,6 @@ typedef enum {
 } FunctionComponent;
 
 
-static bool containsFunctionAssignment(Token const *head) {
-    Token const *cur = head;
-    while (cur != NULL) {
-        if (cur->type == TOKEN_MAPPING) {
-            Debug(0, "Function mapping found.\n");
-            return true;
-        }
-        cur = cur->next;
-    }
-
-    return false;
-}
-
-
-static int containsAssignment(Token const *head) {
-    Token const *cur = head;
-    while (cur != NULL) {
-        if (cur->type == TOKEN_ASSIGNMENT) return true;
-        cur = cur->next;
-    }
-
-    return false;
-}
-
-
 // parseFunctionCalls fragments the list and is now responsible for cleaning up its mess
 static PARSER_RESULT parseFunctionCalls(Token **head) {
 	Debug(0, "parsing function calls\n");
@@ -199,7 +174,7 @@ static PARSER_RESULT parseFunctionCalls(Token **head) {
 }
 
 
-static PARSER_RESULT parseFunctionAssignment(Token *head) {
+static PARSER_RESULT parseFunctionAssignment(Token *head, bool hasCalls) {
     char *identifier = NULL;
     RPNList *rpn = NULL;
     Expression *expr = NULL;
@@ -272,12 +247,6 @@ static PARSER_RESULT parseFunctionAssignment(Token *head) {
 		goto syntax_error;
 	}
 
-    // Checks body for second assignment/mapping token
-    if (containsAssignment(asgn->next) || containsFunctionAssignment(asgn->next)) {
-        printf("Cannot have assignment within a function definition.\n");
-        goto syntax_error;
-    }
-
     // Redoes identifier tokens now that local variables for parameters are established, then redoes lexing
 	PARSER_RESULT result = handleLocalVariables(&asgn, parameters, nParameters);
 	if (result != PARSER_SUCCESS) {
@@ -291,10 +260,12 @@ static PARSER_RESULT parseFunctionAssignment(Token *head) {
 		goto error;
 	}
 
-	result = parseFunctionCalls(&asgn->next);
-	if (result != PARSER_SUCCESS) {
-		if (result == PARSER_SYNTAX_ERROR) goto syntax_error;
-		goto error;
+	if (hasCalls) {
+		result = parseFunctionCalls(&asgn->next);
+		if (result != PARSER_SUCCESS) {
+			if (result == PARSER_SYNTAX_ERROR) goto syntax_error;
+			goto error;
+		}
 	}
 
     rpn = shuntingYard(asgn->next);
@@ -358,7 +329,7 @@ static PARSER_RESULT parseFunctionAssignment(Token *head) {
 }
 
 
-static PARSER_RESULT parseAssignment(Token *head) {
+static PARSER_RESULT parseAssignment(Token *head, bool hasCalls) {
     char *identifier = NULL;
     RPNList *rpn = NULL;
 	Expression *expr = NULL;
@@ -384,11 +355,13 @@ static PARSER_RESULT parseAssignment(Token *head) {
         cur = cur->next;
     }
 
-	PARSER_RESULT callOut = parseFunctionCalls(&asgn->next);
-	if (callOut != PARSER_SUCCESS) {
-		if (callOut == PARSER_ERROR) goto error;
-		goto syntax_error;
-    }
+	if (hasCalls) {
+		PARSER_RESULT callOut = parseFunctionCalls(&asgn->next);
+		if (callOut != PARSER_SUCCESS) {
+			if (callOut == PARSER_ERROR) goto error;
+			goto syntax_error;
+		}
+	}
 
     rpn = shuntingYard(asgn->next);
     if (rpn == NULL) goto error;
@@ -442,6 +415,10 @@ PARSER_RESULT parse(char *buffer, Expression **expr) {
     head = tokenize(buffer);
     if (head == NULL) return PARSER_ERROR;
 
+	bool hasFuncCalls = head->hasFunctionCalls;
+	bool hasFuncAssignment = head->hasFuncAssignment;
+	bool hasVarAssignment = head->hasVarAssignment;
+
 	PARSER_RESULT result = normalize(&head);
 	if (result != PARSER_SUCCESS) {
 		if (result == PARSER_ERROR) goto error;
@@ -451,15 +428,15 @@ PARSER_RESULT parse(char *buffer, Expression **expr) {
 	Debug(0, "Normalizer out\n");
 	Debug(1, printTokens(head));
 
-    if (containsAssignment(head)) {
-        if (containsFunctionAssignment(head)) {
-            return parseFunctionAssignment(head);
-        }
-        return parseAssignment(head);
+    if (hasVarAssignment) {
+        if (hasFuncAssignment) return parseFunctionAssignment(head, hasFuncCalls);
+        return parseAssignment(head, hasFuncCalls);
     }
 
-	result = parseFunctionCalls(&head);
-	if (result != PARSER_SUCCESS) return result; 
+	if (hasFuncCalls) {
+		result = parseFunctionCalls(&head);
+		if (result != PARSER_SUCCESS) return result; 
+	}
 
     rpn = shuntingYard(head);
     if (rpn == NULL) goto error;

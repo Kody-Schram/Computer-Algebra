@@ -171,6 +171,10 @@ Token *tokenize(char *buffer) {
     int spaceI = -1;
     TokenType prevT = -1;
 
+	bool hasCalls = false;
+	bool hasVarAssignment = false;
+	bool hasFuncAssignment = false;
+
     int i = 0;
     // Loops through till end of string
     while(buffer[i] != '\0') {
@@ -227,6 +231,7 @@ Token *tokenize(char *buffer) {
             pointer[i] = '^';
             printf("%s\n", pointer);
 
+			deepFreeTokens(head);
             return NULL;
         }
 
@@ -234,6 +239,7 @@ Token *tokenize(char *buffer) {
         if (spaceI != -1) {
             if ((prevT == TOKEN_NUMBER || prevT == TOKEN_IDENTIFIER) && (type == TOKEN_IDENTIFIER || type == TOKEN_NUMBER || type == TOKEN_FUNC_CALL_PLACEHOLDER)) {
                 printf("Spacing leads to ambiguous intent.\n");
+				deepFreeTokens(head);
                 return NULL;
             }
         }
@@ -243,13 +249,33 @@ Token *tokenize(char *buffer) {
 
         Token *newToken;
 		if (type == TOKEN_OPERATOR) newToken = createOperatorToken(op);
-		else if (type == TOKEN_FUNC_CALL_PLACEHOLDER) newToken = createFuncCallToken(cmp);
+		else if (type == TOKEN_FUNC_CALL_PLACEHOLDER) {
+			newToken = createFuncCallToken(cmp);
+			hasCalls = true;
+		}
 		else newToken = createToken(type, buffer + i, end - i);
+
+		if (newToken->type == TOKEN_ASSIGNMENT) {
+			if (hasVarAssignment || hasFuncAssignment) {
+				printf("Cannot have an assignment within an assignment\n");
+				deepFreeTokens(head);
+				return NULL;
+			}
+			hasVarAssignment = true;
+		} else if (newToken->type == TOKEN_MAPPING) {
+			if (hasFuncAssignment) {
+				printf("Cannot have an assignment within an assignment\n");
+				deepFreeTokens(head);
+				return NULL;
+			}
+			hasFuncAssignment = true;
+		}
 
 		cmp = NULL;
 
 		if (newToken == NULL) {
             perror("Error in tokenizer");
+			deepFreeTokens(head);
             return NULL;
         }
 
@@ -264,6 +290,9 @@ Token *tokenize(char *buffer) {
         i = end;
     }
 	Debug(1, printTokens(head));
-    
+
+    head->hasFuncAssignment = hasFuncAssignment;
+	head->hasVarAssignment = hasVarAssignment;
+	head->hasFunctionCalls = hasCalls;
 	return head;
 }
