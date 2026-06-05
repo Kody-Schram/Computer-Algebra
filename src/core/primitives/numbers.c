@@ -1,3 +1,4 @@
+#include <math.h>
 #include <stdlib.h>
 #include <stdint.h>
 #include <inttypes.h>
@@ -5,6 +6,7 @@
 #include "numbers.h"
 #include "core/common.h"
 #include "core/context.h"
+#include "core/utils/expr_utils.h"
 
 
 bool defaultNumberParser(char const *input, ObjectValue *value, uint32_t *flags) {
@@ -34,11 +36,11 @@ void cleanup_number(ObjectValue value, uint32_t flags) {
 int32_t compare_number(ObjectValue const a, uint32_t aFlags, ObjectValue const b, uint32_t bFlags) {
 
 	if (GMP_NUMBER(aFlags) || GMP_NUMBER(bFlags)) return 0;
-	if (!INLINE_INTEGER(aFlags) && !INLINE_INTEGER(bFlags)) return a.floating - b.floating;
+	if (INLINE_INTEGER(aFlags) && INLINE_INTEGER(bFlags)) return a.integer - b.integer;
 
 	if (!INLINE_INTEGER(aFlags)) return a.floating- b.integer;
 	else if (!INLINE_INTEGER(bFlags)) return a.integer - b.floating;
-	return a.integer - b.integer;
+	return a.floating - b.floating;
 }
 
 
@@ -74,6 +76,151 @@ BuiltinResult add_number(Context const *ctx, Expression **operands, uint32_t nAr
 		*out = NULL;
 		return BUILTIN_NEUTRAL;
 	}
+
+	if (GMP_NUMBER(a->flags) || GMP_NUMBER(b->flags)) return BUILTIN_ERROR; // not implemented yet
+
+	Expression *result = dummyExpression(EXPRESSION_OBJECT);
+	result->objectId = NUMBER_ID;
+
+	if (INLINE_INTEGER(a->flags) && INLINE_INTEGER(b->flags)) {
+		result->value.integer = a->value.integer + b->value.integer;
+		SET_INLINE_INTEGER_TRUE(result->flags);
+	}
+	else if (!INLINE_INTEGER(a->flags)) result->value.floating = a->value.floating + b->value.integer;
+	else if (INLINE_INTEGER(b->flags)) result->value.floating = a->value.integer + b->value.floating;
+	else result->value.floating = a->value.floating + b->value.floating;
+
+	return BUILTIN_SUCCESS;
+}
+
+
+BuiltinResult sub_number(Context const *ctx, Expression **operands, uint32_t nArgs, Expression **out) {
+	Expression *a = operands[0];
+	Expression *b = operands[1];
+
+	if (a->objectId != NUMBER_ID || b->objectId != NUMBER_ID) {
+		*out = NULL;
+		return BUILTIN_NEUTRAL;
+	}
+
+	if (GMP_NUMBER(a->flags) || GMP_NUMBER(b->flags)) return BUILTIN_ERROR; // not implemented yet
+
+	Expression *result = dummyExpression(EXPRESSION_OBJECT);
+	result->objectId = NUMBER_ID;
+
+	if (INLINE_INTEGER(a->flags) && INLINE_INTEGER(b->flags)) {
+		result->value.integer = a->value.integer - b->value.integer;
+		SET_INLINE_INTEGER_TRUE(result->flags);
+	}
+	else if (!INLINE_INTEGER(a->flags)) result->value.floating = a->value.floating - b->value.integer;
+	else if (INLINE_INTEGER(b->flags)) result->value.floating = a->value.integer - b->value.floating;
+	else result->value.floating = a->value.floating - b->value.floating;
+
+	return BUILTIN_SUCCESS;
+}
+
+
+BuiltinResult mult_number(Context const *ctx, Expression **operands, uint32_t nArgs, Expression **out) {
+	Expression *a = operands[0];
+	Expression *b = operands[1];
+
+	if (a->objectId != NUMBER_ID || b->objectId != NUMBER_ID) {
+		*out = NULL;
+		return BUILTIN_NEUTRAL;
+	}
+
+	if (GMP_NUMBER(a->flags) || GMP_NUMBER(b->flags)) return BUILTIN_ERROR; // not implemented yet
+
+	Expression *result = dummyExpression(EXPRESSION_OBJECT);
+	result->objectId = NUMBER_ID;
+
+	if (INLINE_INTEGER(a->flags) && INLINE_INTEGER(b->flags)) {
+		result->value.integer = a->value.integer * b->value.integer;
+		SET_INLINE_INTEGER_TRUE(result->flags);
+	}
+	else if (!INLINE_INTEGER(a->flags)) result->value.floating = a->value.floating * b->value.integer;
+	else if (INLINE_INTEGER(b->flags)) result->value.floating = a->value.integer * b->value.floating;
+	else result->value.floating = a->value.floating * b->value.floating;
+
+	return BUILTIN_SUCCESS;
+}
+
+
+BuiltinResult div_number(Context const *ctx, Expression **operands, uint32_t nArgs, Expression **out) {
+	Expression *a = operands[0];
+	Expression *b = operands[1];
+
+	if (a->objectId != NUMBER_ID || b->objectId != NUMBER_ID) {
+		*out = NULL;
+		return BUILTIN_NEUTRAL;
+	}
+
+	if (GMP_NUMBER(a->flags) || GMP_NUMBER(b->flags)) return BUILTIN_ERROR; // not implemented yet
+
+
+	Expression *result = dummyExpression(EXPRESSION_OBJECT);
+	result->objectId = NUMBER_ID;
+
+	if (INLINE_INTEGER(a->flags) && INLINE_INTEGER(b->flags)) {
+		if (b->value.integer == 0) goto div_by_zero;
+		result->value.floating = ((double) a->value.integer) / ((double) b->value.integer);
+		SET_INLINE_INTEGER_TRUE(result->flags);
+	}
+	else if (!INLINE_INTEGER(a->flags)) {
+		if (b->value.integer == 0) goto div_by_zero;
+		result->value.floating = a->value.floating / b->value.integer;
+	}
+	else if (INLINE_INTEGER(b->flags)) {
+		if (b->value.floating == 0) goto div_by_zero;
+		result->value.floating = a->value.integer / b->value.floating;
+	}
+	else {
+		if (b->value.floating == 0) goto div_by_zero;
+		result->value.floating = a->value.floating / b->value.floating;
+	}
+
+	return BUILTIN_SUCCESS;
+
+	div_by_zero:
+		printf("Division by zero.\n");
+		*out = NULL;
+		return BUILTIN_ERROR;
+}
+
+
+static inline int64_t _powi(int64_t a, int64_t e) {
+    long long r = 1;
+
+    while (e > 0) {
+        if (e % 2 == 1) r *= a;
+        a *= a;
+        e /= 2;
+    }
+
+    return r;
+}
+
+
+BuiltinResult exp_number(Context const *ctx, Expression **operands, uint32_t nArgs, Expression **out) {
+	Expression *a = operands[0];
+	Expression *b = operands[1];
+
+	if (a->objectId != NUMBER_ID || b->objectId != NUMBER_ID) {
+		*out = NULL;
+		return BUILTIN_NEUTRAL;
+	}
+
+	if (GMP_NUMBER(a->flags) || GMP_NUMBER(b->flags)) return BUILTIN_ERROR; // not implemented yet
+
+	Expression *result = dummyExpression(EXPRESSION_OBJECT);
+	result->objectId = NUMBER_ID;
+
+	if (INLINE_INTEGER(a->flags) && INLINE_INTEGER(b->flags)) result->value.integer = _powi(a->value.integer, b->value.integer); 
+	else if (!INLINE_INTEGER(a->flags)) result->value.floating = powf(a->value.floating, b->value.integer); 
+	else if (INLINE_INTEGER(b->flags)) result->value.floating = powf(a->value.integer, b->value.floating); 
+	else result->value.floating = powf(a->value.floating, b->value.floating); 
+
+	return BUILTIN_SUCCESS;
 }
 
 
@@ -81,6 +228,12 @@ bool initNumbers(Registry *registry) {
 	Object number;
 	if (!createObject(&number, LIB_CORE_8, cleanup_number, compare_number, copy_number, print_number)) return true;
 	if (!registerObject(registry, number, NUMBER_ID)) return false;
+
+	if (!addOperationImplementation(registry, '+', add_number)) return false;
+	if (!addOperationImplementation(registry, '-', sub_number)) return false;
+	if (!addOperationImplementation(registry, '*', mult_number)) return false;
+	if (!addOperationImplementation(registry, '/', div_number)) return false;
+	if (!addOperationImplementation(registry, '^', exp_number)) return false;
 
 	return true;
 }
