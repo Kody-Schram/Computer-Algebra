@@ -1,7 +1,8 @@
-#ifndef PARSERTYPES_H
-#define PARSERTYPES_H
+#pragma once
 
-#include "core/utils/types.h"
+#include <stdint.h>
+#include "core/common.h"
+
 
 // Forward declaring types
 typedef enum TokenType TokenType;
@@ -28,9 +29,18 @@ enum TokenType {
 struct Token {
     TokenType type;
 
+	// Pack bools for contains assignment, contains function assignment, contains function calls
+	// Removes need for parser to run a check over the token list to determine this information
+	bool isNegative;
+	bool hasFuncAssignment;
+	bool hasVarAssignment;
+	bool hasFunctionCalls;
+
     union {
         char *value;
-        FunctionCall *call;
+		Expression *finalizedCall;
+		Component const *cmp;
+        Operation const *op;
     };
 
     struct Token *next;
@@ -39,14 +49,12 @@ struct Token {
 
 // RPN related definitions
 struct RPNList {
-    int length;
+    uint32_t length;
     Token **items;
 };
 
 struct Stack {
-    int size;
-    int entries;
+    uint32_t size;
+    uint32_t entries;
     void **items;
 };
-
-#endif

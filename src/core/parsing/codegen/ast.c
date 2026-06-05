@@ -1,41 +1,14 @@
+#include <stdint.h>
 #include <stdlib.h>
-#include <stdio.h>
 
 #include "ast.h"
-#include "core/context/context.h"
+#include "core/context.h"
+#include "core/parsing/parser_types.h"
 #include "core/utils/log.h"
 #include "core/parsing/parser_utils.h"
-#include "core/utils/type_utils.h"
+#include "core/utils/expr_utils.h"
 
 #define DEFAULT_NODE_STACK_SIZE 10
-
-/**
- * @brief Gets the precedent of operator
- * 
- * @param operator 
- * @return int Precedent of operator
- */
-static int getPrecedent(const char *operator) {
-    int precedent = 0;
-
-    // set precedent for '->'
-    switch(operator[0]) {
-        case '+':
-        case '-':
-            precedent = 1;
-            break;
-        case '*':
-        case '/':
-            precedent = 2;
-            break;
-        case '^':
-            precedent = 3;
-            break;
-    }
-
-    return precedent;
-}
-
 
 /**
  * @brief Gets the length of linked list
@@ -43,10 +16,10 @@ static int getPrecedent(const char *operator) {
  * @param head Start of Token linked list
  * @return int Length of linked list
  */
-static int getLinkedListLength(const Token *head) {
+static uint32_t getLinkedListLength(const Token *head) {
     const Token *cur = head;
 
-    int i = 0;
+    uint32_t i = 0;
     while (cur != NULL) {
         i ++;
         cur = cur->next;
@@ -64,16 +37,16 @@ static int getLinkedListLength(const Token *head) {
  * @param stack 
  * @return int Result
  */
-static int reallocStack(Stack *stack) {
+static bool reallocStack(Stack *stack) {
     stack->size *= 2;
     void **temp = realloc(stack->items, stack->size * sizeof(void*));
     if (temp == NULL) {
         printf("Error reallocating space for stack.\n");
-        return 1;
+        return true;
     }
 
     stack->items = temp;
-    return 0;
+    return false;
 }
 
 
@@ -83,7 +56,7 @@ RPNList *shuntingYard(Token *head) {
     Debug(0, "\nCreating RPN List.\n");
     Token *cur = head;
 
-    int size = getLinkedListLength(head);
+    uint32_t size = getLinkedListLength(head);
     Stack output = {
         size,
         0,
@@ -117,23 +90,28 @@ RPNList *shuntingYard(Token *head) {
 
         } else if (cur->type == TOKEN_OPERATOR) {
             if (operators.entries > 0) {
+				Token *opToken = (Token *) operators.items[operators.entries - 1];
                 // Pops all operators on stack with greater or equal precedent
                 while ((operators.entries > 0) 
-                    && (((Token *) operators.items[operators.entries - 1])->value[0] != '(') 
-                    && (getPrecedent(((Token *) operators.items[operators.entries - 1])->value) >= getPrecedent(cur->value))) {
+                    && (opToken->type != TOKEN_LEFT_PAREN) 
+                    && (
+						opToken->type == TOKEN_OPERATOR 
+						&& opToken->op->precedence >= cur->op->precedence)
+					) {
                     
                             // Right associativity for exponents
-                    if (((Token *) operators.items[operators.entries - 1])->value[0] == '^' 
-                        && getPrecedent(((Token *) operators.items[operators.entries - 1])->value) == getPrecedent(cur->value)) break;
+					if (opToken->op->associativity == ASSOC_RIGHT
+						&& opToken->op->precedence == cur->op->precedence) break;
                     
                     operators.entries --;
-                    output.items[output.entries] = operators.items[operators.entries];
-                    output.entries ++;
+                    output.items[output.entries] = opToken;
+					output.entries ++;
+					if (operators.entries > 0) opToken = (Token *) operators.items[operators.entries - 1];
                 }
             }
 
             operators.items[operators.entries] = cur;
-            operators.entries ++;
+			operators.entries ++;
 
             if (operators.entries == operators.size) {
                 if (reallocStack(&operators)) goto error;
@@ -141,7 +119,7 @@ RPNList *shuntingYard(Token *head) {
 
         } else if (cur->type == TOKEN_RIGHT_PAREN) {
             // Pops all operators within parenthesis when closing is reached
-            while (operators.entries > 0 && ((Token *) operators.items[operators.entries - 1])->value[0] != '(') {
+            while (operators.entries > 0 && ((Token *) operators.items[operators.entries - 1])->type != TOKEN_LEFT_PAREN) {
                 operators.entries --;
                 output.items[output.entries] = operators.items[operators.entries];
                 output.entries ++;
@@ -196,7 +174,7 @@ Expression *expressionFromRPN(RPNList *rpn) {
     if (expressions.items == NULL) return NULL;
     Expression *root = NULL;
 
-    for (int i = 0; i < rpn->length; i ++) {
+    for (uint32_t i = 0; i < rpn->length; i ++) {
         Expression *expr = createExpression(rpn->items[i]);
         if (expr == NULL) goto cleanup;
 
@@ -225,7 +203,7 @@ Expression *expressionFromRPN(RPNList *rpn) {
     return root;
 
     cleanup:
-        for (int i = 0; i < expressions.entries; i ++) {
+        for (uint32_t i = 0; i < expressions.entries; i ++) {
             freeExpression(expressions.items[i]);
         }
         free(expressions.items);

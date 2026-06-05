@@ -1,8 +1,6 @@
-#ifndef SIMPLIFY_H
-#define SIMPLIFY_H
+#pragma once
 
-#include "core/utils/types.h"
+#include "core/common.h"
 
-int simplify(Expression **expr);
 
-#endif
+bool simplify(Expression **expr);

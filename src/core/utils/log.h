@@ -1,9 +1,8 @@
-#ifndef LOG_H
-#define LOG_H
+#pragma once
 
 #include <stdio_ext.h>
 
-#ifdef Release
+#ifdef NDEBUG 
 
 #define Debug(fileStream, stream, ...) ((void) 0)
 
@@ -17,5 +16,3 @@ void printStream(FILE *stream);
 
 
 void Info(const int fileStream, const void *stream, ...);
-
-#endif

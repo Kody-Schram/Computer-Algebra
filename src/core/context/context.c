@@ -1,55 +1,184 @@
 #include <stdlib.h>
-#include <stdio.h>
+#include <string.h>
 
-#include "context.h"
-#include "core/context/environment.h"
+#include "core/common.h"
+#include "core/primitives/numbers.h"
+#include "core/utils/log.h"
+#include "core/utils/expr_utils.h"
+#include "core/context.h"
+#include "config.h"
+#include "environment.h"
+#include "registry.h"
+
 
 Context *GLOBALCONTEXT = NULL;
 
-Context *createContext(Config *config, Environment *env) {
-    Context *context = calloc(1, sizeof(Context));
-    if (context == NULL) {
-        perror("Error in context");
-        return NULL;
-    }
 
-    context->config = config;
-    context->env = env;
+bool initOutputVariables(Context *ctx) {
+    int outputs = ctx->config->OUTPUTS;
+	if (outputs <= 0) return true;
+	
+	if (outputs == 1) {
+		Expression *temp = dummyExpression(EXPRESSION_OBJECT);
+		if (temp == NULL) return false;
+		temp->objectId = NUMBER_ID;
+		temp->value.integer = 0;
 
-    return context;
+		if (!bindComponent(ctx->env, COMP_VARIABLE, strdup(ctx->config->OUTPUT_ID), temp)) {
+			free(temp);
+			return false;
+		}
+		
+		return true;
+	}
+
+	for (int i = 0; i < outputs; i ++) {
+		int size = strlen(ctx->config->OUTPUT_ID) + 12;
+
+		char *str = malloc(size);
+		if (str == NULL) return false;
+		snprintf(str, size, "%s_%d", ctx->config->OUTPUT_ID, i);
+
+		Expression *temp = dummyExpression(EXPRESSION_OBJECT);
+		if (temp == NULL) return false;
+		temp->objectId = NUMBER_ID;
+		temp->value.integer = 0;
+
+		if (!bindComponent(ctx->env, COMP_VARIABLE, str, temp)) {
+			free(temp);
+			free(str);
+			return false;
+		}
+	}
+
+    return true;
 }
 
-int initContext(char *cpath) {
-    if (GLOBALCONTEXT != NULL) return 0;
+
+bool initContext(char const *cpath) {
+    if (GLOBALCONTEXT != NULL) return false;
 
     Config *config = loadConfig(cpath);
-    Environment *env = createEnvironment(ENV_LIST); // will change to hash map later
+    Environment *env = createEnvironment(); // will change to hash map later
+	Registry *registry = initRegistry();
 
-    if (config == NULL || env == NULL) {
+    if (config == NULL || env == NULL || registry == NULL) {
         freeConfig(config);
         freeEnvironment(env);
-        return 0;
+		freeRegistry(registry);
+        return false;
     }
     
-    GLOBALCONTEXT = createContext(config, env);
-    if (GLOBALCONTEXT == NULL) {
+	Context *ctx = calloc(1, sizeof(Context));
+	if (ctx == NULL) {
         freeConfig(config);
         freeEnvironment(env);
-        return 0;
+		freeRegistry(registry);
+        return false;
+	}
+
+	ctx->config = config;
+	ctx->env = env;
+	ctx->registry = registry;
+
+	GLOBALCONTEXT = ctx;
+
+	if (!initPrimitives(registry)) {
+		freeContext(ctx);
+		return false;
+	}
+
+    if (!initOutputVariables(ctx)) {
+        freeContext(ctx);
+        return false;
     }
 
-    if (!initOutputVariables(env)) {
-        freeContext(GLOBALCONTEXT);
-        return 0;
-    }
-
-    return 1;
+    return true;
 }
 
-void freeContext(Context *context) {
-    if (context != NULL) {
-        freeEnvironment(context->env);
-        freeConfig(context->config);
+
+void freeContext(Context *ctx) {
+	deepFreeEnvironment(ctx->env);
+	freeConfig(ctx->config);
+	freeRegistry(ctx->registry);
+
+    free(ctx);
+}
+
+
+bool reloadConfig(Context *ctx) {
+	Config *new = loadConfig(ctx->config->CONFIG_FILE_PATH);
+
+	if (new == NULL) return false;
+
+	freeConfig(ctx->config);
+	ctx->config = new;
+
+	return true;
+}
+
+
+bool updateOutputVariables(Context *ctx, Expression *output) {
+	if (ctx->config->OUTPUTS <= 0) {
+		freeExpression(output);
+		return true;
+	}
+
+    Debug(0, "Updating output variable(s).\n");
+    if (ctx->config->OUTPUTS == 1) {
+        Component *cmp = _searchEnvironment(ctx->env, ctx->config->OUTPUT_ID);
+        if (cmp == NULL) return false;
+
+        freeExpression(cmp->value);
+        cmp->value = output;
+        return true;
+    } else {
+        int size = strlen(ctx->config->OUTPUT_ID) + 12;
+        char *str = malloc(size);
+        if (str == NULL) return false;
+        snprintf(str, size, "%s_%d", ctx->config->OUTPUT_ID, ctx->config->OUTPUTS - 1);
+
+        Component *last = _searchEnvironment(ctx->env, str);
+        if (last == NULL) {
+            free(str);
+            return false;
+        }
+        free(str);
+        freeExpression(last->value);
+
+        for (int i = ctx->config->OUTPUTS - 2; i >= 0; i --) {
+            size = strlen(ctx->config->OUTPUT_ID) + 12;
+            str = malloc(size);
+            if (str == NULL) return false;
+            snprintf(str, size, "%s_%d", ctx->config->OUTPUT_ID, i);
+
+            Component *cmp = _searchEnvironment(ctx->env, str);
+            if (cmp == NULL) {
+                free(str);
+                return false;
+            }
+            free(str);
+
+            last->value = cmp->value;
+            last = cmp;
+        }
+
+        size = strlen(ctx->config->OUTPUT_ID) + 12;
+        str = malloc(size);
+        if (str == NULL) return false;
+        snprintf(str, size, "%s_0", ctx->config->OUTPUT_ID);
+
+        Component *first = _searchEnvironment(ctx->env, str);
+        if (first == NULL) {
+            free(str);
+            return false;
+        }
+        free(str);
+
+        first->value = output;
+
+        return true;
     }
-    free(context);
+
+    return true;
 }

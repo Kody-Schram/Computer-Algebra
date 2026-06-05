@@ -3,6 +3,7 @@
 #include <yaml.h>
 #include <string.h>
 
+#include "core/context.h"
 #include "config.h"
 
 
@@ -15,7 +16,6 @@ typedef enum {
     STATE_LOG,
     STATE_LOG_LEVEL,
     STATE_LOG_LOCATION,
-    STATE_LOG_PRINT_AXIOM_OPS,
 
     STATE_STARTUP,
 
@@ -26,9 +26,10 @@ typedef enum {
     STATE_K_ANS,
 
     STATE_RUNTIME,
+	STATE_STRICT,
     STATE_OUTPUTS,
     STATE_PRESERVE_FRACS,
-    STATE_LAZY_CALLS,
+    STATE_LAZY_RESOLUTIONS,
 
     STATE_STOP
 } State;
@@ -141,7 +142,6 @@ static int consumeEvent(State *state, yaml_event_t *event, Config *config) {
                 value = (char *) event->data.scalar.value;
                 if (!strcmp(value, "level")) *state = STATE_LOG_LEVEL;
                 else if (!strcmp(value, "location")) *state = STATE_LOG_LOCATION;
-                else if (!strcmp(value, "printAxiomaticOperations")) *state = STATE_LOG_PRINT_AXIOM_OPS;
                 else {
                     printf("Unexpected scalar: %s\n", value);
                     return 0;
@@ -204,28 +204,6 @@ static int consumeEvent(State *state, yaml_event_t *event, Config *config) {
                 printf("Unexpected event %d in state %d.\n", event->type, *state);
                 return 0;
                 
-        }
-        break;
-        
-    case STATE_LOG_PRINT_AXIOM_OPS:
-        switch (event->type) {
-            case YAML_MAPPING_END_EVENT:
-                *state = STATE_LOG;
-                break;
-                
-            case YAML_SCALAR_EVENT:
-                value = (char *) event->data.scalar.value;
-                int b = get_boolean(value);
-                
-                if (b == -1) return 0;
-                config->PRINT_AXIOMATIC_OPS = b;
-                *state = STATE_LOG;
-                
-                break;
-                
-            default:
-                printf("Unexpected event %d in state %d.\n", event->type, *state);
-                return 0;
         }
         break;
 
@@ -338,7 +316,8 @@ static int consumeEvent(State *state, yaml_event_t *event, Config *config) {
 
                 if (!strcmp(value, "saveOutputs")) *state = STATE_OUTPUTS;
                 else if (!strcmp(value, "preserveFractions")) *state = STATE_PRESERVE_FRACS;
-                else if (!strcmp(value, "lazyFunctionCalls")) *state = STATE_LAZY_CALLS;
+                else if (!strcmp(value, "lazyResolutions")) *state = STATE_LAZY_RESOLUTIONS;
+				else if (!strcmp(value, "strict")) *state = STATE_STRICT;
                 else {
                     printf("Unexpected keyword: %s.\n", value);
                     return 0;
@@ -351,6 +330,25 @@ static int consumeEvent(State *state, yaml_event_t *event, Config *config) {
                 
         }
         break;
+
+	case STATE_STRICT:
+		switch (event->type) {
+			case YAML_MAPPING_END_EVENT:
+				*state = STATE_RUNTIME;
+				break;
+
+			case YAML_SCALAR_EVENT:
+				value = (char *) event->data.scalar.value;
+				int b = get_boolean(value);
+
+				if (b == -1) return 0;
+				config->STRICT = b;
+				*state = STATE_RUNTIME;
+				break;
+
+			default:
+				return 0;
+		}
 
     case STATE_OUTPUTS:
         switch (event->type) {
@@ -394,7 +392,7 @@ static int consumeEvent(State *state, yaml_event_t *event, Config *config) {
         }
         break;
 
-    case STATE_LAZY_CALLS:
+    case STATE_LAZY_RESOLUTIONS:
         switch (event->type) {
             case YAML_MAPPING_END_EVENT:
                 *state = STATE_RUNTIME;
@@ -405,7 +403,7 @@ static int consumeEvent(State *state, yaml_event_t *event, Config *config) {
                 int b = get_boolean(value);
 
                 if (b == -1) return 0;
-                config->LAZY_CALLS = b;
+                config->LAZY_RESOLUTIONS = b;
                 *state = STATE_RUNTIME;
 
                 break;
@@ -429,7 +427,6 @@ static void initConfig(Config *config) {
     
     config->LOG_LEVEL = 0;
     config->LOG_STREAM = stdout;
-    config->PRINT_AXIOMATIC_OPS = false;
     
     config->STARTUP = NULL;
 
@@ -437,18 +434,20 @@ static void initConfig(Config *config) {
     config->MAPPING[1] = (KeywordMapping) {.cmd=K_ENV, .keyword=strdup("env")};
     config->MAPPING[2] = (KeywordMapping) {.cmd=K_RELOAD, .keyword=strdup("reload")};
 
+	config->STRICT = false;
+
     config->OUTPUTS = 1;
     config->OUTPUT_ID = strdup("ans");
 
     config->PRESERVE_FRACS = true;
-    config->LAZY_CALLS = true;
+    config->LAZY_RESOLUTIONS = true;
 }
 
 
-Config *loadConfig(char *cpath) {
+Config *loadConfig(char const *cpath) {
     Config *config = calloc(1, sizeof(Config));
     if (config == NULL) {
-        perror("Error in config");
+        perror("Error creating config");
         return NULL;
     }
 
@@ -473,7 +472,7 @@ Config *loadConfig(char *cpath) {
         int path = 0;
 
         while (cfile == NULL && path < npaths) {
-            printf("trying to load from %s\n", paths[path]);
+            printf("Loading config from: %s\n", paths[path]);
             cfile = fopen(paths[path], "rb");
             if (cfile == NULL) {
                 path ++;
@@ -495,7 +494,7 @@ Config *loadConfig(char *cpath) {
             freeConfig(config);
             return NULL;
         }
-        config->CONFIG_FILE_PATH = cpath;
+        config->CONFIG_FILE_PATH = strdup(cpath);
     }
 
     yaml_parser_t parser;
@@ -545,7 +544,7 @@ Config *loadConfig(char *cpath) {
 }
 
 
-FILE *printConfig(Config *config) {
+FILE *printConfig(Config const *config) {
     FILE *stream = tmpfile();
     if (stream == NULL) return NULL;
 
@@ -591,11 +590,13 @@ FILE *printConfig(Config *config) {
         fprintf(stream, "'%s'\n", config->MAPPING[i].keyword);
     }
 
+	fprintf(stream, "Strict: %d\n", config->STRICT);
+
     fprintf(stream, "Outputs: %d\n", config->OUTPUTS);
     fprintf(stream, "Output: '%s'\n", config->OUTPUT_ID);
 
     fprintf(stream, "Preserve Fractions: %d\n", config->PRESERVE_FRACS);
-    fprintf(stream, "Lazy Function Calls: %d\n", config->LAZY_CALLS);
+    fprintf(stream, "Lazy Function Calls: %d\n", config->LAZY_RESOLUTIONS);
 
     return stream;
 }
@@ -612,6 +613,6 @@ void freeConfig(Config *config) {
     }
 
     free(config->STARTUP);
-    free(config->OUTPUT_ID);
+    free(config->OUTPUT_ID); 
     free(config);
 }

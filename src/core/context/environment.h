@@ -1,69 +1,29 @@
-#ifndef ENVIRONMENT_H
-#define ENVIRONMENT_H
+#pragma once
 
-#include "core/utils/types.h"
-
-typedef enum ComponentType ComponentType;
-typedef struct Component Component;
-typedef enum EnvironmentType EnvironmentType;
-typedef struct Environment Environment;
+#include "core/common.h"
 
 
-// Environment related definitions
-enum ComponentType {
-    COMP_OPERATION,
-    COMP_VARIABLE,
-    COMP_FUNCTION
-};
-
-struct Component {
-    ComponentType type;
-    char *identifier;
-    // Pack secondary hashing to have super fast comparisions when tokenizing
-    Component *next;
-
-    union {
-        Function *func;
-        Expression *value;
-        Operation *operation;
-    };
-};
-
-enum EnvironmentType {
+typedef enum {
     ENV_LIST,
     ENV_HASH
-}; 
+} EnvironmentType; 
 
-struct Environment {
+
+typedef struct Environment {
     EnvironmentType type;
     
     union {
         Component *compList;
         Component **hashTable;
     };
-    Environment *parent;
-};
+    struct Environment *parent;
+} Environment;
 
 
-
-Environment *createEnvironment(EnvironmentType type);
-
-
-int bindComponent(Environment *env, ComponentType type, const char *identifier, const void *data);
+Environment *createHashEnvironment();
 
 
-Component* searchEnvironment(const Environment *env, const char *identifier);
+Component *_searchEnvironment(Environment const *env, char const *identifier);
 
 
-FILE *printEnvironment(const Environment *env);
-
-
-void freeEnvironment(Environment *env);
-
-
-int initOutputVariables(Environment *env);
-
-
-int updateOutputVariables(Environment *env, Expression *output);
-
-#endif
+void deepFreeEnvironment(Environment *env);

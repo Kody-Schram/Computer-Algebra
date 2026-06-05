@@ -11,9 +11,9 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release)
 endif()
 
-if(CMAKE_BUILD_TYPE STREQUAL "Develop")
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     add_compile_options(-g3 -O0)
-    message("Making develop build.")
+    message("Making debug build.")
 endif()
 
 # Use for gprof profiling
@@ -23,13 +23,15 @@ if(CMAKE_BUILD_TYPE STREQUAL "Profile")
 endif()
 
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
-    add_definitions(-DRelease)
-    add_compile_options(-s -O3)
+	add_compile_definitions(NDEBUG)
+    add_compile_options(-O3)
+	add_link_options(-s)
     message("Making release build.")
 endif()
 
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(YAML REQUIRED yaml-0.1)
+# pkg_check_modules(GMP REQUIRED gmp)
 
 add_subdirectory(src/core)
 add_subdirectory(src/modules)
@@ -40,5 +42,6 @@ target_link_libraries(${PROJECT_NAME}
     Core
     Modules
     ${YAML_LIBRARIES}
+	#	${GMP_LIBRARIES}
     m
 )

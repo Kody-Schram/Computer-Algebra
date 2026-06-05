@@ -1,25 +1,22 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <math.h>
 
-#include "core/context/context.h"
-#include "core/context/environment.h"
+#include "core/context.h"
+#include "core/common.h"
+#include "core/utils/expr_utils.h"
 #include "core/utils/log.h"
 #include "core/utils/input.h"
 
-#include "core/utils/type_utils.h"
-#include "core/axioms.h"
-
 #include "core/parsing/parser.h"
-#include "core/execution/simplify.h"
-#include "core/execution/execute.h"
+#include "core/execution/executor.h"
 
 
 static int handleKeywords(char *buffer) {
     for (int i = 0; i < sizeof(GLOBALCONTEXT->config->MAPPING) / sizeof(KeywordMapping); i ++) {
 
-        if (strncmp(buffer, GLOBALCONTEXT->config->MAPPING[i].keyword, fmin(strlen(buffer), strlen(GLOBALCONTEXT->config->MAPPING[i].keyword)))) continue;
+		if (strlen(buffer) != strlen(GLOBALCONTEXT->config->MAPPING[i].keyword)) continue;
+        if (strcmp(buffer, GLOBALCONTEXT->config->MAPPING[i].keyword)) continue;
         Debug(0, "Found keyword '%s'\n", buffer);
         switch (GLOBALCONTEXT->config->MAPPING[i].cmd) {
             case K_QUIT:
@@ -32,9 +29,7 @@ static int handleKeywords(char *buffer) {
             case K_RELOAD:
                 printf("Reloading config.\n");
 
-                freeConfig(GLOBALCONTEXT->config);
-                GLOBALCONTEXT->config = loadConfig(NULL);
-                if (GLOBALCONTEXT->config == NULL) return -1;
+				if (!reloadConfig(GLOBALCONTEXT)) return -1;
 
                 Info(1, printConfig(GLOBALCONTEXT->config));
                 return 1;
@@ -44,36 +39,43 @@ static int handleKeywords(char *buffer) {
     return 0;
 }
 
-
+// Handles processing input
+// 
+// Return value:
+// 0: Error/quit
+// 1: Success
 static int process(char *buffer) {
     Debug(0, "\nProcessing '%s'\n", buffer);
     int keyword = handleKeywords(buffer);
     if (keyword == -1) return 0;
     else if (keyword == 1) return 1;
 
-    ParserResult result = parse(buffer);
-    if (result.type == PARSER_ERROR) return 0;
-    if (result.expr == NULL) return 1;
-    
-    if (!simplify(&result.expr)) {
-        freeExpression(result.expr);
-        return 1;
-    }
+	Expression *expr = NULL;
+    PARSER_RESULT p_result = parse(buffer, &expr);
+	if (p_result != PARSER_SUCCESS) {
+		printf("\n");
+		free(expr);
+		if (GLOBALCONTEXT->config->STRICT || p_result == PARSER_ERROR) return 0;
+		return 1;
+	}
 
-    if (!execute(&result.expr)) {
-        freeExpression(result.expr);
-        return 1;
-    }
+	if (expr == NULL) return 1;
 
-    char *str = expressionToString(result.expr);
-    if (str != NULL) printf("%s\n\n", str);
-    free(str);
+	EXECUTOR_RESULT e_result = execute(&expr, true);
+	if (e_result != EXECUTOR_SUCCESS) {
+		printf("\n");
+		if (e_result == EXECUTOR_ERROR) return 0;
+		return 1;
+	}
 
-    if (GLOBALCONTEXT->config->OUTPUTS > 0) {
-        if (!updateOutputVariables(GLOBALCONTEXT->env, result.expr)) return 0;
-    } else freeExpression(result.expr);
+	char *out = expressionToString(expr);
 
-    return 1;
+    printf("%s\n\n", out);
+	free(out);
+
+    if (!updateOutputVariables(GLOBALCONTEXT, expr)) return 0;
+
+	return 1;
 }
 
 
@@ -132,12 +134,7 @@ int main(int argc, char *argv[]) {
     }
     
     Debug(0, "Project name: " PROJECT_NAME "\n");
-    
-    if (!initAxioms()) {
-        freeContext(GLOBALCONTEXT);
-        return 1;
-    }
-    
+
     Debug(0, "Context created.\n");
     Info(1, printConfig(GLOBALCONTEXT->config));
     Info(1, printEnvironment(GLOBALCONTEXT->env));
