@@ -276,7 +276,10 @@ static PARSER_RESULT parseFunctionAssignment(Token *head, bool hasCalls) {
     if (expr == NULL) goto error;
     
 	EXECUTOR_RESULT e_result = execute(&expr, false);
-	
+	if (e_result != EXECUTOR_SUCCESS) {
+		if (e_result == EXECUTOR_RUNTIME_ERROR) goto syntax_error;
+		goto error;
+	}
 
     Debug(1, printExpression(expr));
 
@@ -370,10 +373,11 @@ static PARSER_RESULT parseAssignment(Token *head, bool hasCalls) {
     expr = expressionFromRPN(rpn);
     if (expr == NULL) goto error;
 
-    
-    // ===============================================
-    // Run expression through simplification step here
-    // ===============================================
+	EXECUTOR_RESULT e_result = execute(&expr, false);
+	if (e_result != EXECUTOR_SUCCESS) {
+		if (e_result == EXECUTOR_RUNTIME_ERROR) goto syntax_error;
+		goto error;
+	}
     
     Debug(1, printExpression(expr));
     

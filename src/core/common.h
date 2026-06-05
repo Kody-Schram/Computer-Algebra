@@ -17,6 +17,31 @@
 	 ((uint64_t)(s[6]) << 48) | ((uint64_t)(s[7]) << 56))
 
 
+// Bit operations for core flags
+#define SET_BIT_TRUE(flags, MASK) (flags |= MASK)
+#define SET_BIT_FALSE(flags, MASK) (flags &= ~MASK)
+#define GET_BIT(flags, MASK) ((flags & MASK) != 0)
+
+#define NEGATIVE_MASK (1 << 0)
+#define SET_NEGATIVE_TRUE(flags) (SET_BIT_TRUE(flags, NEGATIVE_MASK))
+#define SET_NEGATIVE_FALSE(flags) (SET_BIT_FALSE(flags, NEGATIVE_MASK))
+#define NEGATIVE(flags) (GET_BIT(flags, NEGATIVE_MASK))
+
+#define INLINE_INTEGER_MASK (1 << 1)
+#define SET_INLINE_INTEGER_TRUE(flags) (SET_BIT_TRUE(flags, INLINE_INTEGER_MASK))
+#define SET_INLINE_INTEGER_FALSE(flags) (SET_BIT_FALSE(flags, INLINE_INTEGER_MASK))
+#define INLINE_INTEGER(flags) (GET_BIT(flags, INLINE_INTEGER_MASK))
+
+#define GMP_NUMBER_MASK (1 << 2)
+#define SET_GMP_NUMBER_TRUE(flags) (SET_BIT_TRUE(flags, GMP_NUMBER_MASK))
+#define SET_GMP_NUMBER_FALSE(flags) (SET_BIT_FALSE(flags, GMP_NUMBER_MASK))
+#define GMP_NUMBER(flags) (GET_BIT(flags, GMP_NUMBER_MASK))
+
+
+// Defines the bounds for core flags vs module flags
+#define MODULE_FLAG_MASK(bit_index) (1 << (8 + (bit_index)))
+
+
 typedef enum ComponentType ComponentType;
 typedef struct Component Component;
 
@@ -39,11 +64,8 @@ typedef struct Context Context;
 typedef BuiltinResult (*BuiltinImplementation)(Context const *ctx, uint32_t nArgs, Expression **exprs);
 
 // Expression related definitions
-enum ExpressionType {
-	EXPRESSION_OBJECT,
+enum ExpressionType { EXPRESSION_OBJECT,
     EXPRESSION_VARIABLE,
-    EXPRESSION_INTEGER,
-    EXPRESSION_DOUBLE,
     EXPRESSION_FUNCTION_CALL,
     EXPRESSION_OPERATOR
 };
@@ -72,13 +94,22 @@ struct Operation {
 };
 
 
+typedef union {
+	void *data;
+	int64_t integer;
+	double floating;
+} ObjectValue;
+
+
 struct Object {
 	uint64_t module;
-	void (*cleanup)(void *data);
-	int32_t (*compare)(void const *a, void const *b);
-	void *(*copy)(void const *src);
-	char *(*print)(void const *data);
+	void (*cleanup)(ObjectValue value, uint32_t flags);
+	int32_t (*compare)(ObjectValue const a, uint32_t aFlags, ObjectValue const b, uint32_t bFlags);
+	bool (*copy)(ObjectValue const src, ObjectValue *dest, uint32_t flags);
+	char *(*print)(ObjectValue const value, uint32_t flags);
 };
+
+
 
 
 struct Expression {
@@ -88,8 +119,7 @@ struct Expression {
 		uint32_t nOperands;
 		uint32_t nInputs;
 		struct {
-			uint32_t coreFlags :8;
-			uint32_t flags :24;
+			uint32_t flags;
 		};
 	};
 
@@ -103,7 +133,7 @@ struct Expression {
 		// Mathematical objects
 		struct {
 			uint64_t objectId;
-			void *data;
+			ObjectValue value;
 		};
 
 		// Function calls
@@ -113,8 +143,6 @@ struct Expression {
 		};
 
         char *identifier;
-        double value;
-        int64_t integer;
     };
 };
 

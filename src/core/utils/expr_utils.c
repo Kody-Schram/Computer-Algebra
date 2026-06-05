@@ -5,7 +5,9 @@
 #include <inttypes.h>
 
 #include "expr_utils.h"
+#include "core/common.h"
 #include "core/context.h"
+#include "core/primitives/numbers.h"
 
 
 #define DEFUALT_STRING_SIZE 64
@@ -43,18 +45,11 @@ Expression *deepCopyExpression(Expression const *expr) {
 			Object const *obj = searchObject(GLOBALCONTEXT->registry, new->objectId);
 			if (obj == NULL) goto error;
 
-			new->data = obj->copy(expr->data);
+			new->flags = expr->flags;
+			if (!obj->copy(expr->value, &new->value, new->flags)) goto error;
 
 			break;
 
-        case EXPRESSION_INTEGER:
-            new->integer = expr->integer;
-            break;
-
-        case EXPRESSION_DOUBLE:
-            new->value = expr->value;
-            break;
-        
         case EXPRESSION_OPERATOR:
             new->op = expr->op;
             new->nOperands = expr->nOperands;
@@ -118,14 +113,6 @@ static void printExpressionRec(Expression const *expr, int level, FILE *stream) 
     for (int i = 0; i < level; i++) fprintf(stream, "  ");
 
     switch(expr->type) {
-        case EXPRESSION_INTEGER:
-            fprintf(stream, "<type: INTEGER, value: %" PRId64 ">\n", expr->integer);
-            break;
-
-        case EXPRESSION_DOUBLE:
-            fprintf(stream, "<type: DOUBLE, value: %g>\n", expr->value);
-            break;
-
         case EXPRESSION_OPERATOR:
             char id;
             fprintf(stream, "Operation: %c\n", expr->op->symbol);
@@ -150,7 +137,7 @@ static void printExpressionRec(Expression const *expr, int level, FILE *stream) 
 		case EXPRESSION_OBJECT:
 			Object const *obj = searchObject(GLOBALCONTEXT->registry, expr->objectId);
 			if (obj != NULL && obj->print != NULL) {
-				char *out = obj->print(expr->data);
+				char *out = obj->print(expr->value, expr->flags);
 				fprintf(stream, "<type: OBJECT, data: %s>\n", out);
 				free(out);
 			}
@@ -189,16 +176,6 @@ static void expressionToStringRecur(Expression const *expr, FILE *stream) {
             fprintf(stream, ")");
             break;
 
-        case EXPRESSION_DOUBLE:
-            if (expr->value < 0) fprintf(stream, "(%g)", expr->value);
-            else fprintf(stream, "%g", expr->value);
-            break;
-
-        case EXPRESSION_INTEGER:
-            if (expr->integer < 0) fprintf(stream, "(%" PRId64 ")", expr->integer);
-            else fprintf(stream, "%" PRId64, expr->integer);
-            break;
-
         case EXPRESSION_VARIABLE:
             fprintf(stream, "%s", expr->identifier);
             break;
@@ -216,7 +193,12 @@ static void expressionToStringRecur(Expression const *expr, FILE *stream) {
 		case EXPRESSION_OBJECT:
 			Object const *obj = searchObject(GLOBALCONTEXT->registry, expr->objectId);
 			if (obj != NULL && obj->print != NULL) {
-				char *out = obj->print(expr->data);
+				char *out = obj->print(expr->value, expr->flags);
+				if (out == NULL) {
+					fprintf(stream, "(object)");
+					break;
+				}
+
 				fprintf(stream, "%s", out);
 				free(out);
 			}
@@ -284,8 +266,10 @@ void freeExpression(Expression *expr) {
             break;
 
 		case EXPRESSION_OBJECT:
+			if (expr->objectId == NUMBER_ID && !GMP_NUMBER(expr->flags)) break;
+
 			Object const *obj = searchObject(GLOBALCONTEXT->registry, expr->objectId);
-			if (obj != NULL && obj->cleanup != NULL) obj->cleanup(expr->data);	
+			if (obj != NULL && obj->cleanup != NULL) obj->cleanup(expr->value, expr->flags);	
 
 			break;
             

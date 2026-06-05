@@ -17,8 +17,8 @@ add_library(Core STATIC
     
 	execution/executor.c
     execution/simplify.c
-    
-	primitives/integers.c
+
+    primitives/numbers.c
 )
 
 target_link_libraries(Core PRIVATE ${YAML_LIBRARIES})

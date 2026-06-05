@@ -1,6 +1,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "core/common.h"
+#include "core/primitives/numbers.h"
 #include "core/utils/log.h"
 #include "core/utils/expr_utils.h"
 #include "core/context.h"
@@ -17,9 +19,10 @@ bool initOutputVariables(Context *ctx) {
 	if (outputs <= 0) return true;
 	
 	if (outputs == 1) {
-		Expression *temp = dummyExpression(EXPRESSION_DOUBLE);
+		Expression *temp = dummyExpression(EXPRESSION_OBJECT);
 		if (temp == NULL) return false;
-		temp->value = 0;
+		temp->objectId = NUMBER_ID;
+		temp->value.integer = 0;
 
 		if (!bindComponent(ctx->env, COMP_VARIABLE, strdup(ctx->config->OUTPUT_ID), temp)) {
 			free(temp);
@@ -36,9 +39,10 @@ bool initOutputVariables(Context *ctx) {
 		if (str == NULL) return false;
 		snprintf(str, size, "%s_%d", ctx->config->OUTPUT_ID, i);
 
-		Expression *temp = dummyExpression(EXPRESSION_DOUBLE);
+		Expression *temp = dummyExpression(EXPRESSION_OBJECT);
 		if (temp == NULL) return false;
-		temp->value = 0;
+		temp->objectId = NUMBER_ID;
+		temp->value.integer = 0;
 
 		if (!bindComponent(ctx->env, COMP_VARIABLE, str, temp)) {
 			free(temp);

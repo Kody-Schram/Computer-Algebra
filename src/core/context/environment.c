@@ -33,7 +33,7 @@ static void deepFreeExpression(Expression *expr) {
 
 		case EXPRESSION_OBJECT:
 			Object const *obj = searchObject(GLOBALCONTEXT->registry, expr->objectId);
-			if (obj != NULL && obj->cleanup != NULL) obj->cleanup(expr->data);	
+			if (obj != NULL && obj->cleanup != NULL) obj->cleanup(expr->value, expr->flags);	
 
 			break;
             

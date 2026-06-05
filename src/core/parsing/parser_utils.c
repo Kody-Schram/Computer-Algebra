@@ -6,10 +6,11 @@
 #include "parser_utils.h"
 #include "core/common.h"
 #include "core/context.h"
+#include "core/context/registry.h"
 #include "core/parsing/parser_types.h"
+#include "core/primitives/numbers.h"
 #include "core/utils/log.h"
 #include "core/utils/expr_utils.h"
-#include "core/primitives/integers.h"
 
 
 Token *createOperatorToken(Operation const *op) {
@@ -167,22 +168,12 @@ Expression *createExpression(Token *token) {
             break;
             
         case TOKEN_NUMBER:
-            expr->type = EXPRESSION_DOUBLE;
-            char *end;
-            double value = strtod(token->value, &end);
-            
-            if (value == (long long) value) {
-                expr->type = EXPRESSION_OBJECT;
-				expr->objectId = INTEGER_ID;
-
-                expr->data = malloc(sizeof(long long));
-				*(long long*)expr->data = (long long) value;
-
+            expr->type = EXPRESSION_OBJECT;
+			expr->objectId = NUMBER_ID;
+			if (!GLOBALCONTEXT->registry->numberParser(token->value, &expr->value, &expr->flags)) {
 				free(token->value);
-                break;
-            }
-    
-            expr->value = value;
+				goto error;
+			}
 
 			free(token->value);
             break;

@@ -131,8 +131,10 @@ bool createOperation(Operation *out, const char symbol, Associativity a, bool c,
 
 
 bool createObject(Object *out, uint64_t originModule,
-		void (*cleanup)(void *data), int32_t (*compare)(void const *a, void const *b),
-		void *(*copy)(void const *src), char *(*print)(void const *data)
+		void (*cleanup)(ObjectValue value, uint32_t flags),
+		int32_t (*compare)(ObjectValue const a, uint32_t aFlags, ObjectValue const b, uint32_t bFlags),
+		bool (*copy)(ObjectValue const src, ObjectValue *dest, uint32_t flags),
+		char *(*print)(ObjectValue const value, uint32_t flags)
 );
 
 

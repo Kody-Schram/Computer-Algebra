@@ -4,8 +4,9 @@
 #include <string.h>
 
 #include "registry.h"
+#include "core/common.h"
 #include "core/context.h"
-#include "core/primitives/integers.h"
+#include "core/primitives/numbers.h"
 #include "core/utils/log.h"
 
 
@@ -44,6 +45,8 @@ Registry *initRegistry() {
 
 	registry->objects = objects;
 	registry->object_mapping = obj_mapping;
+
+	registry->numberParser = defaultNumberParser;
 
 	return registry;
 
@@ -187,10 +190,14 @@ bool createOperation(Operation *out, const char symbol, Associativity a, bool c,
 }
 
 
+
 bool createObject(Object *out, uint64_t originModule,
-	void (*cleanup)(void *data), int32_t (*compare)(void const *a, void const *b), 
-	void *(*copy)(void const *src), char *(*print)(void const *data)) 
-{
+		void (*cleanup)(ObjectValue value, uint32_t flags),
+		int32_t (*compare)(ObjectValue const a, uint32_t aFlags, ObjectValue const b, uint32_t bFlags),
+		bool (*copy)(ObjectValue const src, ObjectValue *dest, uint32_t flags),
+		char *(*print)(ObjectValue const value, uint32_t flags)
+) {
+
 	(*out) = (Object) {
 		.module = originModule,
 		.cleanup = cleanup,
@@ -227,7 +234,7 @@ bool initPrimitives(Registry *registry) {
 	if (!createOperation(&sub, '-', ASSOC_LEFT, false, 1)) return false;
 	if (!registerOperation(registry, sub)) return false;
 
-	initIntegers(registry);
+	initNumbers(registry);
 
 	return true;
 }
