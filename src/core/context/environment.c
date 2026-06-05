@@ -1,21 +1,16 @@
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "environment.h"
+#include "core/context.h"
 #include "core/utils/log.h"
 #include "core/utils/expr_utils.h"
 
 
+
 static inline void freeFunction(Function *func) {
-    if (func == NULL) return;
-    free(func->parameters);
-    if (func->type == DEFINED) freeExpression(func->definition);
-    free(func);
-} 
-
-
-static inline void deepFreeFunction(Function *func) {
     if (func == NULL) return;
     if (func->parameters != NULL) {
         for (int i = 0; i < func->nParameters; i ++) free(func->parameters[i]);
@@ -29,33 +24,14 @@ static inline void deepFreeFunction(Function *func) {
 static inline void freeComponent(Component *cmp) {
     switch (cmp->type) {
         case COMP_FUNCTION:
-            Debug(0, "Freeing func '%s'\n", cmp->identifier);
             freeFunction(cmp->func);
             break;
             
         case COMP_VARIABLE:
-            Debug(0, "Freeing variable '%s'\n", cmp->identifier);
             freeExpression(cmp->value);
             break;
     }
 
-    free(cmp);
-}
-
-
-static inline void deepFreeComponent(Component *cmp) {
-    switch (cmp->type) {
-        case COMP_FUNCTION:
-            Debug(0, "Freeing func '%s'\n", cmp->identifier);
-            freeFunction(cmp->func);
-            break;
-            
-        case COMP_VARIABLE:
-            Debug(0, "Freeing variable '%s'\n", cmp->identifier);
-            freeExpression(cmp->value);
-            break;
-    }
-    free(cmp->identifier);
     free(cmp);
 }
 
@@ -218,6 +194,7 @@ void freeEnvironment(Environment *env) {
             Component *cmp = env->compList;
             while (cmp != NULL) {
                 Component *temp = cmp->next;
+				Debug(0, "Freeing Component '%s'\n", cmp->identifier);
                 freeComponent(cmp);
                 cmp = temp;
             }
@@ -240,7 +217,9 @@ void deepFreeEnvironment(Environment *env) {
             Component *cmp = env->compList;
             while (cmp != NULL) {
                 Component *temp = cmp->next;
-                deepFreeComponent(cmp);
+				Debug(0, "Freeing Component '%s'\n", cmp->identifier);
+				free(cmp->identifier);
+                freeComponent(cmp);
                 cmp = temp;
             }
             break;
@@ -252,6 +231,5 @@ void deepFreeEnvironment(Environment *env) {
 
     free(env);
     Debug(0, "\n");
-
 }
 

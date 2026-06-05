@@ -78,7 +78,7 @@ static int getNumber(char const *c) {
 }
 
 
-static Operation const *getOperator(char const *c) {
+static inline Operation const *getOperator(char const *c) {
     if (isalnum(c[0])) return NULL;
     
     Operation const *op = searchOperation(GLOBALCONTEXT->registry, (char) c[0]);

@@ -185,7 +185,7 @@ static PARSER_RESULT parseFunctionCalls(Token **head) {
 
 		error:
 			for (uint32_t i = 0; i < nParams; i ++) {
-				freeTokens(params[i]);
+				deepFreeTokens(params[i]);
 				freeExpression(paramExprs[i]);
 			}
 
@@ -332,8 +332,7 @@ static PARSER_RESULT parseFunctionAssignment(Token *head) {
 
 	
 	syntax_error:
-		freeTokens(head);
-        free(identifier);
+		deepFreeTokens(head);
         if (parameters != NULL) {
             for (int i = 0; i < nParameters; i ++) free(parameters[i]);
         }
@@ -346,7 +345,7 @@ static PARSER_RESULT parseFunctionAssignment(Token *head) {
 
     
     error:
-		freeTokens(head);
+		deepFreeTokens(head);
         free(identifier);
         if (parameters != NULL) {
             for (int i = 0; i < nParameters; i ++) free(parameters[i]);
@@ -418,7 +417,7 @@ static PARSER_RESULT parseAssignment(Token *head) {
 
 	syntax_error:
         free(identifier);
-        freeTokens(head);
+        deepFreeTokens(head);
         if (rpn != NULL) free(rpn->items);
         free(rpn);
         freeExpression(expr);
@@ -427,7 +426,7 @@ static PARSER_RESULT parseAssignment(Token *head) {
 
     error:
         free(identifier);
-        freeTokens(head);
+        deepFreeTokens(head);
         if (rpn != NULL) free(rpn->items);
         free(rpn);
         freeExpression(expr);
@@ -476,13 +475,13 @@ PARSER_RESULT parse(char *buffer, Expression **expr) {
 	return PARSER_SUCCESS;
 
 	syntax_error:
-        freeTokens(head);
+    	deepFreeTokens(head);
         if (rpn != NULL) free(rpn->items);
         free(rpn);
 		return PARSER_SYNTAX_ERROR;
 
     error:
-        freeTokens(head);
+        deepFreeTokens(head);
         if (rpn != NULL) free(rpn->items);
         free(rpn);
       	return PARSER_ERROR;

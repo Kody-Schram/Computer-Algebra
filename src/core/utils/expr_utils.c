@@ -176,41 +176,6 @@ FILE *printExpression(const Expression *expr) {
 }
 
 
-void freeExpression(Expression *expr) {
-    if (expr == NULL) return;
-    Debug(0, "Freeing expression\n");
-
-    switch (expr->type) {
-        case EXPRESSION_FUNCTION_CALL:
-			free(expr->inputs);
-            break;
-
-        case EXPRESSION_VARIABLE:
-            free(expr->identifier);
-            break;
-
-        case EXPRESSION_OPERATOR:
-            for (int i = 0; i < expr->nOperands; i ++) {
-                freeExpression(expr->operands[i]);
-            }
-            free(expr->operands);
-            break;
-
-		case EXPRESSION_OBJECT:
-			Object const *obj = searchObject(GLOBALCONTEXT->registry, expr->objectId);
-			if (obj != NULL && obj->cleanup != NULL) obj->cleanup(expr->data);	
-
-			break;
-            
-        default:
-            break;
-        
-    }
-
-    free(expr);
-}
-
-
 static void expressionToStringRecur(Expression const *expr, FILE *stream) {
     if (expr == NULL) return;
 
@@ -274,6 +239,7 @@ char *expressionToString(Expression const *expr) {
     char *string = NULL;
     if (expr == NULL || stream == NULL) {
         fclose(stream);
+		perror("Error getting string form of Expression");
         return string;
     }
     expressionToStringRecur(expr, stream);
@@ -298,3 +264,44 @@ char *expressionToString(Expression const *expr) {
     fclose(stream);
     return string;
 }
+
+
+void freeExpression(Expression *expr) {
+	if (expr == NULL) return;
+
+    switch (expr->type) {
+        case EXPRESSION_FUNCTION_CALL:
+			for (uint32_t i = 0; i < expr->nInputs; i ++) {
+				free(expr->inputs[i]);
+			}
+			free(expr->inputs);
+            break;
+
+        case EXPRESSION_VARIABLE:
+            free(expr->identifier);
+            break;
+
+        case EXPRESSION_OPERATOR:
+            for (int i = 0; i < expr->nOperands; i ++) {
+                freeExpression(expr->operands[i]);
+            }
+            free(expr->operands);
+            break;
+
+		case EXPRESSION_OBJECT:
+			Object const *obj = searchObject(GLOBALCONTEXT->registry, expr->objectId);
+			if (obj != NULL && obj->cleanup != NULL) obj->cleanup(expr->data);	
+
+			break;
+            
+        default:
+            break;
+        
+    }
+
+    free(expr);
+
+
+}
+
+

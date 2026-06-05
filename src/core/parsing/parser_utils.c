@@ -53,7 +53,7 @@ Token *createToken(TokenType type, char const *value, int l) {
         token->type = type;
         
 		if (token->type != TOKEN_LEFT_PAREN  && token->type != TOKEN_RIGHT_PAREN
-				&& token->type != TOKEN_ASSIGNMENT && token->type != TOKEN_MAPPING) {
+				&& token->type != TOKEN_ASSIGNMENT && token->type != TOKEN_MAPPING && token->type != TOKEN_SEPARATOR) {
 
 			token->value = malloc(l + 1);
 			if (token->value == NULL) {
@@ -127,10 +127,10 @@ static void printToken(Token const *token, FILE *stream) {
         }
         else if (token->type == TOKEN_OPERATOR) {
             fprintf(stream, "<type: %s, symbol: '%c'>\n", type, token->op->symbol);
-        }
-        else {
+        } else if (token->type == TOKEN_IDENTIFIER || token->type == TOKEN_NUMBER) {
             fprintf(stream, "<type: %s, value: '%s'>\n", type, token->value);
-            //printf(stream, "<type: %s, value: '%s'>\n", type, token->value);
+		} else {
+            fprintf(stream, "<type: %s>\n", type);
         }
 }
 
@@ -247,12 +247,18 @@ void freeTokens(Token *head) {
 
 
 void deepFreeTokens(Token *head) {
-    Debug(0, "Freeing tokens.\n");
+    Debug(0, "Deep Freeing tokens.\n");
 
     Token* current = head;
     while (current != NULL) {
         Token *next = current->next;
-		free(current->value);
+		if (current->type != TOKEN_OPERATOR  && 
+			current->type != TOKEN_FUNC_CALL_PLACEHOLDER  &&
+			current->type != TOKEN_FUNC_CALL) 
+		{
+			free(current->value);
+		}
+
         free(current);
         current = next;
     }
