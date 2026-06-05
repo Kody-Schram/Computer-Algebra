@@ -78,7 +78,7 @@ struct Config {
     KeywordMapping MAPPING[3];
 
     bool PRESERVE_FRACS;
-    bool LAZY_CALLS;
+    bool LAZY_RESOLUTIONS;
 	bool STRICT;
 };
 

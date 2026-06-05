@@ -62,14 +62,24 @@ runtime:
   # Default is true
   preserveConstants: true
 
-  # Determines whether function calls are "lazy". These lazy calls will be evaluated when executing
-  # For example, having a function call within a function definition will preserve the call until a call to that new function is made
-  # Otherwise, the call will be replaced with the definition of the other function
+  # Determines whether symbol resolutions are "lazy". 
+  # Lazy resolutions will resolve symbols within another definition only once that function/variable is executed upon. 
+  # If lazy is off it will do it while saving that definition to the runtime state.
   # ```
   # f:x->2x
   # g:y,z->yf(z)
+  #
+  # m : 2*5
+  # n: f(m)
   # ```
+  # Function Resolution:
+  # 
   # Lazy: g(y,z) = y * f(z)
   # Not lazy: g(y,z) = y * (2 * z)
+  #
+  # Variable Resolution:
+  # Lazy: n = 20
+  # Not lazy: n = 2 * f(m)
+  #
   # Default is true
-  lazyFunctionCalls: true
+  lazyResolutions: true
