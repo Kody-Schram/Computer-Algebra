@@ -170,7 +170,6 @@ BuiltinResult div_number(Context const *ctx, Expression **operands, uint32_t nAr
 	if (INLINE_INTEGER(a->flags) && INLINE_INTEGER(b->flags)) {
 		if (b->value.integer == 0) goto div_by_zero;
 		result->value.floating = ((double) a->value.integer) / ((double) b->value.integer);
-		SET_INLINE_INTEGER_TRUE(result->flags);
 	}
 	else if (!INLINE_INTEGER(a->flags)) {
 		if (b->value.integer == 0) goto div_by_zero;

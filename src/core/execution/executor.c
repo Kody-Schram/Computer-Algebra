@@ -29,7 +29,6 @@ static BuiltinResult callImplementations(
 
 
 static EXECUTOR_RESULT resolveSymbols(Expression **ptr, Environment *env, bool isExecuting) {
-	Info(0, "Resolving symbols\n");
 	if (ptr == NULL || *ptr == NULL) return EXECUTOR_SUCCESS;
 	if (!isExecuting && GLOBALCONTEXT->config->LAZY_RESOLUTIONS) return EXECUTOR_SUCCESS;
 
@@ -111,6 +110,10 @@ static EXECUTOR_RESULT resolveSymbols(Expression **ptr, Environment *env, bool i
 
 		case EXPRESSION_OPERATOR:
 			for (uint32_t i = 0; i < expr->nOperands; i ++) {
+				if (expr->operands[i]->type != EXPRESSION_OPERATOR &&
+					expr->operands[i]->type != EXPRESSION_VARIABLE &&
+					expr->operands[i]->type != EXPRESSION_FUNCTION_CALL) continue;
+
 				result = resolveSymbols(&expr->operands[i], env, isExecuting);
 				if (result != EXECUTOR_SUCCESS) return result;
 			}
@@ -127,6 +130,7 @@ static EXECUTOR_RESULT resolveSymbols(Expression **ptr, Environment *env, bool i
 
 EXECUTOR_RESULT execute(Expression **ptr, bool isExecuting) {
 	EXECUTOR_RESULT result;
+	Info(0, "Resolving symbols\n");
 	result = resolveSymbols(ptr, GLOBALCONTEXT->env, isExecuting);
 	if (result != EXECUTOR_SUCCESS) goto error;
 

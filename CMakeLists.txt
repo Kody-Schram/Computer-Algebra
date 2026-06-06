@@ -18,8 +18,11 @@ endif()
 
 # Use for gprof profiling
 if(CMAKE_BUILD_TYPE STREQUAL "Profile")
-    add_compile_options(-pg -O2)
+	#add_compile_options(-pg -O2)
+	add_compile_options(-pg -g3 -O2 -fno-inline -fno-inline-functions)
     add_link_options(-pg)
+	add_compile_definitions(NDEBUG)
+	message("Making profile build.")
 endif()
 
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
