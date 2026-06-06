@@ -15,12 +15,50 @@
 #define DEFAULT_OBJECTS 3
 
 
+/*
+ * CREATE_LOOKUP_128 defines a commutative and injective operation to create a faster lookup
+ * (might also be surjective I just didnt check since its irrelevant here)
+ *
+ * CREATE_LOOKUP_128 is commutative since boolean |(OR) and &(AND) are commutative
+ *
+ * Let a,b,c,d be uint64_t such that CREATE_lOOKUP_128(a,b) = CREATE_LOOKUP_128(c, d)
+ * So, (a | b, a & b) = (c | d, c & d)
+ * => a | b = c | d and a & b = c & d
+ * 
+ * Then, a | b = c | d 
+ * => a & (a | b) = a & (c | d)
+ * => a = (a & c) | (a & d)
+ *
+ * Similarily, c = (c & a) | (c & b)
+ *
+ * Let a/b/c/d = 1 represent the bit being on within a/b/c/d
+ * and similarily a/b/c/d = 0 representing the bit being off within a/b/c/d
+ *
+ * Case 1: a = 1, b = 1
+ * Then, 1 = (1 & c) | (1 & d) => c | d = 1. Since a & b = c & d => c = 1, d = 1
+ * So {a, b} = {c, d}
+ *
+ * Case 2: a = 1, b = 0
+ * Then 1 = (1 & c) | (1 & d) => c = 1 or d = 1. Since a & b = c & d, c = 1 xor d = 1.
+ * Since CREATE_LOOKUP_128 is commutative, (a, b) = (c, d) regardless of which c xor d is 1.
+ * So {a, b} = {c, d}
+ *
+ * Case 3: a = 0, b = 0
+ * Then, c = (c & 0) | (c & 0) => c = 0. Since a | b = c | d => d = 0.
+ * So {a, b} = {c, d}
+ *
+ * And so CREATE_LOOKUP_128 is injective and will have no collisions.
+ */
+#define CREATE_LOOKUP_128(a,b) \
+	(uint128_t) {.bits = {((uint64_t) (a | b)), ((uint64_t) (a & b))}}
+
+
 Registry *initRegistry() {
 	Registry *registry = NULL;
 	Operation *operations = NULL;
-	char *op_mapping = NULL;
+	char *op_map = NULL;
 	Object *objects = NULL;
-	uint64_t *obj_mapping = NULL;
+	uint64_t *obj_map = NULL;
 
 	registry = malloc(sizeof(Registry));
 	if (registry == NULL) goto error;
@@ -29,22 +67,22 @@ Registry *initRegistry() {
 	registry->registeredOperations = 0;
 
 	operations = malloc(sizeof(Operation) * DEFAULT_OPERATIONS); 
-	op_mapping = malloc(sizeof(char) * DEFAULT_OPERATIONS);
-	if (operations == NULL || op_mapping == NULL) goto error;
+	op_map = malloc(sizeof(char) * DEFAULT_OPERATIONS);
+	if (operations == NULL || op_map == NULL) goto error;
 
 	registry->operations = operations;
-	registry->operation_mapping = op_mapping;
+	registry->operation_map = op_map;
 
 	registry->objectsSize = DEFAULT_OBJECTS;
 	registry->registeredObjects = 0;
 
 	objects = malloc(sizeof(Object) * DEFAULT_OBJECTS);
-	obj_mapping = malloc(sizeof(uint64_t) * DEFAULT_OBJECTS);
+	obj_map = malloc(sizeof(uint64_t) * DEFAULT_OBJECTS);
 
-	if (objects == NULL || obj_mapping == NULL) goto error;
+	if (objects == NULL || obj_map == NULL) goto error;
 
 	registry->objects = objects;
-	registry->object_mapping = obj_mapping;
+	registry->object_map = obj_map;
 
 	registry->numberParser = defaultNumberParser;
 
@@ -54,9 +92,9 @@ Registry *initRegistry() {
 		perror("Error initializing registry");
 		free(registry);
 		free(operations);
-		free(op_mapping);
+		free(op_map);
 		free(objects);
-		free(obj_mapping);
+		free(obj_map);
 
 		return NULL;
 }
@@ -66,18 +104,18 @@ bool registerOperation(Registry *registry, Operation op) {
 	if (registry->registeredOperations >= registry->operationsSize) {
 		registry->operationsSize ++;
 		Operation *op_tmp = realloc(registry->operations, sizeof(Operation) * registry->operationsSize);
-		char *map_tmp = realloc(registry->operation_mapping, sizeof(char) * registry->operationsSize);
+		char *map_tmp = realloc(registry->operation_map, sizeof(char) * registry->operationsSize);
 		if (op_tmp == NULL || map_tmp == NULL) {
 			perror("Error registering operation");
 			return false;
 		}
 
 		registry->operations = op_tmp;
-		registry->operation_mapping = map_tmp;
+		registry->operation_map= map_tmp;
 	}
 
 	registry->operations[registry->registeredOperations] = op;
-	registry->operation_mapping[registry->registeredOperations] = op.symbol;
+	registry->operation_map[registry->registeredOperations] = op.symbol;
 	registry->registeredOperations ++;
 
 	return true;
@@ -86,7 +124,7 @@ bool registerOperation(Registry *registry, Operation op) {
 
 static Operation *_searchOperation(Registry const *registry, char symbol) {
 	for (unsigned int i = 0; i < registry->registeredOperations; i ++) {
-		if (registry->operation_mapping[i] == symbol) return &registry->operations[i];
+		if (registry->operation_map[i] == symbol) return &registry->operations[i];
 	}
 
 	return NULL;
@@ -98,7 +136,10 @@ Operation const *searchOperation(Registry const *registry, char symbol) {
 }
 
 
-bool addOperationImplementation(Registry *registry, char symbol, OperationImplementation implementation){
+bool addOperationImplementation(
+		Registry *registry, char symbol, 
+		OperationImplementation implementation, uint64_t ids[2]
+) {
 	Operation *op = _searchOperation(registry, symbol);
 	if (op == NULL) {
 		perror("Error adding operation implementation");
@@ -108,37 +149,67 @@ bool addOperationImplementation(Registry *registry, char symbol, OperationImplem
 	if (op->nImplementations >= op->implementationSize) { 
 		op->implementationSize ++;
 		OperationImplementation *temp = realloc(op->implementations, sizeof(OperationImplementation) * op->implementationSize);
-		if (temp == NULL) {
+		uint128_t *temp_map = realloc(op->implementation_map, sizeof(uint128_t) * op->implementationSize);
+		if (temp == NULL || temp_map == NULL) {
 			perror("Error registering operation implementation");
 			return false;
 		}
 
 		op->implementations = temp;
+		op->implementation_map = temp_map;
 	}
 	op->implementations[op->nImplementations] = implementation;
+	op->implementation_map[op->nImplementations] = CREATE_LOOKUP_128(ids[0], ids[1]);
 	op->nImplementations ++;
 	return true;
 }
 
 
-bool registerObject(Registry *registry, Object obj, uint64_t id) {
+BuiltinResult dispatchOperation(Operation const *op, ObjectData a, ObjectData b, ObjectData *out) {
+	uint128_t lookup = CREATE_LOOKUP_128(a.id, b.id);
+	for (uint32_t i = 0; i < op->nImplementations; i ++) {
+		if (COMPARE_UINT128_T(lookup, op->implementation_map[i]))
+			return op->implementations[i](GLOBALCONTEXT, a, b, out);
+	}
+}
+
+
+bool registerObject(
+		Registry *registry, uint64_t id,uint64_t originModule,
+		void (*cleanup)(ObjectValue value, uint32_t flags),
+		int32_t (*compare)(ObjectValue const a, uint32_t aFlags, ObjectValue const b, uint32_t bFlags),
+		bool (*copy)(ObjectValue const src, ObjectValue *dest, uint32_t flags),
+		char *(*print)(ObjectValue const value, uint32_t flags)
+) {
 	if (registry->registeredObjects >= registry->objectsSize) {
 		registry->objectsSize ++;
 
 		Object *obj_tmp = realloc(registry->objects, sizeof(Object) * registry->objectsSize);
-		uint64_t *id_tmp = realloc(registry->object_mapping, sizeof(uint64_t) * registry->objectsSize);
 		
-		if (obj_tmp == NULL || id_tmp == NULL) {
+		if (obj_tmp == NULL) {
+			perror("Error registering object");
+			return false;
+		}
+
+		uint64_t *id_tmp = realloc(registry->object_map, sizeof(uint64_t) * registry->objectsSize);
+		if (id_tmp == NULL) {
+			free(obj_tmp);
 			perror("Error registering object");
 			return false;
 		}
 
 		registry->objects = obj_tmp;
-		registry->object_mapping = id_tmp;
+		registry->object_map = id_tmp;
 	}
 
-	registry->objects[registry->registeredObjects] = obj;
-	registry->object_mapping[registry->registeredObjects] = id;
+	registry->objects[registry->registeredObjects] = (Object) {
+		.module = originModule,
+		.cleanup = cleanup,
+		.compare = compare,
+		.copy = copy,
+		.print = print
+	};
+	registry->object_map[registry->registeredObjects] = id;
 	registry->registeredObjects ++;
 
 	return true;
@@ -147,7 +218,7 @@ bool registerObject(Registry *registry, Object obj, uint64_t id) {
 
 Object const *searchObject(Registry const *registry, uint64_t obj_id) {
 	for (uint32_t i = 0; i < registry->registeredObjects; i ++) {
-		if (registry->object_mapping[i] == obj_id) return &(registry->objects[i]);
+		if (registry->object_map[i] == obj_id) return &(registry->objects[i]);
 	}
 	
 	return NULL;
@@ -156,13 +227,14 @@ Object const *searchObject(Registry const *registry, uint64_t obj_id) {
 
 void freeRegistry(Registry *registry) {
 	free(registry->objects);
-	free(registry->object_mapping);
+	free(registry->object_map);
 
 	for (uint32_t i = 0; i < registry->registeredOperations; i ++) {
 		free(registry->operations[i].implementations);
+		free(registry->operations[i].implementation_map);
 	}
 	free(registry->operations);
-	free(registry->operation_mapping);
+	free(registry->operation_map);
 
 	free(registry);
 }
@@ -175,6 +247,12 @@ bool createOperation(Operation *out, const char symbol, Associativity a, bool c,
 		return false;
 	}
 
+	uint128_t *implementation_map = malloc(sizeof(uint128_t) * DEFAULT_OPERATION_IMPLEMENTATIONS);
+	if (implementation_map == NULL) {
+		perror("Error creating operation");
+		return false;
+	}
+
 	(*out) = (Operation) {
 		.symbol = symbol,
 		.associativity = a,
@@ -182,29 +260,10 @@ bool createOperation(Operation *out, const char symbol, Associativity a, bool c,
 		.precedence = precedence,
 		.implementationSize = DEFAULT_OPERATION_IMPLEMENTATIONS,
 		.nImplementations = 0,
+		.implementation_map = implementation_map,
 		.implementations = implementations
 	};
 	
-	return true;
-}
-
-
-
-bool createObject(Object *out, uint64_t originModule,
-		void (*cleanup)(ObjectValue value, uint32_t flags),
-		int32_t (*compare)(ObjectValue const a, uint32_t aFlags, ObjectValue const b, uint32_t bFlags),
-		bool (*copy)(ObjectValue const src, ObjectValue *dest, uint32_t flags),
-		char *(*print)(ObjectValue const value, uint32_t flags)
-) {
-
-	(*out) = (Object) {
-		.module = originModule,
-		.cleanup = cleanup,
-		.compare = compare,
-		.copy = copy,
-		.print = print
-	};
-
 	return true;
 }
 

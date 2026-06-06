@@ -93,21 +93,35 @@ static bool combineLikeTermsRecur(Expression **ptr) {
 			if (expr->operands[i]->type != EXPRESSION_OBJECT || expr->operands[j]->type != EXPRESSION_OBJECT) continue;
 			if (expr->operands[i]->objectId != expr->operands[j]->objectId) continue;
 			if (expr->operands[i]->objectId == NUMBER_ID) {
-				Expression *out; 
+				Expression *new = dummyExpression(EXPRESSION_OBJECT); 
+					if (new == NULL) return false;
 
 				BuiltinResult result;
+				ObjectData a = {
+					.id = expr->operands[0]->objectId,
+					.value = expr->operands[0]->value,
+					.flags = expr->operands[0]->flags
+				};
 
-				for (uint32_t i = 0; i < expr->op->nImplementations; i ++) {
-					result = expr->op->implementations[i](GLOBALCONTEXT, expr->operands[0], expr->operands[1], &out);
-					if (result == BUILTIN_NEUTRAL) continue;
-					break;
-				}
+				ObjectData b = {
+					.id = expr->operands[1]->objectId,
+					.value = expr->operands[1]->value,
+					.flags = expr->operands[1]->flags
+				};
+
+				ObjectData out;
+
+				result = dispatchOperation(expr->op, a, b, &out);
 
 				if (result == BUILTIN_ERROR) return false;
 
+				new->objectId = out.id;
+				new->value = out.value;
+				new->flags = out.flags;
+
 				freeExpression(expr->operands[i]);
 				freeExpression(expr->operands[j]);
-				expr->operands[i] = out;
+				expr->operands[i] = new;
 				expr->operands[j] = expr->operands[expr->nOperands-1];
 				expr->nOperands --;
 				j --;

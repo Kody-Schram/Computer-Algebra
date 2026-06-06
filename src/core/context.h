@@ -121,7 +121,13 @@ Operation const *searchOperation(Registry const *registry, char symbol);
 bool registerOperation(Registry *registry, Operation op);
 
 
-bool registerObject(Registry *registry, Object obj, uint64_t id);
+bool registerObject(
+		Registry *registry, uint64_t id,uint64_t originModule,
+		void (*cleanup)(ObjectValue value, uint32_t flags),
+		int32_t (*compare)(ObjectValue const a, uint32_t aFlags, ObjectValue const b, uint32_t bFlags),
+		bool (*copy)(ObjectValue const src, ObjectValue *dest, uint32_t flags),
+		char *(*print)(ObjectValue const value, uint32_t flags)
+);
 
 
 Object const *searchObject(Registry const *registry, uint64_t obj_id);
@@ -130,12 +136,10 @@ Object const *searchObject(Registry const *registry, uint64_t obj_id);
 bool createOperation(Operation *out, const char symbol, Associativity a, bool c, uint32_t operands);
 
 
-bool createObject(Object *out, uint64_t originModule,
-		void (*cleanup)(ObjectValue value, uint32_t flags),
-		int32_t (*compare)(ObjectValue const a, uint32_t aFlags, ObjectValue const b, uint32_t bFlags),
-		bool (*copy)(ObjectValue const src, ObjectValue *dest, uint32_t flags),
-		char *(*print)(ObjectValue const value, uint32_t flags)
+bool addOperationImplementation(
+		Registry *registry, char symbol,
+		OperationImplementation implementation, uint64_t ids[2]
 );
 
 
-bool addOperationImplementation(Registry *registry, char symbol, OperationImplementation implementation);
+BuiltinResult dispatchOperation(Operation const *op, ObjectData a, ObjectData b, ObjectData *out);

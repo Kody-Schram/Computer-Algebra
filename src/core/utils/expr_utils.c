@@ -208,6 +208,7 @@ static void expressionToStringRecur(Expression const *expr, FILE *stream) {
 				fprintf(stream, "%s", out);
 				free(out);
 			}
+			else if (obj == NULL) fprintf(stream, "(object sad)");
 
 			else fprintf(stream, "(object)");
 
