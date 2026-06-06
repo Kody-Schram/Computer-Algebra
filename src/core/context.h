@@ -138,4 +138,4 @@ bool createObject(Object *out, uint64_t originModule,
 );
 
 
-bool addOperationImplementation(Registry *registry, char symbol, BuiltinImplementation fn);
+bool addOperationImplementation(Registry *registry, char symbol, OperationImplementation implementation);

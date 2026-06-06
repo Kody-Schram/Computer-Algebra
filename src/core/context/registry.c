@@ -98,7 +98,7 @@ Operation const *searchOperation(Registry const *registry, char symbol) {
 }
 
 
-bool addOperationImplementation(Registry *registry, char symbol, BuiltinImplementation fn){
+bool addOperationImplementation(Registry *registry, char symbol, OperationImplementation implementation){
 	Operation *op = _searchOperation(registry, symbol);
 	if (op == NULL) {
 		perror("Error adding operation implementation");
@@ -107,7 +107,7 @@ bool addOperationImplementation(Registry *registry, char symbol, BuiltinImplemen
 
 	if (op->nImplementations >= op->implementationSize) { 
 		op->implementationSize ++;
-		BuiltinImplementation *temp = realloc(op->implementations, sizeof(BuiltinImplementation) * op->implementationSize);
+		OperationImplementation *temp = realloc(op->implementations, sizeof(OperationImplementation) * op->implementationSize);
 		if (temp == NULL) {
 			perror("Error registering operation implementation");
 			return false;
@@ -115,7 +115,7 @@ bool addOperationImplementation(Registry *registry, char symbol, BuiltinImplemen
 
 		op->implementations = temp;
 	}
-	op->implementations[op->nImplementations] = fn;
+	op->implementations[op->nImplementations] = implementation;
 	op->nImplementations ++;
 	return true;
 }
@@ -169,7 +169,7 @@ void freeRegistry(Registry *registry) {
 
 
 bool createOperation(Operation *out, const char symbol, Associativity a, bool c, uint32_t precedence) {
-	BuiltinImplementation *implementations = malloc(sizeof(BuiltinImplementation) * DEFAULT_OPERATION_IMPLEMENTATIONS);
+	OperationImplementation *implementations = malloc(sizeof(OperationImplementation) * DEFAULT_OPERATION_IMPLEMENTATIONS);
 	if (implementations == NULL) {
 		perror("Error creating operation");
 		return false;
@@ -179,7 +179,6 @@ bool createOperation(Operation *out, const char symbol, Associativity a, bool c,
 		.symbol = symbol,
 		.associativity = a,
 		.commutative = c,
-		.arity = 2,
 		.precedence = precedence,
 		.implementationSize = DEFAULT_OPERATION_IMPLEMENTATIONS,
 		.nImplementations = 0,

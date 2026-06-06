@@ -13,7 +13,7 @@
 #define DEFUALT_STRING_SIZE 64
 
 
-Expression *dummyExpression(ExpressionType type) {
+static inline Expression *_dummyExpression(ExpressionType type) {
     Expression *expr = calloc(1, sizeof(Expression));
 
     if (expr == NULL) {
@@ -27,11 +27,17 @@ Expression *dummyExpression(ExpressionType type) {
 }
 
 
+Expression *dummyExpression(ExpressionType type) {
+	return _dummyExpression(type);
+}
+
+
 Expression *deepCopyExpression(Expression const *expr) {
     if (expr == NULL) return NULL;
     
-    Expression *new = dummyExpression(expr->type);
-    if (new == NULL) return NULL;
+	Expression *new = _dummyExpression(expr->type);
+	if (new == NULL) return NULL;
+
 
     switch (new->type) {
         case EXPRESSION_VARIABLE:

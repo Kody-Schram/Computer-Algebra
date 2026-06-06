@@ -68,10 +68,7 @@ char *print_number(ObjectValue const value, uint32_t flags) {
 }
 
 
-BuiltinResult add_number(Context const *ctx, Expression **operands, uint32_t nArgs, Expression **out) {
-	Expression *a = operands[0];
-	Expression *b = operands[1];
-
+BuiltinResult add_number(Context const *ctx, Expression *a, Expression *b, Expression **out) {
 	if (a->objectId != NUMBER_ID || b->objectId != NUMBER_ID) {
 		*out = NULL;
 		return BUILTIN_NEUTRAL;
@@ -96,10 +93,7 @@ BuiltinResult add_number(Context const *ctx, Expression **operands, uint32_t nAr
 }
 
 
-BuiltinResult sub_number(Context const *ctx, Expression **operands, uint32_t nArgs, Expression **out) {
-	Expression *a = operands[0];
-	Expression *b = operands[1];
-
+BuiltinResult sub_number(Context const *ctx, Expression *a, Expression *b, Expression **out) {
 	if (a->objectId != NUMBER_ID || b->objectId != NUMBER_ID) {
 		*out = NULL;
 		return BUILTIN_NEUTRAL;
@@ -124,10 +118,7 @@ BuiltinResult sub_number(Context const *ctx, Expression **operands, uint32_t nAr
 }
 
 
-BuiltinResult mult_number(Context const *ctx, Expression **operands, uint32_t nArgs, Expression **out) {
-	Expression *a = operands[0];
-	Expression *b = operands[1];
-
+BuiltinResult mult_number(Context const *ctx, Expression *a, Expression *b, Expression **out) {
 	if (a->objectId != NUMBER_ID || b->objectId != NUMBER_ID) {
 		*out = NULL;
 		return BUILTIN_NEUTRAL;
@@ -152,10 +143,7 @@ BuiltinResult mult_number(Context const *ctx, Expression **operands, uint32_t nA
 }
 
 
-BuiltinResult div_number(Context const *ctx, Expression **operands, uint32_t nArgs, Expression **out) {
-	Expression *a = operands[0];
-	Expression *b = operands[1];
-
+BuiltinResult div_number(Context const *ctx, Expression *a, Expression *b, Expression **out) {
 	if (a->objectId != NUMBER_ID || b->objectId != NUMBER_ID) {
 		*out = NULL;
 		return BUILTIN_NEUTRAL;
@@ -208,10 +196,7 @@ static inline int64_t _powi(int64_t a, int64_t e) {
 }
 
 
-BuiltinResult exp_number(Context const *ctx, Expression **operands, uint32_t nArgs, Expression **out) {
-	Expression *a = operands[0];
-	Expression *b = operands[1];
-
+BuiltinResult exp_number(Context const *ctx, Expression *a, Expression *b, Expression **out) {
 	if (a->objectId != NUMBER_ID || b->objectId != NUMBER_ID) {
 		*out = NULL;
 		return BUILTIN_NEUTRAL;

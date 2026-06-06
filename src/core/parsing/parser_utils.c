@@ -181,7 +181,7 @@ Expression *createExpression(Token *token) {
         case TOKEN_OPERATOR:
             expr->type = EXPRESSION_OPERATOR;
             expr->op = token->op;
-            expr->nOperands = expr->op->arity;
+            expr->nOperands = 2;
             
             expr->operands = malloc(sizeof(Expression *) * expr->nOperands);
             if (expr->operands == NULL) goto error;

@@ -12,23 +12,6 @@
 #define DEFAULT_FLATTEN_INCREASE 5
 
 
-static BuiltinResult callImplementations(
-		uint32_t nImplementations, BuiltinImplementation const * const implementations,
-		Context const *ctx, Expression **exprs, uint32_t nArgs, Expression **out
-) {
-	if (nImplementations == 0) return BUILTIN_NEUTRAL; 
-
-	BuiltinResult result;
-	for (uint32_t i = 0; i < nImplementations; i ++) {
-		result = implementations[i](ctx, exprs, nArgs, out);
-		if (result == BUILTIN_NEUTRAL) continue;
-		break;
-	}
-	
-	return result;
-}
-
-
 static int flattenOpsRecur(Expression *expr, const Operation *op, Expression ***list, int *elts, int *size) {
     if (expr->type == EXPRESSION_OPERATOR && expr->op == op) {
         for (int i = 0; i < expr->nOperands; i ++) {
@@ -111,13 +94,14 @@ static bool combineLikeTermsRecur(Expression **ptr) {
 			if (expr->operands[i]->objectId != expr->operands[j]->objectId) continue;
 			if (expr->operands[i]->objectId == NUMBER_ID) {
 				Expression *out; 
-				Expression *list[2] = {expr->operands[i], expr->operands[j]};
 
-				BuiltinResult result = callImplementations(
-						expr->op->nImplementations,
-						expr->op->implementations,
-						GLOBALCONTEXT, list, 2, &out
-				);
+				BuiltinResult result;
+
+				for (uint32_t i = 0; i < expr->op->nImplementations; i ++) {
+					result = expr->op->implementations[i](GLOBALCONTEXT, expr->operands[0], expr->operands[1], &out);
+					if (result == BUILTIN_NEUTRAL) continue;
+					break;
+				}
 
 				if (result == BUILTIN_ERROR) return false;
 
@@ -163,6 +147,11 @@ static bool simplifyRecur(Expression **ptr) {
     if (!combineLikeTermsRecur(ptr)) return 0;
 
     return true;
+}
+
+
+bool collapseRecur(Expression **ptr) {
+
 }
 
 

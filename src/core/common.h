@@ -42,26 +42,29 @@
 #define MODULE_FLAG_MASK(bit_index) (1 << (8 + (bit_index)))
 
 
+typedef struct Context Context;
+
+typedef enum BuiltinResultType BuiltinResultType;
+typedef enum BuiltinResult BuiltinResult;
+
 typedef enum ComponentType ComponentType;
 typedef struct Component Component;
-
-// Forward declaring types
-typedef struct Object Object; 
-
-typedef enum OperationType OperationType;
-typedef struct Operation Operation;
 
 typedef enum ExpressionType ExpressionType;
 typedef struct Expression Expression;
 
+typedef struct Object Object; 
+
+typedef enum OperationType OperationType;
+typedef struct Operation Operation;
+typedef BuiltinResult (*OperationImplementation)(Context const *ctx, Expression *a, Expression *b, Expression **out);
+
+
 typedef enum FunctionType FunctionType;
-typedef enum BuiltinResultType BuiltinResultType;
-typedef enum BuiltinResult BuiltinResult;
 typedef struct Function Function;
+typedef BuiltinResult (*FunctionImplementation)(Context const *ctx, Expression **inputs, uint32_t nInputs, Expression **out);
 
 
-typedef struct Context Context;
-typedef BuiltinResult (*BuiltinImplementation)(Context const *ctx, Expression **operands, uint32_t nArgs, Expression **out);
 
 // Expression related definitions
 enum ExpressionType { EXPRESSION_OBJECT,
@@ -85,12 +88,10 @@ struct Operation {
     char symbol;
 	
 	uint8_t precedence;
-    uint32_t arity; // Number of required operands
-
 
 	uint32_t implementationSize;
     uint32_t nImplementations;
-	BuiltinImplementation *implementations;
+	OperationImplementation *implementations;
 };
 
 
@@ -166,7 +167,7 @@ struct Function {
 
     union {
         Expression *definition;
-		BuiltinImplementation implementation;
+		FunctionImplementation implementation;
     };
 };
 

@@ -11,23 +11,6 @@
 #include "core/context/environment.h"
 
 
-static BuiltinResult callImplementations(
-		uint32_t nImplementations, BuiltinImplementation const * const implementations,
-		Context const *ctx, Expression **exprs, uint32_t nArgs, Expression **out
-) {
-	if (nImplementations == 0) return BUILTIN_NEUTRAL; 
-
-	BuiltinResult result;
-	for (uint32_t i = 0; i < nImplementations; i ++) {
-		result = implementations[i](ctx, exprs, nArgs, out);
-		if (result == BUILTIN_NEUTRAL) continue;
-		break;
-	}
-	
-	return result;
-}
-
-
 static EXECUTOR_RESULT resolveSymbols(Expression **ptr, Environment *env, bool isExecuting) {
 	if (ptr == NULL || *ptr == NULL) return EXECUTOR_SUCCESS;
 	if (!isExecuting && GLOBALCONTEXT->config->LAZY_RESOLUTIONS) return EXECUTOR_SUCCESS;
