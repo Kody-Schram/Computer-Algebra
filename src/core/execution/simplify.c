@@ -12,17 +12,17 @@
 #define DEFAULT_FLATTEN_INCREASE 5
 
 
-static int flattenOpsRecur(Expression *expr, const Operation *op, Expression ***list, int *elts, int *size) {
+static bool flattenOpsRecur(Expression *expr, Operation const *op, Expression ***list, int *elts, int *size) {
     if (expr->type == EXPRESSION_OPERATOR && expr->op == op) {
         for (int i = 0; i < expr->nOperands; i ++) {
-            if (!flattenOpsRecur(expr->operands[i], op, list, elts, size)) return 0;
+            if (!flattenOpsRecur(expr->operands[i], op, list, elts, size)) return false;
         }
         
         // Ensures main flatten function doesnt free expressions moved to the flattened list
         expr->nOperands = 0;
         freeExpression(expr);
         
-        return 1;
+        return true;
     }
     
     if (*elts >= *size) {
@@ -30,7 +30,7 @@ static int flattenOpsRecur(Expression *expr, const Operation *op, Expression ***
         Expression **temp = realloc(*list, sizeof(Expression*) * (*size));
         if (temp == NULL) {
             perror("Error flattening operation");
-            return 0;
+            return false;
         }
         
         *list = temp;
@@ -42,7 +42,7 @@ static int flattenOpsRecur(Expression *expr, const Operation *op, Expression ***
     (*list)[*elts] = expr;
     (*elts) ++;
     
-    return 1;
+    return true;
 }
 
 
@@ -109,7 +109,11 @@ static bool combineLikeTermsRecur(Expression **ptr) {
 					.flags = expr->operands[1]->flags
 				};
 
-				ObjectData out;
+				ObjectData out = {
+					.id = NUMBER_ID,
+					.value.integer = 0,
+					.flags = 0
+				};
 
 				result = dispatchOperation(expr->op, a, b, &out);
 

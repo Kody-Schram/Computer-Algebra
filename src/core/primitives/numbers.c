@@ -6,6 +6,8 @@
 #include "numbers.h"
 #include "core/common.h"
 #include "core/context.h"
+#include "core/utils/log.h"
+
 
 bool defaultNumberParser(char const *input, ObjectValue *value, uint32_t *flags) {
 	char *end;
@@ -36,14 +38,14 @@ int32_t compare_number(ObjectValue const a, uint32_t aFlags, ObjectValue const b
 	if (GMP_NUMBER(aFlags) || GMP_NUMBER(bFlags)) return 0;
 	if (INLINE_INTEGER(aFlags) && INLINE_INTEGER(bFlags)) return a.integer - b.integer;
 
-	if (!INLINE_INTEGER(aFlags)) return a.floating- b.integer;
+	if (!INLINE_INTEGER(aFlags)) return a.floating - b.integer;
 	else if (!INLINE_INTEGER(bFlags)) return a.integer - b.floating;
 	return a.floating - b.floating;
 }
 
 
 bool copy_number(ObjectValue const src, ObjectValue *dest, uint32_t flags) {
-	if (GMP_NUMBER(flags)) return 0;
+	if (GMP_NUMBER(flags)) return false;
 	else if (INLINE_INTEGER(flags)) dest->integer = src.integer;
 	else dest->floating = src.floating;
 
@@ -79,6 +81,8 @@ BuiltinResult add_number(Context const *ctx, ObjectData a, ObjectData b, ObjectD
 		(*out).value.floating = a.value.integer + b.value.floating;
 	else (*out).value.floating = a.value.floating + b.value.floating;
 
+	(*out).id = NUMBER_ID;
+
 	return BUILTIN_SUCCESS;
 }
 
@@ -96,6 +100,8 @@ BuiltinResult sub_number(Context const *ctx, ObjectData a, ObjectData b, ObjectD
 		(*out).value.floating = a.value.integer - b.value.floating;
 	else (*out).value.floating = a.value.floating - b.value.floating;
 
+	(*out).id = NUMBER_ID;
+
 	return BUILTIN_SUCCESS;
 }
 
@@ -112,6 +118,8 @@ BuiltinResult mult_number(Context const *ctx, ObjectData a, ObjectData b, Object
 	else if (INLINE_INTEGER(a.flags) && !INLINE_INTEGER(b.flags)) 
 		(*out).value.floating = a.value.integer * b.value.floating;
 	else (*out).value.floating = a.value.floating * b.value.floating;
+
+	(*out).id = NUMBER_ID;
 
 	return BUILTIN_SUCCESS;
 }
@@ -136,6 +144,8 @@ BuiltinResult div_number(Context const *ctx, ObjectData a, ObjectData b, ObjectD
 		if (b.value.floating == 0) goto div_by_zero;
 		(*out).value.floating = a.value.floating / b.value.floating;
 	}
+
+	(*out).id = NUMBER_ID;
 
 	return BUILTIN_SUCCESS;
 
@@ -169,12 +179,15 @@ BuiltinResult exp_number(Context const *ctx, ObjectData a, ObjectData b, ObjectD
 		(*out).value.floating = powf(a.value.integer, b.value.floating); 
 	else (*out).value.floating = powf(a.value.floating, b.value.floating); 
 
+	(*out).id = NUMBER_ID;
+
 	return BUILTIN_SUCCESS;
 }
 
 
 bool initNumbers(Registry *registry) {
-	if (!registerObject(registry, LIB_CORE_8, NUMBER_ID, cleanup_number, compare_number, copy_number, print_number)) return true;
+	Info(0, "Initializing numbers\n");
+	if (!registerObject(registry, LIB_CORE_8, NUMBER_ID, cleanup_number, compare_number, copy_number, print_number)) return false;
 
 	if (!addOperationImplementation(registry, '+', add_number, (uint64_t[]) {NUMBER_ID, NUMBER_ID})) return false;
 	if (!addOperationImplementation(registry, '-', sub_number, (uint64_t[]) {NUMBER_ID, NUMBER_ID})) return false;

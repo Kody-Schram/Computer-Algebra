@@ -122,7 +122,7 @@ bool registerOperation(Registry *registry, Operation op);
 
 
 bool registerObject(
-		Registry *registry, uint64_t id,uint64_t originModule,
+			Registry *registry,uint64_t originModule, uint64_t id,
 		void (*cleanup)(ObjectValue value, uint32_t flags),
 		int32_t (*compare)(ObjectValue const a, uint32_t aFlags, ObjectValue const b, uint32_t bFlags),
 		bool (*copy)(ObjectValue const src, ObjectValue *dest, uint32_t flags),

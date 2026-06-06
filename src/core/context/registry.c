@@ -171,35 +171,35 @@ BuiltinResult dispatchOperation(Operation const *op, ObjectData a, ObjectData b,
 		if (COMPARE_UINT128_T(lookup, op->implementation_map[i]))
 			return op->implementations[i](GLOBALCONTEXT, a, b, out);
 	}
+
+	return BUILTIN_NEUTRAL;
 }
 
 
 bool registerObject(
-		Registry *registry, uint64_t id,uint64_t originModule,
+		Registry *registry, uint64_t originModule, uint64_t id,
 		void (*cleanup)(ObjectValue value, uint32_t flags),
 		int32_t (*compare)(ObjectValue const a, uint32_t aFlags, ObjectValue const b, uint32_t bFlags),
 		bool (*copy)(ObjectValue const src, ObjectValue *dest, uint32_t flags),
 		char *(*print)(ObjectValue const value, uint32_t flags)
 ) {
 	if (registry->registeredObjects >= registry->objectsSize) {
-		registry->objectsSize ++;
+		uint32_t newSize = registry->objectsSize + 1;
 
-		Object *obj_tmp = realloc(registry->objects, sizeof(Object) * registry->objectsSize);
-		
-		if (obj_tmp == NULL) {
-			perror("Error registering object");
-			return false;
-		}
+        Object *obj_tmp = realloc(registry->objects, sizeof(Object) * newSize);
+        if (obj_tmp == NULL) {
+            perror("Error reallocating objects array");
+            return false;
+        }
+        registry->objects = obj_tmp; 
 
-		uint64_t *id_tmp = realloc(registry->object_map, sizeof(uint64_t) * registry->objectsSize);
-		if (id_tmp == NULL) {
-			free(obj_tmp);
-			perror("Error registering object");
-			return false;
-		}
-
-		registry->objects = obj_tmp;
-		registry->object_map = id_tmp;
+        uint64_t *id_tmp = realloc(registry->object_map, sizeof(uint64_t) * newSize);
+        if (id_tmp == NULL) {
+            perror("Error reallocating object map array");
+            return false;
+        }
+        registry->object_map = id_tmp;
+        registry->objectsSize = newSize;
 	}
 
 	registry->objects[registry->registeredObjects] = (Object) {

@@ -50,6 +50,7 @@ Expression *deepCopyExpression(Expression const *expr) {
 			new->objectId = expr->objectId;
 			Object const *obj = searchObject(GLOBALCONTEXT->registry, new->objectId);
 			if (obj == NULL) goto error;
+			//printf("found obj\n");
 
 			new->flags = expr->flags;
 			if (!obj->copy(expr->value, &new->value, new->flags)) goto error;
@@ -208,8 +209,6 @@ static void expressionToStringRecur(Expression const *expr, FILE *stream) {
 				fprintf(stream, "%s", out);
 				free(out);
 			}
-			else if (obj == NULL) fprintf(stream, "(object sad)");
-
 			else fprintf(stream, "(object)");
 
 			break;
