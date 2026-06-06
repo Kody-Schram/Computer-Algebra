@@ -17,9 +17,9 @@
 
 
 // Bit operations for core flags
-#define SET_BIT_TRUE(flags, MASK) (flags |= MASK)
-#define SET_BIT_FALSE(flags, MASK) (flags &= ~MASK)
-#define GET_BIT(flags, MASK) ((flags & MASK) != 0)
+#define SET_BIT_TRUE(flags, MASK) ((flags) |= (MASK))
+#define SET_BIT_FALSE(flags, MASK) ((flags) &= ~(MASK))
+#define GET_BIT(flags, MASK) (((flags) & (MASK)) != 0)
 
 
 #define NEGATIVE_MASK (1 << 0)
@@ -38,6 +38,12 @@
 #define SET_GMP_NUMBER_TRUE(flags) (SET_BIT_TRUE(flags, GMP_NUMBER_MASK))
 #define SET_GMP_NUMBER_FALSE(flags) (SET_BIT_FALSE(flags, GMP_NUMBER_MASK))
 #define GMP_NUMBER(flags) (GET_BIT(flags, GMP_NUMBER_MASK))
+
+
+#define CONSTANT_MASK (1 << 3)
+#define SET_CONSTANT_TRUE(flags) (SET_BIT_TRUE(flags, CONSTANT_MASK))
+#define SET_CONSTANT_FALSE(flags) (SET_BIT_FALSE(flags, CONSTANT_MASK))
+#define IS_CONSTANT(flags) (GET_BIT(flags, CONSTANT_MASK))
 
 
 // Defines the bounds for core flags vs module flags
