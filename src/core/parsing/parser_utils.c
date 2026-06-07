@@ -170,7 +170,7 @@ Expression *createExpression(Token *token) {
         case TOKEN_NUMBER:
             expr->type = EXPRESSION_OBJECT;
 			expr->objectId = NUMBER_ID;
-			if (!GLOBALCONTEXT->registry->numberParser(token->value, &expr->value, &expr->flags)) {
+			if (!GLOBALCONTEXT->registry->numberParser(token->value, &expr->value, &expr->meta)) {
 				free(token->value);
 				goto error;
 			}

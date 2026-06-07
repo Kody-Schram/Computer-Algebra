@@ -16,7 +16,7 @@ typedef struct Registry {
 	uint64_t *object_map;
 	Object *objects;
 
-	bool (*numberParser)(char const *input, ObjectValue *value, uint32_t *flags);
+	bool (*numberParser)(char const *input, ObjectValue *value, ExpressionMeta *meta);
 } Registry;
 
 

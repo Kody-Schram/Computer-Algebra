@@ -61,7 +61,7 @@ typedef enum ComponentType ComponentType;
 typedef struct Component Component;
 
 
-typedef enum ExpressionType ExpressionType;
+//typedef enum uint8_t ExpressionType;
 typedef struct Expression Expression;
 
 
@@ -80,11 +80,13 @@ typedef BuiltinResult (*FunctionImplementation)(Context const *ctx, Expression *
 
 
 // Expression related definitions
-enum ExpressionType { EXPRESSION_OBJECT,
+typedef enum uint8_t {
+	EXPRESSION_OBJECT,
     EXPRESSION_VARIABLE,
     EXPRESSION_FUNCTION_CALL,
     EXPRESSION_OPERATOR
-};
+} ExpressionType;
+
 
 typedef enum Associativity {
 	ASSOC_LEFT,
@@ -141,15 +143,27 @@ struct Object {
 };
 
 
+#define EXPRESSION_OPERATOR 0
+#define EXPRESSION_FUNCTION_CALL 1
+#define EXPRESSION_VARIABLE 2
+#define EXPRESSION_OBJECT 3
+
+
+typedef struct ExpressionMeta {
+	uint8_t coreFlags;
+	uint8_t weight;
+	uint8_t computeWeight;
+} ExpressionMeta;
+
+
 struct Expression {
-    ExpressionType type;
+    uint8_t type;
+	ExpressionMeta meta;
 
 	union {
 		uint32_t nOperands;
 		uint32_t nInputs;
-		struct {
-			uint32_t flags;
-		};
+		uint32_t flags;
 	};
 
     union {

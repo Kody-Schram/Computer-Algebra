@@ -9,7 +9,7 @@
 #include "core/utils/log.h"
 
 
-bool defaultNumberParser(char const *input, ObjectValue *value, uint32_t *flags) {
+bool defaultNumberParser(char const *input, ObjectValue *value, ExpressionMeta *meta) {
 	char *end;
 	double number = strtod(input, &end);
 
@@ -17,7 +17,7 @@ bool defaultNumberParser(char const *input, ObjectValue *value, uint32_t *flags)
 	
 	if (number == (int64_t) number) {
 		value->integer = number;
-		SET_INLINE_INTEGER_TRUE(*flags);
+		SET_INLINE_INTEGER_TRUE((*meta).coreFlags);
 
 		return true;
 	}

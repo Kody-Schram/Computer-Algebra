@@ -8,7 +8,7 @@
 typedef struct Registry Registry;
 
 
-bool defaultNumberParser(char const *input, ObjectValue *value, uint32_t *flags);
+bool defaultNumberParser(char const *input, ObjectValue *value, ExpressionMeta *meta);
 
 
 bool initNumbers(Registry *registry);
