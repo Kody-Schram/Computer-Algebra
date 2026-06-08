@@ -122,11 +122,11 @@ bool registerOperation(Registry *registry, Operation op);
 
 
 bool registerObject(
-			Registry *registry,uint64_t originModule, uint64_t id,
-		void (*cleanup)(ObjectValue value, uint32_t flags),
-		int32_t (*compare)(ObjectValue const a, uint32_t aFlags, ObjectValue const b, uint32_t bFlags),
-		bool (*copy)(ObjectValue const src, ObjectValue *dest, uint32_t flags),
-		char *(*print)(ObjectValue const value, uint32_t flags)
+		Registry *registry, uint64_t originModule, uint64_t id,
+		void (*cleanup)(ObjectData data),
+		int32_t (*compare)(ObjectData const a, ObjectData const b),
+		bool (*copy)(ObjectValue const src, ObjectValue *dest, ExpressionMeta meta, uint32_t flags),
+		char *(*print)(ObjectData const data)
 );
 
 
@@ -142,4 +142,8 @@ bool addOperationImplementation(
 );
 
 
-BuiltinResult dispatchOperation(Operation const *op, ObjectData a, ObjectData b, ObjectData *out);
+BuiltinResult dispatchOperation(Operation const *op, 
+		uint64_t id_a, ObjectData a, uint64_t id_b, ObjectData b, 
+		ObjectData *out, uint64_t *id_out
+);
+

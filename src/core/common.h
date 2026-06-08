@@ -23,27 +23,27 @@
 
 
 #define NEGATIVE_MASK (1 << 0)
-#define SET_NEGATIVE_TRUE(flags) (SET_BIT_TRUE(flags, NEGATIVE_MASK))
-#define SET_NEGATIVE_FALSE(flags) (SET_BIT_FALSE(flags, NEGATIVE_MASK))
-#define NEGATIVE(flags) (GET_BIT(flags, NEGATIVE_MASK))
+#define SET_NEGATIVE_TRUE(flags) (SET_BIT_TRUE((flags), NEGATIVE_MASK))
+#define SET_NEGATIVE_FALSE(flags) (SET_BIT_FALSE((flags), NEGATIVE_MASK))
+#define NEGATIVE(flags) (GET_BIT((flags), NEGATIVE_MASK))
 
 
 #define INLINE_INTEGER_MASK (1 << 1)
-#define SET_INLINE_INTEGER_TRUE(flags) (SET_BIT_TRUE(flags, INLINE_INTEGER_MASK))
-#define SET_INLINE_INTEGER_FALSE(flags) (SET_BIT_FALSE(flags, INLINE_INTEGER_MASK))
-#define INLINE_INTEGER(flags) (GET_BIT(flags, INLINE_INTEGER_MASK))
+#define SET_INLINE_INTEGER_TRUE(flags) (SET_BIT_TRUE((flags), INLINE_INTEGER_MASK))
+#define SET_INLINE_INTEGER_FALSE(flags) (SET_BIT_FALSE((flags), INLINE_INTEGER_MASK))
+#define INLINE_INTEGER(flags) (GET_BIT((flags), INLINE_INTEGER_MASK))
 
 
 #define GMP_NUMBER_MASK (1 << 2)
-#define SET_GMP_NUMBER_TRUE(flags) (SET_BIT_TRUE(flags, GMP_NUMBER_MASK))
-#define SET_GMP_NUMBER_FALSE(flags) (SET_BIT_FALSE(flags, GMP_NUMBER_MASK))
-#define GMP_NUMBER(flags) (GET_BIT(flags, GMP_NUMBER_MASK))
+#define SET_GMP_NUMBER_TRUE(flags) (SET_BIT_TRUE((flags), GMP_NUMBER_MASK))
+#define SET_GMP_NUMBER_FALSE(flags) (SET_BIT_FALSE((flags), GMP_NUMBER_MASK))
+#define GMP_NUMBER(flags) (GET_BIT((flags), GMP_NUMBER_MASK))
 
 
 #define CONSTANT_MASK (1 << 3)
-#define SET_CONSTANT_TRUE(flags) (SET_BIT_TRUE(flags, CONSTANT_MASK))
-#define SET_CONSTANT_FALSE(flags) (SET_BIT_FALSE(flags, CONSTANT_MASK))
-#define IS_CONSTANT(flags) (GET_BIT(flags, CONSTANT_MASK))
+#define SET_CONSTANT_TRUE(flags) (SET_BIT_TRUE((flags), CONSTANT_MASK))
+#define SET_CONSTANT_FALSE(flags) (SET_BIT_FALSE((flags), CONSTANT_MASK))
+#define IS_CONSTANT(flags) (GET_BIT((flags), CONSTANT_MASK))
 
 
 // Defines the bounds for core flags vs module flags
@@ -64,28 +64,18 @@ typedef struct Component Component;
 //typedef enum uint8_t ExpressionType;
 typedef struct Expression Expression;
 
-
 typedef struct Object Object; 
 typedef struct ObjectData ObjectData;
 
 
 typedef enum OperationType OperationType;
 typedef struct Operation Operation;
-typedef BuiltinResult (*OperationImplementation)(Context const *ctx, ObjectData a, ObjectData b, ObjectData *out);
+typedef BuiltinResult (*OperationImplementation)(Context const *ctx, ObjectData a, ObjectData b, ObjectData *out, uint64_t *id_out);
 
 
 typedef enum FunctionType FunctionType;
 typedef struct Function Function;
 typedef BuiltinResult (*FunctionImplementation)(Context const *ctx, Expression **inputs, uint32_t nInputs, Expression **out);
-
-
-// Expression related definitions
-typedef enum uint8_t {
-	EXPRESSION_OBJECT,
-    EXPRESSION_VARIABLE,
-    EXPRESSION_FUNCTION_CALL,
-    EXPRESSION_OPERATOR
-} ExpressionType;
 
 
 typedef enum Associativity {
@@ -127,19 +117,30 @@ typedef union {
 } ObjectValue;
 
 
+typedef struct ExpressionMeta {
+	uint8_t coreFlags;
+	uint8_t weight;
+	uint8_t computeWeight;
+} ExpressionMeta;
+
+
 struct ObjectData {
-	uint64_t id;
 	ObjectValue value;
 	uint32_t flags;
+	ExpressionMeta meta;
 };
+
+
+#define BUILD_OBJECT_DATA(expr_ptr) \
+	(ObjectData) {.meta = (expr)->meta, .flags = (expr)->flags, .value = (expr)->value}
 
 
 struct Object {
 	uint64_t module;
-	void (*cleanup)(ObjectValue value, uint32_t flags);
-	int32_t (*compare)(ObjectValue const a, uint32_t aFlags, ObjectValue const b, uint32_t bFlags);
-	bool (*copy)(ObjectValue const src, ObjectValue *dest, uint32_t flags);
-	char *(*print)(ObjectValue const value, uint32_t flags);
+	void (*cleanup)(ObjectData data);
+	int32_t (*compare)(ObjectData const a, ObjectData const b);
+	bool (*copy)(ObjectValue const src, ObjectValue *dest, ExpressionMeta meta, uint32_t flags);
+	char *(*print)(ObjectData const data);
 };
 
 
@@ -149,11 +150,6 @@ struct Object {
 #define EXPRESSION_OBJECT 3
 
 
-typedef struct ExpressionMeta {
-	uint8_t coreFlags;
-	uint8_t weight;
-	uint8_t computeWeight;
-} ExpressionMeta;
 
 
 struct Expression {

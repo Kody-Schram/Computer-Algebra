@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include "environment.h"
+#include "core/common.h"
 #include "core/context.h"
 #include "core/utils/log.h"
 #include "core/utils/expr_utils.h"
@@ -33,7 +34,7 @@ static void deepFreeExpression(Expression *expr) {
 
 		case EXPRESSION_OBJECT:
 			Object const *obj = searchObject(GLOBALCONTEXT->registry, expr->objectId);
-			if (obj != NULL && obj->cleanup != NULL) obj->cleanup(expr->value, expr->flags);	
+			if (obj != NULL && obj->cleanup != NULL) obj->cleanup(BUILD_OBJECT_DATA(expr));	
 
 			break;
             

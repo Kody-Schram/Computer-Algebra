@@ -1,11 +1,12 @@
 #pragma once
 
+#include <stdint.h>
 #include <stdio.h>
 
 #include "core/common.h"
 
 
-Expression *dummyExpression(ExpressionType type);
+Expression *dummyExpression(uint8_t type);
 
 
 Expression *deepCopyExpression(Expression const *expr);

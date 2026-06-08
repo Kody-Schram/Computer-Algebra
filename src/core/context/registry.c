@@ -165,23 +165,25 @@ bool addOperationImplementation(
 }
 
 
-BuiltinResult dispatchOperation(Operation const *op, ObjectData a, ObjectData b, ObjectData *out) {
-	uint128_t lookup = CREATE_LOOKUP_128(a.id, b.id);
+BuiltinResult dispatchOperation(Operation const *op, 
+		uint64_t id_a, ObjectData a, uint64_t id_b, ObjectData b, 
+		ObjectData *out, uint64_t *id_out
+) {
+	uint128_t lookup = CREATE_LOOKUP_128(id_a, id_b);
 	for (uint32_t i = 0; i < op->nImplementations; i ++) {
 		if (COMPARE_UINT128_T(lookup, op->implementation_map[i]))
-			return op->implementations[i](GLOBALCONTEXT, a, b, out);
+			return op->implementations[i](GLOBALCONTEXT, a, b, out, id_out);
 	}
 
 	return BUILTIN_NEUTRAL;
 }
 
-
 bool registerObject(
 		Registry *registry, uint64_t originModule, uint64_t id,
-		void (*cleanup)(ObjectValue value, uint32_t flags),
-		int32_t (*compare)(ObjectValue const a, uint32_t aFlags, ObjectValue const b, uint32_t bFlags),
-		bool (*copy)(ObjectValue const src, ObjectValue *dest, uint32_t flags),
-		char *(*print)(ObjectValue const value, uint32_t flags)
+		void (*cleanup)(ObjectData data),
+		int32_t (*compare)(ObjectData const a, ObjectData const b),
+		bool (*copy)(ObjectValue const src, ObjectValue *dest, ExpressionMeta meta, uint32_t flags),
+		char *(*print)(ObjectData const data)
 ) {
 	if (registry->registeredObjects >= registry->objectsSize) {
 		uint32_t newSize = registry->objectsSize + 1;

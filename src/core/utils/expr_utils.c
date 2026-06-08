@@ -13,7 +13,7 @@
 #define DEFUALT_STRING_SIZE 64
 
 
-static inline Expression *_dummyExpression(ExpressionType type) {
+static inline Expression *_dummyExpression(uint8_t type) {
     Expression *expr = calloc(1, sizeof(Expression));
 
     if (expr == NULL) {
@@ -27,7 +27,7 @@ static inline Expression *_dummyExpression(ExpressionType type) {
 }
 
 
-Expression *dummyExpression(ExpressionType type) {
+Expression *dummyExpression(uint8_t type) {
 	return _dummyExpression(type);
 }
 
@@ -50,17 +50,18 @@ Expression *deepCopyExpression(Expression const *expr) {
 			new->objectId = expr->objectId;
 			Object const *obj = searchObject(GLOBALCONTEXT->registry, new->objectId);
 			if (obj == NULL) goto error;
-			//printf("found obj\n");
 
+			new->meta = expr->meta;
 			new->flags = expr->flags;
-			if (!obj->copy(expr->value, &new->value, new->flags)) goto error;
+
+			if (!obj->copy(expr->value, &new->value, new->meta, new->flags)) goto error;
 
 			break;
 
         case EXPRESSION_OPERATOR:
             new->op = expr->op;
             new->nOperands = expr->nOperands;
-            new->operands = calloc(expr->nOperands, sizeof(Expression *));
+            new->operands = calloc(1, sizeof(Expression *) * expr->nOperands);
             if (new->operands == NULL) goto error;
             
             for (int i = 0; i < expr->nOperands; i ++) {
@@ -144,7 +145,7 @@ static void printExpressionRec(Expression const *expr, int level, FILE *stream) 
 		case EXPRESSION_OBJECT:
 			Object const *obj = searchObject(GLOBALCONTEXT->registry, expr->objectId);
 			if (obj != NULL && obj->print != NULL) {
-				char *out = obj->print(expr->value, expr->flags);
+				char *out = obj->print(BUILD_OBJECT_DATA(expr));
 				fprintf(stream, "<type: OBJECT, data: %s>\n", out);
 				free(out);
 			}
@@ -200,7 +201,7 @@ static void expressionToStringRecur(Expression const *expr, FILE *stream) {
 		case EXPRESSION_OBJECT:
 			Object const *obj = searchObject(GLOBALCONTEXT->registry, expr->objectId);
 			if (obj != NULL && obj->print != NULL) {
-				char *out = obj->print(expr->value, expr->flags);
+				char *out = obj->print(BUILD_OBJECT_DATA(expr));
 				if (out == NULL) {
 					fprintf(stream, "(object)");
 					break;
@@ -265,7 +266,7 @@ void freeExpression(Expression *expr) {
             break;
 
         case EXPRESSION_OPERATOR:
-            for (int i = 0; i < expr->nOperands; i ++) {
+            for (uint32_t i = 0; i < expr->nOperands; i ++) {
                 freeExpression(expr->operands[i]);
             }
             free(expr->operands);
@@ -275,7 +276,7 @@ void freeExpression(Expression *expr) {
 			if (expr->objectId == NUMBER_ID && !GMP_NUMBER(expr->flags)) break;
 
 			Object const *obj = searchObject(GLOBALCONTEXT->registry, expr->objectId);
-			if (obj != NULL && obj->cleanup != NULL) obj->cleanup(expr->value, expr->flags);	
+			if (obj != NULL && obj->cleanup != NULL) obj->cleanup(BUILD_OBJECT_DATA(expr));	
 
 			break;
             

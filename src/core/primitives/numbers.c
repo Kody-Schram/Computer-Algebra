@@ -10,6 +10,7 @@
 
 
 bool defaultNumberParser(char const *input, ObjectValue *value, ExpressionMeta *meta) {
+	Debug(0, "Creating number from '%s'\n", input);
 	char *end;
 	double number = strtod(input, &end);
 
@@ -28,23 +29,23 @@ bool defaultNumberParser(char const *input, ObjectValue *value, ExpressionMeta *
 }
 
 
-void cleanup_number(ObjectValue value, uint32_t flags) {
-	if (!GMP_NUMBER(flags) || INLINE_INTEGER(flags)) return;
+void cleanup_number(ObjectData data) {
+	if (!GMP_NUMBER(data.meta.coreFlags) || INLINE_INTEGER(data.meta.coreFlags)) return;
 }
 
 
-int32_t compare_number(ObjectValue const a, uint32_t aFlags, ObjectValue const b, uint32_t bFlags) {
+int32_t compare_number(ObjectData const a, ObjectData const b) {
 
-	if (GMP_NUMBER(aFlags) || GMP_NUMBER(bFlags)) return 0;
-	if (INLINE_INTEGER(aFlags) && INLINE_INTEGER(bFlags)) return a.integer - b.integer;
+	if (GMP_NUMBER(a.meta.coreFlags) || GMP_NUMBER(b.meta.coreFlags)) return 0;
+	if (INLINE_INTEGER(a.meta.coreFlags) && INLINE_INTEGER(b.meta.coreFlags)) return a.value.integer- b.value.integer;
 
-	if (!INLINE_INTEGER(aFlags)) return a.floating - b.integer;
-	else if (!INLINE_INTEGER(bFlags)) return a.integer - b.floating;
-	return a.floating - b.floating;
+	if (!INLINE_INTEGER(a.meta.coreFlags)) return a.value.floating - b.value.integer;
+	else if (!INLINE_INTEGER(b.meta.coreFlags)) return a.value.integer - b.value.floating;
+	return a.value.floating - b.value.floating;
 }
 
 
-bool copy_number(ObjectValue const src, ObjectValue *dest, uint32_t flags) {
+bool copy_number(ObjectValue const src, ObjectValue *dest, ExpressionMeta meta, uint32_t flags) {
 	if (GMP_NUMBER(flags)) return false;
 	else if (INLINE_INTEGER(flags)) dest->integer = src.integer;
 	else dest->floating = src.floating;
@@ -53,22 +54,22 @@ bool copy_number(ObjectValue const src, ObjectValue *dest, uint32_t flags) {
 }
 
 
-char *print_number(ObjectValue const value, uint32_t flags) {
-	if (GMP_NUMBER(flags)) return NULL;
+char *print_number(ObjectData data) {
+	if (GMP_NUMBER(data.meta.coreFlags)) return NULL;
 
     char *result = NULL;
 
-	if (INLINE_INTEGER(flags)) {
-		if (asprintf(&result, "%" PRId64, value.integer) < 0) return NULL; 
+	if (INLINE_INTEGER(data.meta.coreFlags)) {
+		if (asprintf(&result, "%" PRId64, data.value.integer) < 0) return NULL; 
 	} else {
-		if (asprintf(&result, "%f", value.floating) < 0) return NULL; 
+		if (asprintf(&result, "%f", data.value.floating) < 0) return NULL; 
 	}
 
 	return result;
 }
 
 
-BuiltinResult add_number(Context const *ctx, ObjectData a, ObjectData b, ObjectData *out) {
+BuiltinResult add_number(Context const *ctx, ObjectData a, ObjectData b, ObjectData *out, uint64_t *id_out) {
 	if (GMP_NUMBER(a.flags) || GMP_NUMBER(b.flags)) return BUILTIN_ERROR; // not implemented yet
 
 	if (INLINE_INTEGER(a.flags) && INLINE_INTEGER(b.flags)) {
@@ -81,13 +82,13 @@ BuiltinResult add_number(Context const *ctx, ObjectData a, ObjectData b, ObjectD
 		(*out).value.floating = a.value.integer + b.value.floating;
 	else (*out).value.floating = a.value.floating + b.value.floating;
 
-	(*out).id = NUMBER_ID;
+	*id_out = NUMBER_ID;
 
 	return BUILTIN_SUCCESS;
 }
 
 
-BuiltinResult sub_number(Context const *ctx, ObjectData a, ObjectData b, ObjectData *out) {
+BuiltinResult sub_number(Context const *ctx, ObjectData a, ObjectData b, ObjectData *out, uint64_t *id_out) {
 	if (GMP_NUMBER(a.flags) || GMP_NUMBER(b.flags)) return BUILTIN_ERROR; // not implemented yet
 
 	if (INLINE_INTEGER(a.flags) && INLINE_INTEGER(b.flags)) {
@@ -100,13 +101,13 @@ BuiltinResult sub_number(Context const *ctx, ObjectData a, ObjectData b, ObjectD
 		(*out).value.floating = a.value.integer - b.value.floating;
 	else (*out).value.floating = a.value.floating - b.value.floating;
 
-	(*out).id = NUMBER_ID;
+	*id_out = NUMBER_ID;
 
 	return BUILTIN_SUCCESS;
 }
 
 
-BuiltinResult mult_number(Context const *ctx, ObjectData a, ObjectData b, ObjectData *out) {
+BuiltinResult mult_number(Context const *ctx, ObjectData a, ObjectData b, ObjectData *out, uint64_t *id_out) {
 	if (GMP_NUMBER(a.flags) || GMP_NUMBER(b.flags)) return BUILTIN_ERROR; // not implemented yet
 
 	if (INLINE_INTEGER(a.flags) && INLINE_INTEGER(b.flags)) {
@@ -119,13 +120,13 @@ BuiltinResult mult_number(Context const *ctx, ObjectData a, ObjectData b, Object
 		(*out).value.floating = a.value.integer * b.value.floating;
 	else (*out).value.floating = a.value.floating * b.value.floating;
 
-	(*out).id = NUMBER_ID;
+	*id_out = NUMBER_ID;
 
 	return BUILTIN_SUCCESS;
 }
 
 
-BuiltinResult div_number(Context const *ctx, ObjectData a, ObjectData b, ObjectData *out) {
+BuiltinResult div_number(Context const *ctx, ObjectData a, ObjectData b, ObjectData *out, uint64_t *id_out) {
 	if (GMP_NUMBER(a.flags) || GMP_NUMBER(b.flags)) return BUILTIN_ERROR; // not implemented yet
 
 	if (INLINE_INTEGER(a.flags) && INLINE_INTEGER(b.flags)) {
@@ -145,7 +146,7 @@ BuiltinResult div_number(Context const *ctx, ObjectData a, ObjectData b, ObjectD
 		(*out).value.floating = a.value.floating / b.value.floating;
 	}
 
-	(*out).id = NUMBER_ID;
+	*id_out = NUMBER_ID;
 
 	return BUILTIN_SUCCESS;
 
@@ -168,7 +169,7 @@ static inline int64_t _powi(int64_t a, int64_t e) {
 }
 
 
-BuiltinResult exp_number(Context const *ctx, ObjectData a, ObjectData b, ObjectData *out) {
+BuiltinResult exp_number(Context const *ctx, ObjectData a, ObjectData b, ObjectData *out, uint64_t *id_out) {
 	if (GMP_NUMBER(a.flags) || GMP_NUMBER(b.flags)) return BUILTIN_ERROR; // not implemented yet
 
 	if (INLINE_INTEGER(a.flags) && INLINE_INTEGER(b.flags)) 
@@ -179,7 +180,7 @@ BuiltinResult exp_number(Context const *ctx, ObjectData a, ObjectData b, ObjectD
 		(*out).value.floating = powf(a.value.integer, b.value.floating); 
 	else (*out).value.floating = powf(a.value.floating, b.value.floating); 
 
-	(*out).id = NUMBER_ID;
+	*id_out = NUMBER_ID;
 
 	return BUILTIN_SUCCESS;
 }
