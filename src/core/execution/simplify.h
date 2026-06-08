@@ -3,4 +3,4 @@
 #include "core/common.h"
 
 
-bool simplify(Expression **expr);
+bool simplify(Expression **ptr);

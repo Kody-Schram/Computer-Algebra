@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
 
 #include "simplify.h"
@@ -168,16 +169,173 @@ static bool simplifyRecur(Expression **ptr) {
 }
 
 
-bool collapseRecur(Expression **ptr) {
+bool collapseRecur(Expression **ptr, Operation const *op, Expression ***list, uint32_t *size, uint32_t *elts);
 
+
+static inline bool collapseOperation(Expression **ptr, Operation const *op, Expression ***list, uint32_t *size, uint32_t *elts) {
+	if (list != NULL && op == (*ptr)->op) {
+		if (!collapseRecur(ptr, op, list, size, elts)) return false;
+		return true;
+	}
+
+	uint32_t newSize = 2;
+	uint32_t newElts = 0;
+	Expression **newList = malloc(sizeof(Expression *) * newSize);
+	if (newList == NULL) return false;
+
+	if (!collapseRecur(ptr, (*ptr)->op, &newList, &newSize, &newElts)) {
+		free(newList);
+		return false;
+	}
+
+	if (newElts == 1) {
+		*ptr = newList[0];
+		free(newList);
+		return true;
+	}
+
+	free((*ptr)->operands);
+	(*ptr)->operands = newList;
+	(*ptr)->nOperands = newElts;
+
+	return true;
 }
 
 
-bool simplify(Expression **expr) {
+bool collapseRecur(Expression **ptr, Operation const *op, Expression ***list, uint32_t *size, uint32_t *elts) {
+	Expression *expr = *ptr;
+	if (expr->type == EXPRESSION_FUNCTION_CALL) {
+		for (uint32_t i = 0; i < expr->nInputs; i ++) {
+			if (expr->inputs[i]->type != EXPRESSION_OPERATOR && expr->inputs[i]->type != EXPRESSION_FUNCTION_CALL) continue;
+
+			if (expr->inputs[i]->type == EXPRESSION_OPERATOR && 
+					!collapseOperation(&expr->inputs[i], NULL, NULL, NULL, NULL)) return false;
+			else if (!collapseRecur(&expr->inputs[i], NULL, NULL, NULL, NULL)) return false;
+		}
+
+		if (list == NULL) return true;
+
+		if (*elts >= *size) {
+			*size += 1;
+			Expression **temp = realloc(*list, sizeof(Expression*) * (*size));
+			if (temp == NULL) {
+				perror("Error flattening operation");
+				return false;
+			}
+			
+			*list = temp;
+		}
+		
+		(*list)[*elts] = expr;
+		(*elts) ++;
+
+		return true;
+	}
+
+
+	if (expr->operands[0]->type == EXPRESSION_OPERATOR &&
+			!collapseOperation(&expr->operands[0], op, list, size, elts)) return false;
+	if (expr->operands[1]->type == EXPRESSION_OPERATOR &&
+			!collapseOperation(&expr->operands[1], op, list, size, elts)) return false;
+
+	// No flattening has been done yet, should only be 2 operands
+	Expression *a = expr->operands[0];
+	Expression *b = expr->operands[1];
+
+	if (a->type == EXPRESSION_OBJECT && b->type == EXPRESSION_OBJECT) {
+
+		// Applies constant folding
+		if ((a->objectId == NUMBER_ID && b->objectId == NUMBER_ID) || (IS_CONSTANT(a->flags) && IS_CONSTANT(b->flags))) {
+			BuiltinResult result;
+			ObjectData x = {
+				.id = a->objectId,
+				.value = a->value,
+				.flags = a->flags
+			};
+
+			ObjectData y = {
+				.id = b->objectId,
+				.value = b->value,
+				.flags = b->flags
+			};
+
+			ObjectData out = {
+				.id = NUMBER_ID,
+				.flags = 0
+			};
+
+			result = dispatchOperation(expr->op, x, y, &out);
+
+			if (result == BUILTIN_ERROR) return false;
+
+			Expression *new = dummyExpression(EXPRESSION_OBJECT);
+			if (new == NULL) return false;
+
+			new->objectId = out.id;
+			new->flags = out.flags;
+			new->value = out.value;
+
+			// This will also free the child a and b nodes
+			freeExpression(expr);
+
+			if (list == NULL) {
+				*ptr = new;
+				return true;
+			}
+
+			if (*elts >= *size) {
+				*size += 1;
+				Expression **temp = realloc(*list, sizeof(Expression*) * (*size));
+				if (temp == NULL) {
+					perror("Error flattening operation");
+					return false;
+				}
+				
+				*list = temp;
+			}
+
+			(*list)[(*elts)] = new; 
+			(*elts) ++;
+
+			return true;
+		}
+	}
+
+	if (list == NULL) return true;
+
+	// Appends children to list
+	if (*elts + 1 >= *size) {
+		*size += 2;
+		Expression **temp = realloc(*list, sizeof(Expression*) * (*size));
+		if (temp == NULL) {
+			perror("Error flattening operation");
+			return false;
+		}
+		
+		*list = temp;
+	}
+	
+	(*list)[*elts] = a;
+	(*elts) ++;
+	(*list)[*elts] = b;
+	(*elts) ++;
+
+	return true;
+}
+
+
+
+
+bool simplify(Expression **ptr) {
     Debug(0, "\nSimplifying\n");
-    Debug(1, printExpression(*expr));
+    Debug(1, printExpression(*ptr));
     
-    if (!simplifyRecur(expr)) return false;
-    
-    return true;
+    //if (!simplifyRecur(expr)) return false;
+	
+	if ((*ptr)->type != EXPRESSION_OPERATOR && (*ptr)->type != EXPRESSION_FUNCTION_CALL) return true;
+	/*
+	if ((*ptr)->type == EXPRESSION_OPERATOR) return collapseOperation(ptr, NULL, NULL, NULL, NULL);
+	return collapseRecur(ptr, NULL, NULL, NULL, NULL);
+	*/
+	return true;
 }
