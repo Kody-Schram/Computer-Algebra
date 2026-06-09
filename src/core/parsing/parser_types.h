@@ -5,7 +5,6 @@
 
 
 // Forward declaring types
-typedef enum TokenType TokenType;
 typedef struct Token Token;
 
 typedef struct RPNList RPNList;
@@ -13,7 +12,7 @@ typedef struct Stack Stack;
 
 
 // Token related definitions
-enum TokenType {
+typedef enum TokenType : uint8_t {
     TOKEN_NUMBER,
     TOKEN_OPERATOR,
     TOKEN_IDENTIFIER,
@@ -24,7 +23,7 @@ enum TokenType {
     TOKEN_FUNC_CALL,
     TOKEN_MAPPING,
     TOKEN_SEPARATOR
-};
+} TokenType;
 
 struct Token {
     TokenType type;

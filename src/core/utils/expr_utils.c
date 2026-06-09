@@ -13,7 +13,7 @@
 #define DEFUALT_STRING_SIZE 64
 
 
-static inline Expression *_dummyExpression(uint8_t type) {
+static inline Expression *_dummyExpression(ExpressionType type) {
     Expression *expr = calloc(1, sizeof(Expression));
 
     if (expr == NULL) {
@@ -27,7 +27,7 @@ static inline Expression *_dummyExpression(uint8_t type) {
 }
 
 
-Expression *dummyExpression(uint8_t type) {
+Expression *dummyExpression(ExpressionType type) {
 	return _dummyExpression(type);
 }
 

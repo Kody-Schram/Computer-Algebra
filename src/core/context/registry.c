@@ -7,6 +7,7 @@
 #include "core/common.h"
 #include "core/context.h"
 #include "core/primitives/numbers.h"
+#include "core/utils/expr_utils.h"
 #include "core/utils/log.h"
 
 
@@ -171,8 +172,9 @@ BuiltinResult dispatchOperation(Operation const *op,
 ) {
 	uint128_t lookup = CREATE_LOOKUP_128(id_a, id_b);
 	for (uint32_t i = 0; i < op->nImplementations; i ++) {
-		if (COMPARE_UINT128_T(lookup, op->implementation_map[i]))
+		if (COMPARE_UINT128_T(lookup, op->implementation_map[i])) {
 			return op->implementations[i](GLOBALCONTEXT, a, b, out, id_out);
+		}
 	}
 
 	return BUILTIN_NEUTRAL;

@@ -70,15 +70,15 @@ char *print_number(ObjectData data) {
 
 
 BuiltinResult add_number(Context const *ctx, ObjectData a, ObjectData b, ObjectData *out, uint64_t *id_out) {
-	if (GMP_NUMBER(a.flags) || GMP_NUMBER(b.flags)) return BUILTIN_ERROR; // not implemented yet
+	if (GMP_NUMBER(a.meta.coreFlags) || GMP_NUMBER(b.meta.coreFlags)) return BUILTIN_ERROR; // not implemented yet
 
-	if (INLINE_INTEGER(a.flags) && INLINE_INTEGER(b.flags)) {
+	if (INLINE_INTEGER(a.meta.coreFlags) && INLINE_INTEGER(b.meta.coreFlags)) {
 		(*out).value.integer = a.value.integer + b.value.integer;
-		SET_INLINE_INTEGER_TRUE((*out).flags);
+		SET_INLINE_INTEGER_TRUE((*out).meta.coreFlags);
 	}
-	else if (!INLINE_INTEGER(a.flags) && INLINE_INTEGER(b.flags))
+	else if (!INLINE_INTEGER(a.meta.coreFlags) && INLINE_INTEGER(b.meta.coreFlags))
 		(*out).value.floating = a.value.floating + b.value.integer;
-	else if (INLINE_INTEGER(a.flags) && !INLINE_INTEGER(b.flags))
+	else if (INLINE_INTEGER(a.meta.coreFlags) && !INLINE_INTEGER(b.meta.coreFlags))
 		(*out).value.floating = a.value.integer + b.value.floating;
 	else (*out).value.floating = a.value.floating + b.value.floating;
 
@@ -89,15 +89,15 @@ BuiltinResult add_number(Context const *ctx, ObjectData a, ObjectData b, ObjectD
 
 
 BuiltinResult sub_number(Context const *ctx, ObjectData a, ObjectData b, ObjectData *out, uint64_t *id_out) {
-	if (GMP_NUMBER(a.flags) || GMP_NUMBER(b.flags)) return BUILTIN_ERROR; // not implemented yet
+	if (GMP_NUMBER(a.meta.coreFlags) || GMP_NUMBER(b.meta.coreFlags)) return BUILTIN_ERROR; // not implemented yet
 
-	if (INLINE_INTEGER(a.flags) && INLINE_INTEGER(b.flags)) {
+	if (INLINE_INTEGER(a.meta.coreFlags) && INLINE_INTEGER(b.meta.coreFlags)) {
 		(*out).value.integer = a.value.integer - b.value.integer;
-		SET_INLINE_INTEGER_TRUE((*out).flags);
+		SET_INLINE_INTEGER_TRUE((*out).meta.coreFlags);
 	}
-	else if (!INLINE_INTEGER(a.flags) && INLINE_INTEGER(b.flags))
+	else if (!INLINE_INTEGER(a.meta.coreFlags) && INLINE_INTEGER(b.meta.coreFlags))
 		(*out).value.floating = a.value.floating - b.value.integer;
-	else if (INLINE_INTEGER(a.flags) && !INLINE_INTEGER(b.flags)) 
+	else if (INLINE_INTEGER(a.meta.coreFlags) && !INLINE_INTEGER(b.meta.coreFlags))
 		(*out).value.floating = a.value.integer - b.value.floating;
 	else (*out).value.floating = a.value.floating - b.value.floating;
 
@@ -108,15 +108,15 @@ BuiltinResult sub_number(Context const *ctx, ObjectData a, ObjectData b, ObjectD
 
 
 BuiltinResult mult_number(Context const *ctx, ObjectData a, ObjectData b, ObjectData *out, uint64_t *id_out) {
-	if (GMP_NUMBER(a.flags) || GMP_NUMBER(b.flags)) return BUILTIN_ERROR; // not implemented yet
+	if (GMP_NUMBER(a.meta.coreFlags) || GMP_NUMBER(b.meta.coreFlags)) return BUILTIN_ERROR; // not implemented yet
 
-	if (INLINE_INTEGER(a.flags) && INLINE_INTEGER(b.flags)) {
+	if (INLINE_INTEGER(a.meta.coreFlags) && INLINE_INTEGER(b.meta.coreFlags)) {
 		(*out).value.integer = a.value.integer * b.value.integer;
-		SET_INLINE_INTEGER_TRUE((*out).flags);
+		SET_INLINE_INTEGER_TRUE((*out).meta.coreFlags);
 	}
-	else if (!INLINE_INTEGER(a.flags) && INLINE_INTEGER(b.flags))
+	else if (!INLINE_INTEGER(a.meta.coreFlags) && INLINE_INTEGER(b.meta.coreFlags))
 		(*out).value.floating = a.value.floating * b.value.integer;
-	else if (INLINE_INTEGER(a.flags) && !INLINE_INTEGER(b.flags)) 
+	else if (INLINE_INTEGER(a.meta.coreFlags) && !INLINE_INTEGER(b.meta.coreFlags))
 		(*out).value.floating = a.value.integer * b.value.floating;
 	else (*out).value.floating = a.value.floating * b.value.floating;
 
@@ -127,17 +127,17 @@ BuiltinResult mult_number(Context const *ctx, ObjectData a, ObjectData b, Object
 
 
 BuiltinResult div_number(Context const *ctx, ObjectData a, ObjectData b, ObjectData *out, uint64_t *id_out) {
-	if (GMP_NUMBER(a.flags) || GMP_NUMBER(b.flags)) return BUILTIN_ERROR; // not implemented yet
+	if (GMP_NUMBER(a.meta.coreFlags) || GMP_NUMBER(b.meta.coreFlags)) return BUILTIN_ERROR; // not implemented yet
 
-	if (INLINE_INTEGER(a.flags) && INLINE_INTEGER(b.flags)) {
+	if (INLINE_INTEGER(a.meta.coreFlags) && INLINE_INTEGER(b.meta.coreFlags)) {
 		if (b.value.integer == 0) goto div_by_zero;
 		(*out).value.floating = ((double) a.value.integer) / ((double) b.value.integer);
 	}
-	else if (!INLINE_INTEGER(a.flags) && INLINE_INTEGER(b.flags)) {
+	else if (!INLINE_INTEGER(a.meta.coreFlags) && INLINE_INTEGER(b.meta.coreFlags)) {
 		if (b.value.integer == 0) goto div_by_zero;
 		(*out).value.floating = a.value.floating / b.value.integer;
 	}
-	else if (INLINE_INTEGER(a.flags) && !INLINE_INTEGER(b.flags)) {
+	else if (INLINE_INTEGER(a.meta.coreFlags) && !INLINE_INTEGER(b.meta.coreFlags)) {
 		if (b.value.floating == 0) goto div_by_zero;
 		(*out).value.floating = a.value.integer / b.value.floating;
 	}
@@ -170,13 +170,13 @@ static inline int64_t _powi(int64_t a, int64_t e) {
 
 
 BuiltinResult exp_number(Context const *ctx, ObjectData a, ObjectData b, ObjectData *out, uint64_t *id_out) {
-	if (GMP_NUMBER(a.flags) || GMP_NUMBER(b.flags)) return BUILTIN_ERROR; // not implemented yet
+	if (GMP_NUMBER(a.meta.coreFlags) || GMP_NUMBER(b.meta.coreFlags)) return BUILTIN_ERROR; // not implemented yet
 
-	if (INLINE_INTEGER(a.flags) && INLINE_INTEGER(b.flags)) 
+	if (INLINE_INTEGER(a.meta.coreFlags) && INLINE_INTEGER(b.meta.coreFlags)) 
 		(*out).value.integer = _powi(a.value.integer, b.value.integer);
-	else if (!INLINE_INTEGER(a.flags) && INLINE_INTEGER(b.flags))
+	else if (!INLINE_INTEGER(a.meta.coreFlags) && INLINE_INTEGER(b.meta.coreFlags))
 		(*out).value.floating = powf(a.value.floating, b.value.integer); 
-	else if (INLINE_INTEGER(a.flags) && !INLINE_INTEGER(b.flags)) 
+	else if (INLINE_INTEGER(a.meta.coreFlags) && !INLINE_INTEGER(b.meta.coreFlags)) 
 		(*out).value.floating = powf(a.value.integer, b.value.floating); 
 	else (*out).value.floating = powf(a.value.floating, b.value.floating); 
 

@@ -132,7 +132,7 @@ struct ObjectData {
 
 
 #define BUILD_OBJECT_DATA(expr_ptr) \
-	(ObjectData) {.meta = (expr)->meta, .flags = (expr)->flags, .value = (expr)->value}
+	(ObjectData) {.meta = (expr_ptr)->meta, .flags = (expr_ptr)->flags, .value = (expr_ptr)->value}
 
 
 struct Object {
@@ -144,16 +144,17 @@ struct Object {
 };
 
 
-#define EXPRESSION_OPERATOR 0
-#define EXPRESSION_FUNCTION_CALL 1
-#define EXPRESSION_VARIABLE 2
-#define EXPRESSION_OBJECT 3
 
-
+typedef enum ExpressionType : uint8_t {
+	EXPRESSION_OPERATOR,
+	EXPRESSION_FUNCTION_CALL,
+	EXPRESSION_VARIABLE,
+	EXPRESSION_OBJECT
+} ExpressionType;
 
 
 struct Expression {
-    uint8_t type;
+	ExpressionType type;
 	ExpressionMeta meta;
 
 	union {
