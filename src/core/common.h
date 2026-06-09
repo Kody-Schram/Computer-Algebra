@@ -91,7 +91,7 @@ typedef struct uint128_t {
 
 
 #define COMPARE_UINT128_T(a, b) \
-	(((a).bits[0] == (b).bits[0]) & ((a).bits[1] == (b).bits[0]))
+	(((a).bits[0] == (b).bits[0]) & ((a).bits[1] == (b).bits[1]))
 
 
 struct Operation {
