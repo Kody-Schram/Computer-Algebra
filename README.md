@@ -1,3 +1,5 @@
+# This repository has moved to Codeberg: https://codeberg.org/KodySchram/Computer-Algebra
+
 # COMPUTER ALGEBRA
 
 *A system which parses and executes mathematical expressions and equations.*
