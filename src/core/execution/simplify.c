@@ -136,22 +136,6 @@ bool collapse(Expression **ptr, Operation const *op, Expression ***list, uint32_
 			*ptr = out;
 		}
 
-		if (list != NULL) {
-			if (*elts >= *size) {
-				*size *= 2;
-				Expression **temp = realloc(*list, sizeof(Expression*) * (*size));
-				if (temp == NULL) {
-					perror("Error flattening operation");
-					return false;
-				}
-				
-				*list = temp;
-			}
-			
-			(*list)[*elts] = *ptr;
-			(*elts) ++;
-		}
-
 		return true;
 	}
 
@@ -228,14 +212,6 @@ bool simplify(Expression **ptr) {
     Debug(0, "\nSimplifying\n");
     Debug(1, printExpression(*ptr));
 
-	char *out = expressionToString(*ptr);
-
-    printf("%s\n\n", out);
-	free(out);
-    
-    //if (!simplifyRecur(expr)) return false;
-	
 	if ((*ptr)->type != EXPRESSION_OPERATOR && (*ptr)->type != EXPRESSION_FUNCTION_CALL) return true;
 	return collapse(ptr, NULL, NULL, NULL, NULL);
-	//return collapseRecur(ptr, NULL, NULL, NULL, NULL);
 }

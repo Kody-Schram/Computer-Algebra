@@ -19,4 +19,19 @@ startup: |
   j(1,2)
   
   .5f(y)
+
+  2+2*5
+  a:2
+  b:3
+  c:4
+  f:x,y->a*x + b*y
+  g:u,v->f(v,u) + f(u,v) + c
+  h:w->g(w,a) - g(b,w)
+  i:p->h(p) * 2
+  j:m->i(m) + i(m)
+  a:5
+  b:a+a
+  c:b*b
+  a*b
+  j(c)
   quit

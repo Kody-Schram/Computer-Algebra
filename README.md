@@ -92,7 +92,7 @@ Ex.
 3. Evaluation
 
 ## AI Disclosure
-I am ashamed to say that, up until release 1.1.0, generative AI was used during development on this project. I cannot in good conscious continue to use or support generative AI and have since stopped using it entirely.
+I am ashamed to say that, up until release 1.1.0, generative AI was used during development on this project. I cannot in good conscious continue to use or support generative AI due to environmental, economic, and social concerns. I have since stopped using it entirely.
 
 Prior to this change, AI was used largely for debugging or quick brainstorming and big picture implementation ideas. As this is my first project in a lower level language and also specifically C, it was helpful in pointing out my dumb mistakes and providing areas where I should go research to learn more and improve.
 
