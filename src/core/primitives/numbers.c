@@ -172,8 +172,10 @@ static inline int64_t _powi(int64_t a, int64_t e) {
 BuiltinResult exp_number(Context const *ctx, ObjectData a, ObjectData b, ObjectData *out, uint64_t *id_out) {
 	if (GMP_NUMBER(a.meta.coreFlags) || GMP_NUMBER(b.meta.coreFlags)) return BUILTIN_ERROR; // not implemented yet
 
-	if (INLINE_INTEGER(a.meta.coreFlags) && INLINE_INTEGER(b.meta.coreFlags)) 
+	if (INLINE_INTEGER(a.meta.coreFlags) && INLINE_INTEGER(b.meta.coreFlags)) { 
 		(*out).value.integer = _powi(a.value.integer, b.value.integer);
+		SET_INLINE_INTEGER_TRUE((*out).meta.coreFlags);
+	}
 	else if (!INLINE_INTEGER(a.meta.coreFlags) && INLINE_INTEGER(b.meta.coreFlags))
 		(*out).value.floating = powf(a.value.floating, b.value.integer); 
 	else if (INLINE_INTEGER(a.meta.coreFlags) && !INLINE_INTEGER(b.meta.coreFlags)) 
