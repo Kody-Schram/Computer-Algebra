@@ -2,30 +2,29 @@
 
 *A system which parses and executes mathematical expressions and equations.*
 
-## Installation
-Release binaries for the latest build are tagged and provided. Select which binary you need based on your OS and system architecture. For macOS or Linux distibutions, ensure the following dependencies are installed on your machine.
-
-### Dependencies
+## Dependencies
 - [libyaml](https://github.com/yaml/libyaml)
 
-### Manually Building
-This project uses CMake for its build process. To build locally ensure you have CMake installed. Additionally, certain OS's such as Ubuntu will need the developer versions of the required dependencies to properly link when building, ensure you have these installed. For Windows, it is recommended to just use the provided binary, however building is still possible assuming you have MinGW and the required dependencies installed.
+## Installation
+1. Install required dependencies (some OSes such as Ubuntu will require *-dev packages or similar to enable proper linking)
 
-First, clone the repository to your local machine. Then, run the following commands within the project root directory:
+2. Ensure you have CMake installed on your machine
+
+3. Clone the repo and run this in the project directory
 ```bash
-mkdir build
-cd build
-cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_FLAGS="-march=native" ..
-cmake --build .
+cmake -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_FLAGS="-march=native" ..
+cmake --build build
 ```
 
-`-DCMAKE_C_FLAGS="-march=native"` is not required and shouldn't be included if you plan on distributing the binary and or developing/contributing to/on this project. `Debug` is the proper build type for development. Otherwise this may marginally improve performance on your specific machine.
+**Note: -DCMAKE_C_FLAGS="-march=native" is optional for better local performance. Not recommended if you plan to distribute or run on any machines other than the one building the program**
 
-### Configuration
 
-Configuration through YAML file is supported. [Example config](config.example.yaml) provides documentation on the different configurations. Unless the path is passed in through a command line argument, the file should be located at these locations:
-- Windows/macOS: ./config.yaml (Relative to executable location)
-- Linux: ~/.config/algebra/config.yaml
+## Configuration
+
+Configuration through YAML file is supported.
+[Example config](config.example.yaml) provides documentation on the different configurations. 
+The configuration path defaults to `~/.config/algebra/config.yaml` unless overridden when running from the terminal
+`Ex: algebra /home/(user)/(custom override path)`
 
 
 ## Usage
